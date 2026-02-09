@@ -616,11 +616,10 @@ const Cars: React.FC = () => {
                           <div className="flex items-center justify-center gap-2">
                             <button
                               onClick={() => handleViewCar(car)}
-                              className="inline-flex items-center px-3 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition-all duration-200 font-medium group"
+                              className="inline-flex items-center justify-center p-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition-all duration-200 font-medium group"
                               title={t("Ko'rish", language)}
                             >
-                              <Eye className="h-4 w-4 mr-1.5 group-hover:scale-110 transition-transform" />
-                              <span className="text-sm">{t("Ko'rish", language)}</span>
+                              <Eye className="h-4 w-4 group-hover:scale-110 transition-transform" />
                             </button>
                             
                             {/* SMS Button - Arxivdagi mashinalar uchun */}
@@ -1053,15 +1052,6 @@ const CarCard: React.FC<{
       <div className="px-3 sm:px-6 pb-3 sm:pb-6">
         {/* Desktop: Bir qatorda barcha tugmalar */}
         <div className="hidden sm:flex items-center gap-1.5 pt-4 border-t border-gray-100">
-          <button 
-            onClick={() => onView(car)}
-            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition-all duration-200 font-medium group"
-            title={t("Ko'rish", language)}
-          >
-            <Eye className="h-3.5 w-3.5 group-hover:scale-110 transition-transform" />
-            <span className="text-sm">{t("Ko'rish", language)}</span>
-          </button>
-          
           {/* Payment Button - Show if car has remaining balance */}
           {(() => {
             const remaining = displayTotal - (car.paidAmount || 0);
@@ -1096,6 +1086,13 @@ const CarCard: React.FC<{
           )}
           
           <button 
+            onClick={() => onView(car)}
+            className="p-2 bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700 rounded-lg transition-all duration-200 group"
+            title={t("Ko'rish", language)}
+          >
+            <Eye className="h-3.5 w-3.5 group-hover:scale-110 transition-transform" />
+          </button>
+          <button 
             onClick={() => onEdit(car)}
             className="p-2 bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-lg transition-all duration-200"
             title={t("Tahrirlash", language)}
@@ -1115,15 +1112,6 @@ const CarCard: React.FC<{
         <div className="sm:hidden space-y-2 pt-2 border-t border-gray-100">
           {/* Birinchi qator: Asosiy tugmalar */}
           <div className="flex items-center gap-2">
-            <button 
-              onClick={() => onView(car)}
-              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition-all duration-200 font-medium"
-              title={t("Ko'rish", language)}
-            >
-              <Eye className="h-3.5 w-3.5" />
-              <span className="text-xs">{t("Ko'rish", language)}</span>
-            </button>
-            
             {(() => {
               const remaining = displayTotal - (car.paidAmount || 0);
               return remaining > 0 && (
@@ -1154,6 +1142,14 @@ const CarCard: React.FC<{
                 <span className="text-xs">{t("SMS", language)}</span>
               </a>
             )}
+            
+            <button 
+              onClick={() => onView(car)}
+              className="p-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition-all duration-200"
+              title={t("Ko'rish", language)}
+            >
+              <Eye className="h-3.5 w-3.5" />
+            </button>
           </div>
           
           {/* Ikkinchi qator: Tahrirlash va O'chirish */}
