@@ -526,13 +526,7 @@ export const deleteCar = async (req: AuthRequest, res: Response) => {
     
     res.json({
       message: 'Mashina arxivga o\'tkazildi',
-      car: {
-        _id: car._id,
-        licensePlate: car.licensePlate,
-        ownerName: car.ownerName,
-        isDeleted: car.isDeleted,
-        deletedAt: car.deletedAt
-      }
+      car: car // To'liq mashina ma'lumotlarini qaytarish
     });
   } catch (error: any) {
     console.error('❌ Mashinani o\'chirishda xatolik:', error);
@@ -811,13 +805,46 @@ export const addCarPayment = async (req: AuthRequest, res: Response) => {
 
     console.log(`✅ To'lov qo'shildi: ${amount} so'm - ${car.licensePlate} - ${paymentMethod || 'cash'}`);
 
-    // ❌ ESKI KOD OLIB TASHLANDI - DebtService ishlatiladi
-    // Bu yerda qarz yaratish/yangilash yo'q, chunki carServiceController allaqachon buni qiladi
+    // ✅ Transaction yaratish (Kassa sahifasiga kirim)
+    try {
+      const Transaction = require('../models/Transaction').default;
+      const transaction = new Transaction({
+        type: 'income',
+        category: 'car-payment',
+        amount,
+        paymentMethod: paymentMethod || 'cash',
+        description: `${car.make} ${car.carModel} (${car.licensePlate}) - To'lov${notes ? ': ' + notes : ''}`,
+        relatedTo: {
+          type: 'car',
+          id: car._id
+        },
+        createdBy: req.user?.id
+      });
+      await transaction.save();
 
-    res.json({
-      message: 'Payment added successfully',
-      car
-    });
+      // Update user earnings
+      if (req.user) {
+        req.user.earnings = (req.user.earnings || 0) + amount;
+        await req.user.save();
+      }
+
+      console.log(`✅ Transaction yaratildi: ${amount} so'm - Kassa sahifasiga kirim`);
+
+      res.json({
+        message: 'Payment added successfully',
+        car,
+        transaction
+      });
+    } catch (transactionError: any) {
+      console.error('⚠️ Transaction yaratishda xatolik:', transactionError.message);
+      console.error('Transaction error details:', transactionError);
+      
+      // Transaction yaratilmasa ham, to'lov qabul qilingan
+      res.json({
+        message: 'Payment added successfully (transaction failed)',
+        car
+      });
+    }
   } catch (error: any) {
     console.error('❌ To\'lov qo\'shishda xatolik:', error);
     res.status(500).json({ message: 'Server error', error: error.message });

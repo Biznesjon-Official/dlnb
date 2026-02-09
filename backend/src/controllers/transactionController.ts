@@ -204,83 +204,180 @@ export const getTransactionById = async (req: AuthRequest, res: Response) => {
 
 export const getTransactionSummary = async (req: AuthRequest, res: Response) => {
   try {
-    // Barcha transaksiyalarni olish (reset qilinganda eski transaksiyalar o'chiriladi)
-    const summary = await Transaction.aggregate([
-      {
-        $group: {
-          _id: '$type',
-          totalAmount: { $sum: '$amount' },
-          count: { $sum: 1 }
-        }
-      }
-    ]);
-
-    // Get payment method breakdown
-    const paymentMethodBreakdown = await Transaction.aggregate([
+    // 1. HAR BIR USER UCHUN KIRIM (INCOME) HISOBLASH
+    const incomeByUserRaw = await Transaction.aggregate([
+      { $match: { type: 'income' } },
       {
         $group: {
           _id: {
-            type: '$type',
+            userId: '$createdBy',
             paymentMethod: '$paymentMethod'
           },
           totalAmount: { $sum: '$amount' },
           count: { $sum: 1 }
         }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: '_id.userId',
+          foreignField: '_id',
+          as: 'user'
+        }
+      },
+      { $unwind: '$user' },
+      {
+        $project: {
+          userId: '$_id.userId',
+          userName: '$user.name',
+          paymentMethod: '$_id.paymentMethod',
+          amount: '$totalAmount',
+          count: '$count'
+        }
       }
     ]);
 
-    const income = summary.find(s => s._id === 'income') || { totalAmount: 0, count: 0 };
-    const expense = summary.find(s => s._id === 'expense') || { totalAmount: 0, count: 0 };
-    const balance = income.totalAmount - expense.totalAmount;
+    // 2. HAR BIR USER UCHUN CHIQIM (EXPENSE) HISOBLASH
+    const expenseByUserRaw = await Transaction.aggregate([
+      { $match: { type: 'expense' } },
+      {
+        $group: {
+          _id: {
+            userId: '$createdBy',
+            paymentMethod: '$paymentMethod'
+          },
+          totalAmount: { $sum: '$amount' },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: '_id.userId',
+          foreignField: '_id',
+          as: 'user'
+        }
+      },
+      { $unwind: '$user' },
+      {
+        $project: {
+          userId: '$_id.userId',
+          userName: '$user.name',
+          paymentMethod: '$_id.paymentMethod',
+          amount: '$totalAmount',
+          count: '$count'
+        }
+      }
+    ]);
 
-    // Calculate payment method totals for income
-    const incomeCash = paymentMethodBreakdown
-      .filter(p => p._id.type === 'income' && p._id.paymentMethod === 'cash')
-      .reduce((sum, p) => sum + p.totalAmount, 0);
-    
-    const incomeCard = paymentMethodBreakdown
-      .filter(p => p._id.type === 'income' && (p._id.paymentMethod === 'card' || p._id.paymentMethod === 'click'))
-      .reduce((sum, p) => sum + p.totalAmount, 0);
+    // 3. MA'LUMOTLARNI FORMATLASH
+    const userStatsMap: any = {};
 
-    // Calculate payment method totals for expense
-    const expenseCash = paymentMethodBreakdown
-      .filter(p => p._id.type === 'expense' && p._id.paymentMethod === 'cash')
-      .reduce((sum, p) => sum + p.totalAmount, 0);
-    
-    const expenseCard = paymentMethodBreakdown
-      .filter(p => p._id.type === 'expense' && (p._id.paymentMethod === 'card' || p._id.paymentMethod === 'click'))
-      .reduce((sum, p) => sum + p.totalAmount, 0);
+    // Kirimlarni qo'shish
+    incomeByUserRaw.forEach((item: any) => {
+      const userId = item.userId.toString();
+      if (!userStatsMap[userId]) {
+        userStatsMap[userId] = {
+          userId: userId,
+          userName: item.userName,
+          income: { cash: 0, card: 0, click: 0, total: 0, count: 0 },
+          expense: { cash: 0, card: 0, click: 0, total: 0, count: 0 }
+        };
+      }
 
-    // Calculate balance by payment method
-    const balanceCash = incomeCash - expenseCash;
-    const balanceCard = incomeCard - expenseCard;
-
-    console.log('📊 Transaction Summary:', {
-      income: income.totalAmount,
-      expense: expense.totalAmount,
-      balance: balance
+      const method = item.paymentMethod;
+      userStatsMap[userId].income[method] = item.amount;
+      userStatsMap[userId].income.total += item.amount;
+      userStatsMap[userId].income.count += item.count;
     });
 
+    // Chiqimlarni qo'shish
+    expenseByUserRaw.forEach((item: any) => {
+      const userId = item.userId.toString();
+      if (!userStatsMap[userId]) {
+        userStatsMap[userId] = {
+          userId: userId,
+          userName: item.userName,
+          income: { cash: 0, card: 0, click: 0, total: 0, count: 0 },
+          expense: { cash: 0, card: 0, click: 0, total: 0, count: 0 }
+        };
+      }
+
+      const method = item.paymentMethod;
+      userStatsMap[userId].expense[method] = item.amount;
+      userStatsMap[userId].expense.total += item.amount;
+      userStatsMap[userId].expense.count += item.count;
+    });
+
+    // 4. UMUMIY STATISTIKA HISOBLASH
+    const totalStats = {
+      income: { cash: 0, card: 0, click: 0, total: 0, count: 0 },
+      expense: { cash: 0, card: 0, click: 0, total: 0, count: 0 },
+      balance: { cash: 0, card: 0, click: 0, total: 0 }
+    };
+
+    Object.values(userStatsMap).forEach((user: any) => {
+      totalStats.income.cash += user.income.cash;
+      totalStats.income.card += user.income.card;
+      totalStats.income.click += user.income.click;
+      totalStats.income.total += user.income.total;
+      totalStats.income.count += user.income.count;
+
+      totalStats.expense.cash += user.expense.cash;
+      totalStats.expense.card += user.expense.card;
+      totalStats.expense.click += user.expense.click;
+      totalStats.expense.total += user.expense.total;
+      totalStats.expense.count += user.expense.count;
+    });
+
+    totalStats.balance.cash = totalStats.income.cash - totalStats.expense.cash;
+    totalStats.balance.card = totalStats.income.card - totalStats.expense.card;
+    totalStats.balance.click = totalStats.income.click - totalStats.expense.click;
+    totalStats.balance.total = totalStats.income.total - totalStats.expense.total;
+
+    console.log('📊 Transaction Summary (User bo\'yicha):', {
+      userCount: Object.keys(userStatsMap).length,
+      totalIncome: totalStats.income.total,
+      totalExpense: totalStats.expense.total,
+      balance: totalStats.balance.total,
+      byUserArray: Object.values(userStatsMap)
+    });
+    
+    // Debug: Har bir user ma'lumotlarini ko'rsatish
+    Object.values(userStatsMap).forEach((user: any) => {
+      console.log(`  👤 ${user.userName}:`, {
+        income: user.income.total,
+        expense: user.expense.total,
+        balance: user.income.total - user.expense.total
+      });
+    });
+
+    // 5. RESPONSE (Eski format + Yangi format)
     res.json({
       summary: {
-        totalIncome: income.totalAmount,
-        totalExpense: expense.totalAmount,
-        balance: balance,
-        incomeCount: income.count,
-        expenseCount: expense.count,
-        incomeCash,
-        incomeCard,
-        expenseCash,
-        expenseCard,
-        balanceCash,
-        balanceCard
+        // Eski format (backward compatibility)
+        totalIncome: totalStats.income.total,
+        totalExpense: totalStats.expense.total,
+        balance: totalStats.balance.total,
+        incomeCount: totalStats.income.count,
+        expenseCount: totalStats.expense.count,
+        incomeCash: totalStats.income.cash,
+        incomeCard: totalStats.income.card + totalStats.income.click,
+        expenseCash: totalStats.expense.cash,
+        expenseCard: totalStats.expense.card + totalStats.expense.click,
+        balanceCash: totalStats.balance.cash,
+        balanceCard: totalStats.balance.card + totalStats.balance.click,
+
+        // YANGI: User bo'yicha batafsil
+        byUser: Object.values(userStatsMap),
+        total: totalStats
       }
     });
   } catch (error: any) {
     console.error('❌ Summary xatosi:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-};
+}
 
 export const deleteTransaction = async (req: AuthRequest, res: Response) => {
   try {

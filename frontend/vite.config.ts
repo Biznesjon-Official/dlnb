@@ -80,17 +80,19 @@ export default defineConfig({
     },
   },
   server: {
-    port: 8080,
-    host: 'localhost', // Faqat localhost ishlatish
-    strictPort: true,
-    hmr: false, // HMR'ni butunlay o'chirish
-    watch: {
-      usePolling: true,
-    },
+    port: 5173,
+    host: '0.0.0.0',
+    strictPort: false,
     proxy: {
       '/api': {
-        target: 'http://localhost:4000',
+        target: 'http://127.0.0.1:4000',
         changeOrigin: true,
+        secure: false,
+        configure: (proxy, _options) => {
+          proxy.on('error', (err, _req, _res) => {
+            console.log('⚠️  Backend hali tayyor emas, kutilmoqda...');
+          });
+        },
       },
     },
   },

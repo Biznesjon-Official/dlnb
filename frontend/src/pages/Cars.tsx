@@ -9,7 +9,6 @@ import ViewCarModal from '@/components/ViewCarModal';
 import EditCarStepModal from '@/components/EditCarStepModal';
 import DeleteCarModal from '@/components/DeleteCarModal';
 import RestoreCarModal from '@/components/RestoreCarModal';
-import CompleteCarModal from '@/components/CompleteCarModal';
 import CarPaymentModalHybrid from '@/components/CarPaymentModalHybrid';
 import {Plus,Search, Car as CarIcon, Eye, Edit, Trash2, Phone, Package2, Filter, CheckCircle, RotateCcw, DollarSign, Users, ClipboardList, X, XCircle, MessageSquare} from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
@@ -28,7 +27,6 @@ const Cars: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isRestoreModalOpen, setIsRestoreModalOpen] = useState(false);
-  const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   
   // State for task approval modal
@@ -221,11 +219,6 @@ const Cars: React.FC = () => {
     setSelectedCar(car);
     setIsRestoreModalOpen(true);
   };
-
-  const handleCompleteCar = (car: Car) => {
-    setSelectedCar(car);
-    setIsCompleteModalOpen(true);
-  };
   
   // Handle task approval
   const handleApproveTask = (task: any) => {
@@ -260,7 +253,6 @@ const Cars: React.FC = () => {
     setIsEditModalOpen(false);
     setIsDeleteModalOpen(false);
     setIsRestoreModalOpen(false);
-    setIsCompleteModalOpen(false);
     setShowApprovalModal(false);
     setSelectedCar(null);
     setSelectedTask(null);
@@ -659,6 +651,17 @@ const Cars: React.FC = () => {
                                 <span className="text-sm">{t("Qaytarish", language)}</span>
                               </button>
                             )}
+                            
+                            {!car.isDeleted && (
+                              <button
+                                onClick={() => handleDeleteCar(car)}
+                                className="inline-flex items-center px-3 py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-all duration-200 font-medium group"
+                                title={t("O'chirish", language)}
+                              >
+                                <Trash2 className="h-4 w-4 mr-1.5 group-hover:scale-110 transition-transform" />
+                                <span className="text-sm">{t("O'chirish", language)}</span>
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -709,7 +712,7 @@ const Cars: React.FC = () => {
               // Backend dan kelgan totalEstimate ni ishlatish, agar mavjud bo'lsa
               const displayTotal = car.totalEstimate || calculatedTotal;
               
-              return <CarCard key={car._id} car={car} displayTotal={displayTotal} language={language} onView={handleViewCar} onEdit={handleEditCar} onDelete={handleDeleteCar} onComplete={handleCompleteCar} onApproveTask={handleApproveTask} onPayment={handlePaymentCar} getSmsMessage={getSmsMessage} />;
+              return <CarCard key={car._id} car={car} displayTotal={displayTotal} language={language} onView={handleViewCar} onEdit={handleEditCar} onDelete={handleDeleteCar} onApproveTask={handleApproveTask} onPayment={handlePaymentCar} getSmsMessage={getSmsMessage} />;
             })}
           </div>
         )}
@@ -735,7 +738,9 @@ const Cars: React.FC = () => {
             isOpen={isEditModalOpen}
             onClose={closeAllModals}
             car={selectedCar}
-            updateCar={updateCar}
+            updateCar={async (id, data) => {
+              await updateCar(id, data);
+            }}
           />
           
           <DeleteCarModal
@@ -748,16 +753,6 @@ const Cars: React.FC = () => {
             isOpen={isRestoreModalOpen}
             onClose={closeAllModals}
             car={selectedCar}
-          />
-          
-          <CompleteCarModal
-            isOpen={isCompleteModalOpen}
-            onClose={closeAllModals}
-            car={selectedCar}
-            onComplete={() => {
-              // Refresh cars data after completion
-              window.location.reload();
-            }}
           />
           
           <CarPaymentModalHybrid
@@ -892,11 +887,10 @@ const CarCard: React.FC<{
   onView: (car: Car) => void;
   onEdit: (car: Car) => void;
   onDelete: (car: Car) => void;
-  onComplete: (car: Car) => void;
   onApproveTask: (task: any) => void;
   onPayment: (car: Car) => void;
-  getSmsMessage: (car: Car) => string; // SMS funksiyasi
-}> = ({ car, displayTotal, language, onView, onEdit, onDelete, onComplete, onApproveTask, onPayment, getSmsMessage }) => {
+  getSmsMessage: (car: Car) => string;
+}> = ({ car, displayTotal, language, onView, onEdit, onDelete, onApproveTask, onPayment, getSmsMessage }) => {
   // Fetch tasks for this car ONLY
   const { data: tasksData } = useTasks({ car: car._id });
   const tasks = tasksData?.tasks || [];
@@ -1057,14 +1051,15 @@ const CarCard: React.FC<{
 
       {/* Card Footer - Action Buttons */}
       <div className="px-3 sm:px-6 pb-3 sm:pb-6">
-        <div className="flex items-center gap-2 pt-2 sm:pt-4 border-t border-gray-100">
+        {/* Desktop: Bir qatorda barcha tugmalar */}
+        <div className="hidden sm:flex items-center gap-1.5 pt-4 border-t border-gray-100">
           <button 
             onClick={() => onView(car)}
-            className="flex-1 flex items-center justify-center space-x-1 sm:space-x-2 px-3 py-2 sm:py-2.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg sm:rounded-xl transition-all duration-200 font-medium group"
+            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition-all duration-200 font-medium group"
             title={t("Ko'rish", language)}
           >
-            <Eye className="h-3 w-3 sm:h-4 sm:w-4 group-hover:scale-110 transition-transform" />
-            <span className="text-xs sm:text-sm">{t("Ko'rish", language)}</span>
+            <Eye className="h-3.5 w-3.5 group-hover:scale-110 transition-transform" />
+            <span className="text-sm">{t("Ko'rish", language)}</span>
           </button>
           
           {/* Payment Button - Show if car has remaining balance */}
@@ -1073,58 +1068,114 @@ const CarCard: React.FC<{
             return remaining > 0 && (
               <button 
                 onClick={() => onPayment(car)}
-                className="flex-1 flex items-center justify-center space-x-1 sm:space-x-2 px-3 py-2 sm:py-2.5 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg sm:rounded-xl transition-all duration-200 font-medium group"
+                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg transition-all duration-200 font-medium group"
                 title={t("To'lov", language)}
               >
-                <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 group-hover:scale-110 transition-transform" />
-                <span className="text-xs sm:text-sm">{t("To'lov", language)}</span>
+                <DollarSign className="h-3.5 w-3.5 group-hover:scale-110 transition-transform" />
+                <span className="text-sm">{t("To'lov", language)}</span>
               </button>
             );
           })()}
           
-          {/* Complete Button - Only for in-progress cars */}
-          {car.status === 'in-progress' && (
-            <button 
-              onClick={() => onComplete(car)}
-              className="p-2 sm:p-2.5 bg-green-50 text-green-600 hover:bg-green-100 hover:text-green-700 rounded-lg sm:rounded-xl transition-all duration-200"
-              title={t("Tugatish", language)}
-            >
-              <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />
-            </button>
-          )}
-          
-          {/* SMS Button - Barcha mashinalar uchun (telefon raqami bo'lsa) */}
+          {/* SMS Button */}
           {car.ownerPhone && (
             <a 
               href={`sms:${car.ownerPhone}?body=${encodeURIComponent(getSmsMessage(car))}`}
-              className="p-2 sm:p-2.5 bg-purple-50 text-purple-600 hover:bg-purple-100 hover:text-purple-700 rounded-lg sm:rounded-xl transition-all duration-200 group"
+              className="px-3 py-2 bg-purple-50 text-purple-600 hover:bg-purple-100 hover:text-purple-700 rounded-lg transition-all duration-200 group flex items-center gap-1.5"
               title={t("SMS yuborish", language)}
               onClick={(e) => {
-                // Mobile qurilmalarda to'g'ri ishlashi uchun
                 if (!/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
                   e.preventDefault();
                   toast.error(t('SMS yuborish faqat mobil qurilmalarda ishlaydi', language));
                 }
               }}
             >
-              <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4 group-hover:scale-110 transition-transform" />
+              <MessageSquare className="h-3.5 w-3.5 group-hover:scale-110 transition-transform" />
+              <span className="text-sm">{t("SMS", language)}</span>
             </a>
           )}
           
           <button 
             onClick={() => onEdit(car)}
-            className="p-2 sm:p-2.5 bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-lg sm:rounded-xl transition-all duration-200"
+            className="p-2 bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-lg transition-all duration-200"
             title={t("Tahrirlash", language)}
           >
-            <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
+            <Edit className="h-3.5 w-3.5" />
           </button>
           <button 
             onClick={() => onDelete(car)}
-            className="p-2 sm:p-2.5 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 rounded-lg sm:rounded-xl transition-all duration-200"
+            className="p-2 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 rounded-lg transition-all duration-200"
             title={t("O'chirish", language)}
           >
-            <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+            <Trash2 className="h-3.5 w-3.5" />
           </button>
+        </div>
+
+        {/* Mobile: Ikki qatorda tugmalar */}
+        <div className="sm:hidden space-y-2 pt-2 border-t border-gray-100">
+          {/* Birinchi qator: Asosiy tugmalar */}
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => onView(car)}
+              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition-all duration-200 font-medium"
+              title={t("Ko'rish", language)}
+            >
+              <Eye className="h-3.5 w-3.5" />
+              <span className="text-xs">{t("Ko'rish", language)}</span>
+            </button>
+            
+            {(() => {
+              const remaining = displayTotal - (car.paidAmount || 0);
+              return remaining > 0 && (
+                <button 
+                  onClick={() => onPayment(car)}
+                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg transition-all duration-200 font-medium"
+                  title={t("To'lov", language)}
+                >
+                  <DollarSign className="h-3.5 w-3.5" />
+                  <span className="text-xs">{t("To'lov", language)}</span>
+                </button>
+              );
+            })()}
+            
+            {car.ownerPhone && (
+              <a 
+                href={`sms:${car.ownerPhone}?body=${encodeURIComponent(getSmsMessage(car))}`}
+                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-purple-50 text-purple-600 hover:bg-purple-100 rounded-lg transition-all duration-200 font-medium"
+                title={t("SMS yuborish", language)}
+                onClick={(e) => {
+                  if (!/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+                    e.preventDefault();
+                    toast.error(t('SMS yuborish faqat mobil qurilmalarda ishlaydi', language));
+                  }
+                }}
+              >
+                <MessageSquare className="h-3.5 w-3.5" />
+                <span className="text-xs">{t("SMS", language)}</span>
+              </a>
+            )}
+          </div>
+          
+          {/* Ikkinchi qator: Tahrirlash va O'chirish */}
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => onEdit(car)}
+              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-gray-50 text-gray-600 hover:bg-gray-100 rounded-lg transition-all duration-200 font-medium"
+              title={t("Tahrirlash", language)}
+            >
+              <Edit className="h-3.5 w-3.5" />
+              <span className="text-xs">{t("Tahrirlash", language)}</span>
+            </button>
+            
+            <button 
+              onClick={() => onDelete(car)}
+              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-all duration-200 font-medium"
+              title={t("O'chirish", language)}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              <span className="text-xs">{t("O'chirish", language)}</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

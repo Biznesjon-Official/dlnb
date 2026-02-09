@@ -5,11 +5,12 @@ import {
   getTransactions,
   getTransactionById,
   getTransactionSummary,
-  getTransactionStats,
   deleteTransaction,
-  bulkDeleteTransactions
-} from '../controllers/transactionControllerOptimized';
-import { resetMonthlyEarnings, getMonthlyHistory, getMonthHistory, deleteMonthlyHistory } from '../controllers/transactionController';
+  resetMonthlyEarnings,
+  getMonthlyHistory,
+  getMonthHistory,
+  deleteMonthlyHistory
+} from '../controllers/transactionController';
 import { authenticate, authorize } from '../middleware/auth';
 import { handleValidationErrors } from '../middleware/validation';
 
@@ -31,9 +32,6 @@ router.get('/', authenticate, getTransactions);
 // Get transaction summary with period filtering
 router.get('/summary', authenticate, getTransactionSummary);
 
-// Get transaction statistics
-router.get('/stats', authenticate, getTransactionStats);
-
 // Reset monthly earnings (master only)
 router.post('/reset-monthly', authenticate, authorize('master'), resetMonthlyEarnings);
 
@@ -45,13 +43,6 @@ router.get('/monthly-history/:year/:month', authenticate, authorize('master'), g
 
 // Delete monthly history (master only)
 router.delete('/monthly-history/:id', authenticate, authorize('master'), deleteMonthlyHistory);
-
-// Bulk delete transactions (master only)
-router.post('/bulk-delete', authenticate, authorize('master'), [
-  body('ids').isArray({ min: 1 }).withMessage('IDs array is required'),
-  body('ids.*').isMongoId().withMessage('Invalid transaction ID'),
-  handleValidationErrors
-], bulkDeleteTransactions);
 
 // Export transactions (placeholder - would need actual implementation)
 router.get('/export', authenticate, (req, res) => {

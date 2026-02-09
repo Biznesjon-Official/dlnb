@@ -8,7 +8,7 @@ import { t } from '@/lib/transliteration';
 interface DeleteCarModalProps {
   isOpen: boolean;
   onClose: () => void;
-  car: Car;
+  car: Car | null;
 }
 
 const DeleteCarModal: React.FC<DeleteCarModalProps> = ({ isOpen, onClose, car }) => {
@@ -25,6 +25,8 @@ const DeleteCarModal: React.FC<DeleteCarModalProps> = ({ isOpen, onClose, car })
   useBodyScrollLock(isOpen);
 
   const handleDelete = async () => {
+    if (!car) return;
+    
     try {
       setIsLoading(true);
       await deleteCar(car._id);
@@ -43,7 +45,7 @@ const DeleteCarModal: React.FC<DeleteCarModalProps> = ({ isOpen, onClose, car })
     }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !car) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">

@@ -549,6 +549,13 @@ export const addCarServicePayment = async (req: AuthRequest, res: Response) => {
 
     // ✨ YANGI: Transaction yaratish (Muammo 1.3 yechimi)
     try {
+      console.log('🔵 Transaction yaratish boshlandi:', {
+        amount,
+        paymentMethod,
+        carId: service.car,
+        userId: req.user?.id
+      });
+      
       const Transaction = require('../models/Transaction').default;
       const transaction = new Transaction({
         type: 'income',
@@ -556,10 +563,23 @@ export const addCarServicePayment = async (req: AuthRequest, res: Response) => {
         amount,
         description: `Xizmat to'lovi - ${carData?.make || ''} ${carData?.carModel || ''} (${carData?.licensePlate || ''})`,
         paymentMethod: paymentMethod || 'cash',
-        relatedTo: service._id,
+        relatedTo: {
+          type: 'car',
+          id: service.car
+        },
         createdBy: req.user?.id
       });
+      
+      console.log('🔵 Transaction obyekti yaratildi:', {
+        type: transaction.type,
+        category: transaction.category,
+        amount: transaction.amount,
+        paymentMethod: transaction.paymentMethod
+      });
+      
       await transaction.save();
+      
+      console.log('✅ Transaction saqlandi:', transaction._id);
       
       // Daromadni yangilash
       const user = req.user!;
@@ -569,6 +589,8 @@ export const addCarServicePayment = async (req: AuthRequest, res: Response) => {
       console.log(`💰 Transaction yaratildi va daromad yangilandi: +${amount} so'm`);
     } catch (transactionError: any) {
       console.error('⚠️ Transaction yaratishda xatolik:', transactionError.message);
+      console.error('Transaction error details:', transactionError);
+      console.error('Transaction error stack:', transactionError.stack);
       // Transaction xatosi to'lovni bekor qilmaydi, faqat log qilinadi
     }
 

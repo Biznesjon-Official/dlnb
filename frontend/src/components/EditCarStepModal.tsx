@@ -1,22 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { X, Car, ArrowLeft, ArrowRight, Check, Plus, Trash2, Edit, Save, ClipboardList, Users, Calendar, AlertCircle } from 'lucide-react';
+import { X, Car, ArrowLeft, ArrowRight, Check, Plus, Trash2, Edit, Save, ClipboardList, Users, Calendar, AlertCircle, Search } from 'lucide-react';
 import { Car as CarType } from '@/types';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { useCarTasks, useUpdateTask, useCreateTask } from '@/hooks/useTasks';
 import { useUsers } from '@/hooks/useUsers';
 import { useBackendStatus } from '@/hooks/useBackendStatus';
+import { useSpareParts } from '@/hooks/useSpareParts';
 import { t } from '@/lib/transliteration';
 import { format } from 'date-fns';
 import { safeFormatDate } from '@/lib/utils';
 import api from '@/lib/api';
 import DeleteTaskModal from './DeleteTaskModal';
 
-interface EditCarStepModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  car: CarType;
-  updateCar: (id: string, carData: any) => Promise<any>;
-}
 
 interface Part {
   name: string;
@@ -31,9 +26,21 @@ interface ServiceItem {
   category: 'part' | 'material' | 'labor';
 }
 
+interface EditCarStepModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  car: CarType;
+  updateCar: (id: string, data: any) => Promise<void>;
+}
+
 const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, car, updateCar }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const { isOnline } = useBackendStatus();
+  
+  // Qidiruv uchun state'lar
+  const [searchQuery, setSearchQuery] = useState('');
+  const { data: sparePartsData } = useSpareParts();
+  const spareParts = sparePartsData?.spareParts || [];
   
   // localStorage'dan tilni o'qish
   const language = React.useMemo<'latin' | 'cyrillic'>(() => {
@@ -137,6 +144,33 @@ const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, ca
   const handlePartNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setNewPart(prev => ({ ...prev, name: value }));
+  };
+  
+  // Qidiruv funksiyasi - Warehouse'dagi kabi
+  const filteredSpareParts = React.useMemo(() => {
+    if (!searchQuery || searchQuery.length < 2) return [];
+    
+    const searchLower = searchQuery.toLowerCase();
+    return spareParts.filter((part: any) => {
+      const nameMatch = part.name.toLowerCase().includes(searchLower);
+      const supplierMatch = part.supplier?.toLowerCase().includes(searchLower);
+      const categoryMatch = part.category && (
+        (part.category === 'balon' && ('balon'.includes(searchLower) || 'tire'.includes(searchLower))) ||
+        (part.category === 'zapchast' && ('zapchast'.includes(searchLower) || 'spare'.includes(searchLower))) ||
+        (part.category === 'boshqa' && ('boshqa'.includes(searchLower) || 'other'.includes(searchLower)))
+      );
+      return nameMatch || supplierMatch || categoryMatch;
+    }).slice(0, 5); // Faqat 5 ta natija
+  }, [spareParts, searchQuery]);
+  
+  // Qidiruv natijasidan tanlash
+  const handleSelectSparePart = (part: any) => {
+    setNewPart({
+      name: part.name,
+      quantity: 1,
+      price: part.sellingPrice || part.price || 0
+    });
+    setSearchQuery('');
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -529,6 +563,42 @@ const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, ca
               {/* Qism qo'shish formi */}
               <div className="bg-green-50 rounded-xl p-3 sm:p-4 border border-green-100">
                 <div className="space-y-3">
+                  {/* Qidiruv input - Ombordan qidirish */}
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full pl-10 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder={t('Ombordan qidirish...', language)}
+                    />
+                    
+                    {/* Qidiruv natijalari */}
+                    {filteredSpareParts.length > 0 && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                        {filteredSpareParts.map((part: any) => (
+                          <button
+                            key={part._id}
+                            type="button"
+                            onClick={() => handleSelectSparePart(part)}
+                            className="w-full px-3 py-2 text-left hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-b-0"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <p className="text-sm font-medium text-gray-900">{part.name}</p>
+                                <p className="text-xs text-gray-500">
+                                  {part.quantity} {part.unit} • {(part.sellingPrice || part.price || 0).toLocaleString()} {t("so'm", language)}
+                                </p>
+                              </div>
+                              <Plus className="h-4 w-4 text-blue-600" />
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  
                   {/* Qism nomi input - oddiy, autocomplete yo'q */}
                   <div>
                     <input

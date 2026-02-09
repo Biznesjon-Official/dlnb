@@ -24,12 +24,15 @@ import IncomeModal from '@/components/IncomeModal';
 import ExpenseModal from '@/components/ExpenseModal';
 import MonthlyHistoryModal from '@/components/MonthlyHistoryModal';
 import MonthlyResetModal from '@/components/MonthlyResetModal';
+import UserStatsModal from '@/components/UserStatsModal';
 
 const MasterCashier: React.FC = memo(() => {
   const [isIncomeModalOpen, setIsIncomeModalOpen] = useState(false);
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+  const [isUserStatsModalOpen, setIsUserStatsModalOpen] = useState(false);
+  const [userStatsType, setUserStatsType] = useState<'income' | 'expense' | 'balance'>('income');
   const [filter, setFilter] = useState<'all' | 'income' | 'expense'>('all');
   const [dateFilter, setDateFilter] = useState<'today' | 'week' | 'month' | 'all'>('today');
 
@@ -91,11 +94,31 @@ const MasterCashier: React.FC = memo(() => {
       expenseCash: 0,
       expenseCard: 0,
       balanceCash: 0,
-      balanceCard: 0
+      balanceCard: 0,
+      byUser: [],
+      total: {
+        income: { cash: 0, card: 0, click: 0, total: 0, count: 0 },
+        expense: { cash: 0, card: 0, click: 0, total: 0, count: 0 },
+        balance: { cash: 0, card: 0, click: 0, total: 0 }
+      }
     }, 
     [summaryData]
   );
 
+  // Hozirgi user ma'lumotlari
+  const currentUser = useMemo(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        return JSON.parse(userStr);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  }, []);
+
+  // User bo'yicha statistika
   // Memoized helper functions - qayta yaratilishni oldini olish
   const getPaymentMethodIcon = useMemo(() => (method: string) => {
     switch (method) {
@@ -125,6 +148,11 @@ const MasterCashier: React.FC = memo(() => {
     }
   };
 
+  const handleOpenUserStats = (type: 'income' | 'expense' | 'balance') => {
+    setUserStatsType(type);
+    setIsUserStatsModalOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/40">
       <div className="max-w-7xl mx-auto space-y-5 sm:space-y-6 p-4 sm:p-6 lg:p-8 animate-fade-in">
@@ -152,38 +180,38 @@ const MasterCashier: React.FC = memo(() => {
                 </div>
               </div>
               
-              <div className="flex flex-wrap gap-2 sm:gap-3 w-full lg:w-auto">
+              <div className="grid grid-cols-2 gap-2 w-full lg:grid-cols-4 lg:w-auto">
                 <Link 
                   to="/app/master/warehouse"
-                  className="group relative overflow-hidden px-5 py-3 bg-gradient-to-r from-purple-500 via-purple-600 to-indigo-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 flex items-center gap-2 flex-1 sm:flex-initial justify-center"
+                  className="group relative overflow-hidden px-3 sm:px-4 md:px-5 py-2.5 sm:py-3 bg-gradient-to-r from-purple-500 via-purple-600 to-indigo-600 text-white rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 flex items-center gap-1.5 sm:gap-2 justify-center"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-                  <Package className="h-4 w-4 relative z-10" />
-                  <span className="relative z-10">{t('Ombor', language)}</span>
+                  <Package className="h-3.5 w-3.5 sm:h-4 sm:w-4 relative z-10 flex-shrink-0" />
+                  <span className="relative z-10 truncate">{t('Ombor', language)}</span>
                 </Link>
                 <button
                   onClick={() => setIsResetModalOpen(true)}
-                  className="group relative overflow-hidden px-5 py-3 bg-gradient-to-r from-red-500 via-red-600 to-pink-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 flex items-center gap-2 flex-1 sm:flex-initial justify-center"
+                  className="group relative overflow-hidden px-3 sm:px-4 md:px-5 py-2.5 sm:py-3 bg-gradient-to-r from-red-500 via-red-600 to-pink-600 text-white rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 flex items-center gap-1.5 sm:gap-2 justify-center"
                   title={t("Barcha daromadlarni 0 ga qaytarish", language)}
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-                  <Calendar className="h-4 w-4 relative z-10" />
-                  <span className="relative z-10">{t('Oylik Reset', language)}</span>
+                  <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 relative z-10 flex-shrink-0" />
+                  <span className="relative z-10 truncate">{t('Oylik Reset', language)}</span>
                 </button>
                 <button
                   onClick={() => setIsHistoryModalOpen(true)}
-                  className="group relative overflow-hidden px-5 py-3 bg-white border-2 border-gray-200 text-gray-700 rounded-xl font-semibold shadow-md hover:shadow-xl hover:border-blue-400 transition-all duration-300 hover:scale-105 flex items-center gap-2 flex-1 sm:flex-initial justify-center"
+                  className="group relative overflow-hidden px-3 sm:px-4 md:px-5 py-2.5 sm:py-3 bg-white border-2 border-gray-200 text-gray-700 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold shadow-md hover:shadow-xl hover:border-blue-400 transition-all duration-300 hover:scale-105 flex items-center gap-1.5 sm:gap-2 justify-center"
                   title={t("Oylik tarix", language)}
                 >
-                  <History className="h-4 w-4 group-hover:text-blue-600 transition-colors" />
-                  <span className="group-hover:text-blue-600 transition-colors">{t('Tarix', language)}</span>
+                  <History className="h-3.5 w-3.5 sm:h-4 sm:w-4 group-hover:text-blue-600 transition-colors flex-shrink-0" />
+                  <span className="group-hover:text-blue-600 transition-colors truncate">{t('Tarix', language)}</span>
                 </button>
                 <Link 
                   to="/app/master/expenses"
-                  className="group relative overflow-hidden px-5 py-3 bg-white border-2 border-gray-200 text-gray-700 rounded-xl font-semibold shadow-md hover:shadow-xl hover:border-indigo-400 transition-all duration-300 hover:scale-105 flex items-center gap-2 flex-1 sm:flex-initial justify-center"
+                  className="group relative overflow-hidden px-3 sm:px-4 md:px-5 py-2.5 sm:py-3 bg-white border-2 border-gray-200 text-gray-700 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold shadow-md hover:shadow-xl hover:border-indigo-400 transition-all duration-300 hover:scale-105 flex items-center gap-1.5 sm:gap-2 justify-center"
                 >
-                  <BarChart3 className="h-4 w-4 group-hover:text-indigo-600 transition-colors" />
-                  <span className="group-hover:text-indigo-600 transition-colors">{t("Hisobot", language)}</span>
+                  <BarChart3 className="h-3.5 w-3.5 sm:h-4 sm:w-4 group-hover:text-indigo-600 transition-colors flex-shrink-0" />
+                  <span className="group-hover:text-indigo-600 transition-colors truncate">{t("Hisobot", language)}</span>
                 </Link>
               </div>
             </div>
@@ -191,9 +219,12 @@ const MasterCashier: React.FC = memo(() => {
 
           {/* Stats Cards - Premium Design */}
           <div className="relative z-10 px-6 sm:px-8 lg:px-10 pb-6 sm:pb-8 lg:pb-10">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
             {/* KIRIM CARD */}
-            <div className="relative overflow-hidden bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200 hover:shadow-lg transition-all">
+            <div 
+              onClick={() => handleOpenUserStats('income')}
+              className="relative overflow-hidden bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200 hover:shadow-lg transition-all cursor-pointer hover:scale-105"
+            >
               <div className="flex items-center justify-between mb-3">
                 <div className="p-2 bg-green-500 rounded-lg">
                   <TrendingUp className="h-5 w-5 text-white" />
@@ -206,33 +237,37 @@ const MasterCashier: React.FC = memo(() => {
               <div className="mb-3">
                 <p className="text-xs text-green-600 mb-1">{t('Umumiy', language)}</p>
                 <div className="text-2xl font-bold text-green-900">
-                  {formatCurrency(summary.totalIncome, language)}
+                  {formatCurrency(summary.total?.income.total || summary.totalIncome, language)}
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-2 mb-2">
+              <div className="grid grid-cols-2 gap-2 mb-3">
                 <div className="bg-white/60 rounded-lg p-2">
                   <p className="text-xs text-green-600 mb-0.5">{t('Naqd', language)}</p>
                   <div className="text-sm font-bold text-green-900">
-                    {formatCurrency(summary.incomeCash || 0, language)}
+                    {formatCurrency(summary.total?.income.cash || summary.incomeCash || 0, language)}
                   </div>
                 </div>
                 
                 <div className="bg-white/60 rounded-lg p-2">
                   <p className="text-xs text-green-600 mb-0.5">{t('Karta', language)}</p>
                   <div className="text-sm font-bold text-green-900">
-                    {formatCurrency(summary.incomeCard || 0, language)}
+                    {formatCurrency(summary.total?.income.card || summary.incomeCard || 0, language)}
                   </div>
                 </div>
               </div>
               
-              <p className="text-xs text-green-600">
-                {summary.incomeCount} {t('ta', language)}
+              
+              <p className="text-xs text-green-600 pt-2 border-t border-green-200">
+                {summary.total?.income.count || summary.incomeCount} {t('ta', language)}
               </p>
             </div>
 
             {/* CHIQIM CARD */}
-            <div className="relative overflow-hidden bg-gradient-to-br from-red-50 to-pink-50 rounded-xl p-4 border border-red-200 hover:shadow-lg transition-all">
+            <div 
+              onClick={() => handleOpenUserStats('expense')}
+              className="relative overflow-hidden bg-gradient-to-br from-red-50 to-pink-50 rounded-xl p-4 border border-red-200 hover:shadow-lg transition-all cursor-pointer hover:scale-105"
+            >
               <div className="flex items-center justify-between mb-3">
                 <div className="p-2 bg-red-500 rounded-lg">
                   <TrendingDown className="h-5 w-5 text-white" />
@@ -245,33 +280,37 @@ const MasterCashier: React.FC = memo(() => {
               <div className="mb-3">
                 <p className="text-xs text-red-600 mb-1">{t('Umumiy', language)}</p>
                 <div className="text-2xl font-bold text-red-900">
-                  {formatCurrency(summary.totalExpense, language)}
+                  {formatCurrency(summary.total?.expense.total || summary.totalExpense, language)}
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-2 mb-2">
+              <div className="grid grid-cols-2 gap-2 mb-3">
                 <div className="bg-white/60 rounded-lg p-2">
                   <p className="text-xs text-red-600 mb-0.5">{t('Naqd', language)}</p>
                   <div className="text-sm font-bold text-red-900">
-                    {formatCurrency(summary.expenseCash || 0, language)}
+                    {formatCurrency(summary.total?.expense.cash || summary.expenseCash || 0, language)}
                   </div>
                 </div>
                 
                 <div className="bg-white/60 rounded-lg p-2">
                   <p className="text-xs text-red-600 mb-0.5">{t('Karta', language)}</p>
                   <div className="text-sm font-bold text-red-900">
-                    {formatCurrency(summary.expenseCard || 0, language)}
+                    {formatCurrency(summary.total?.expense.card || summary.expenseCard || 0, language)}
                   </div>
                 </div>
               </div>
               
-              <p className="text-xs text-red-600">
-                {summary.expenseCount} {t('ta', language)}
+              
+              <p className="text-xs text-red-600 pt-2 border-t border-red-200">
+                {summary.total?.expense.count || summary.expenseCount} {t('ta', language)}
               </p>
             </div>
 
             {/* BALANS CARD */}
-            <div className="relative overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200 hover:shadow-lg transition-all">
+            <div 
+              onClick={() => handleOpenUserStats('balance')}
+              className="relative overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200 hover:shadow-lg transition-all cursor-pointer hover:scale-105"
+            >
               <div className="flex items-center justify-between mb-3">
                 <div className="p-2 bg-blue-500 rounded-lg">
                   <BarChart3 className="h-5 w-5 text-white" />
@@ -283,34 +322,37 @@ const MasterCashier: React.FC = memo(() => {
               
               <div className="mb-3">
                 <p className="text-xs text-blue-600 mb-1">{t('Umumiy', language)}</p>
-                <div className={`text-2xl font-bold ${summary.balance >= 0 ? 'text-green-900' : 'text-red-900'}`}>
-                  {formatCurrency(summary.balance, language)}
+                <div className={`text-2xl font-bold ${(summary.total?.balance.total || summary.balance) >= 0 ? 'text-green-900' : 'text-red-900'}`}>
+                  {formatCurrency(summary.total?.balance.total || summary.balance, language)}
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-2 mb-2">
+              <div className="grid grid-cols-2 gap-2 mb-3">
                 <div className="bg-white/60 rounded-lg p-2">
                   <p className="text-xs text-blue-600 mb-0.5">{t('Naqd', language)}</p>
-                  <div className={`text-sm font-bold ${(summary.balanceCash || 0) >= 0 ? 'text-green-900' : 'text-red-900'}`}>
-                    {formatCurrency(summary.balanceCash || 0, language)}
+                  <div className={`text-sm font-bold ${(summary.total?.balance.cash || summary.balanceCash || 0) >= 0 ? 'text-green-900' : 'text-red-900'}`}>
+                    {formatCurrency(summary.total?.balance.cash || summary.balanceCash || 0, language)}
                   </div>
                 </div>
                 
                 <div className="bg-white/60 rounded-lg p-2">
                   <p className="text-xs text-blue-600 mb-0.5">{t('Karta', language)}</p>
-                  <div className={`text-sm font-bold ${(summary.balanceCard || 0) >= 0 ? 'text-green-900' : 'text-red-900'}`}>
-                    {formatCurrency(summary.balanceCard || 0, language)}
+                  <div className={`text-sm font-bold ${(summary.total?.balance.card || summary.balanceCard || 0) >= 0 ? 'text-green-900' : 'text-red-900'}`}>
+                    {formatCurrency(summary.total?.balance.card || summary.balanceCard || 0, language)}
                   </div>
                 </div>
               </div>
               
-              <p className={`text-xs ${summary.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {summary.balance >= 0 ? t('Ijobiy', language) : t('Salbiy', language)}
+              
+              <p className={`text-xs pt-2 border-t border-blue-200 ${(summary.total?.balance.total || summary.balance) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {(summary.total?.balance.total || summary.balance) >= 0 ? t('Ijobiy', language) : t('Salbiy', language)}
               </p>
             </div>
           </div>
+          </div>
 
           {/* Action Buttons */}
+          <div className="relative z-10 px-6 sm:px-8 lg:px-10 pb-6 sm:pb-8 lg:pb-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* KIRIM Button */}
             <button
@@ -474,7 +516,7 @@ const MasterCashier: React.FC = memo(() => {
                         <p className="text-sm text-gray-600 mb-3 line-clamp-2 font-medium">
                           {transaction.description}
                         </p>
-                        <div className="flex items-center gap-4 text-xs text-gray-500">
+                        <div className="flex items-center gap-4 text-xs text-gray-500 flex-wrap">
                           <span className="flex items-center gap-1.5 bg-white/80 px-2.5 py-1 rounded-lg">
                             <Calendar className="h-3.5 w-3.5" />
                             {format(new Date(transaction.createdAt), 'dd.MM.yyyy HH:mm')}
@@ -483,6 +525,20 @@ const MasterCashier: React.FC = memo(() => {
                             {getPaymentMethodIcon(transaction.paymentMethod)}
                             {getPaymentMethodText(transaction.paymentMethod)}
                           </span>
+                          {transaction.createdBy && typeof transaction.createdBy === 'object' && (
+                            <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-semibold ${
+                              transaction.createdBy._id === currentUser?._id
+                                ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                                : 'bg-gray-100 text-gray-700 border border-gray-200'
+                            }`}>
+                              👤 {transaction.createdBy.name}
+                              {transaction.createdBy._id === currentUser?._id && (
+                                <span className="text-[10px] bg-blue-200 px-1.5 py-0.5 rounded-full">
+                                  {t('Siz', language)}
+                                </span>
+                              )}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -534,6 +590,14 @@ const MasterCashier: React.FC = memo(() => {
         onClose={() => setIsResetModalOpen(false)}
         onConfirm={handleMonthlyReset}
         currentStats={summary}
+      />
+      <UserStatsModal
+        isOpen={isUserStatsModalOpen}
+        onClose={() => setIsUserStatsModalOpen(false)}
+        type={userStatsType}
+        userStats={summary.byUser || []}
+        currentUserId={currentUser?._id}
+        language={language}
       />
     </div>
   );

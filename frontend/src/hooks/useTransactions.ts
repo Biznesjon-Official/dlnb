@@ -59,12 +59,12 @@ export const useTransactions = (filters: TransactionFilters = {}) => {
     },
     initialData, // INSTANT LOADING: Darhol cache'dan ko'rsatish (0.1s)
     placeholderData: (previousData) => previousData, // Har safar oldingi ma'lumotni ko'rsatish
-    staleTime: Infinity, // Hech qachon "eski" bo'lmaydi - maksimal tezlik
-    gcTime: Infinity, // Hech qachon o'chirilmaydi - doim cache'da
-    retry: 0, // Qayta urinmaslik
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
+    staleTime: 0, // Har doim yangi ma'lumot olish
+    gcTime: 5 * 60 * 1000, // 5 daqiqa cache'da saqlash
+    retry: 1, // 1 marta qayta urinish
+    refetchOnWindowFocus: true, // Window focus bo'lganda yangilash
+    refetchOnMount: true, // Mount bo'lganda yangilash
+    refetchOnReconnect: true, // Reconnect bo'lganda yangilash
     notifyOnChangeProps: ['data'], // Faqat data o'zgarganda render qilish
   });
 };
@@ -76,8 +76,13 @@ export const useTransactionSummary = () => {
   return useQuery({
     queryKey: ['transactionSummary'],
     queryFn: async (): Promise<{ summary: TransactionSummary }> => {
+      console.log('🔄 Fetching transaction summary from API...');
       const response = await api.get('/transactions/summary');
       const data = response.data;
+      
+      console.log('📊 API Response:', data);
+      console.log('👥 byUser array:', data.summary?.byUser);
+      console.log('👥 byUser length:', data.summary?.byUser?.length);
       
       // INSTANT LOADING: Cache'ni saqlash
       setCachedData(cacheKey, data);
@@ -86,12 +91,12 @@ export const useTransactionSummary = () => {
     },
     initialData, // INSTANT LOADING: Darhol cache'dan ko'rsatish (0.1s)
     placeholderData: (previousData) => previousData, // Har safar oldingi ma'lumotni ko'rsatish
-    staleTime: Infinity, // Hech qachon "eski" bo'lmaydi - maksimal tezlik
-    gcTime: Infinity, // Hech qachon o'chirilmaydi - doim cache'da
-    retry: 0, // Qayta urinmaslik
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
+    staleTime: 0, // Har doim yangi ma'lumot olish
+    gcTime: 5 * 60 * 1000, // 5 daqiqa cache'da saqlash
+    retry: 1, // 1 marta qayta urinish
+    refetchOnWindowFocus: true, // Window focus bo'lganda yangilash
+    refetchOnMount: true, // Mount bo'lganda yangilash
+    refetchOnReconnect: true, // Reconnect bo'lganda yangilash
     notifyOnChangeProps: ['data'], // Faqat data o'zgarganda render qilish
   });
 };
@@ -107,12 +112,12 @@ export const useTransactionStats = (dateRange?: { startDate?: string; endDate?: 
       const response = await api.get(`/transactions/stats?${params.toString()}`);
       return response.data;
     },
-    staleTime: Infinity,
-    gcTime: Infinity,
-    retry: 0,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
+    staleTime: 0, // Har doim yangi ma'lumot olish
+    gcTime: 5 * 60 * 1000, // 5 daqiqa cache'da saqlash
+    retry: 1, // 1 marta qayta urinish
+    refetchOnWindowFocus: true, // Window focus bo'lganda yangilash
+    refetchOnMount: true, // Mount bo'lganda yangilash
+    refetchOnReconnect: true, // Reconnect bo'lganda yangilash
     enabled: !!dateRange,
     notifyOnChangeProps: ['data'],
     placeholderData: (previousData) => previousData,

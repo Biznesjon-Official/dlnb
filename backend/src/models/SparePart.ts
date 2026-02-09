@@ -14,7 +14,7 @@ export interface ISparePart extends Document {
   updatedAt: Date;
   profit?: number; // Virtual field - foyda (sellingPrice - costPrice)
   // Balon uchun maxsus maydonlar
-  category?: 'tire' | 'other'; // Tovar kategoriyasi
+  category?: 'balon' | 'zapchast' | 'boshqa'; // Tovar kategoriyasi
   tireSize?: string; // Disk razmeri (R13, R14, R15, R16, R17, R20, R22.5, R24.5)
   tireFullSize?: string; // To'liq razmer (175/65 R15, 315/80R22.5, 11R22.5)
   tireBrand?: string; // Balon brendi (Michelin, Bridgestone, Goodyear, va h.k.)
@@ -73,8 +73,8 @@ const sparePartSchema = new Schema<ISparePart>({
   // Balon uchun maxsus maydonlar
   category: {
     type: String,
-    enum: ['tire', 'other'],
-    default: 'other'
+    enum: ['balon', 'zapchast', 'boshqa'],
+    default: 'zapchast'
   },
   tireSize: {
     type: String,

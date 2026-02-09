@@ -32,7 +32,7 @@ export interface Transaction {
     type: 'debt' | 'car' | 'task' | 'expense_category' | 'other';
     id: string | null;
   };
-  createdBy: string;
+  createdBy: string | { _id: string; name: string }; // Populated yoki ID
   createdAt: string;
   updatedAt: string;
 }
@@ -48,7 +48,53 @@ export interface TransactionFilters {
   limit?: number;
 }
 
+// YANGI: User bo'yicha kassa statistikasi
+export interface UserCashierStats {
+  userId: string;
+  userName: string;
+  income: {
+    cash: number;
+    card: number;
+    click: number;
+    total: number;
+    count: number;
+  };
+  expense: {
+    cash: number;
+    card: number;
+    click: number;
+    total: number;
+    count: number;
+  };
+}
+
 export interface TransactionSummary {
+  // YANGI: User bo'yicha batafsil
+  byUser?: UserCashierStats[];
+  total?: {
+    income: {
+      cash: number;
+      card: number;
+      click: number;
+      total: number;
+      count: number;
+    };
+    expense: {
+      cash: number;
+      card: number;
+      click: number;
+      total: number;
+      count: number;
+    };
+    balance: {
+      cash: number;
+      card: number;
+      click: number;
+      total: number;
+    };
+  };
+  
+  // ESKI: Backward compatibility
   totalIncome: number;
   totalExpense: number;
   balance: number;

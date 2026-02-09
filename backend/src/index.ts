@@ -38,6 +38,26 @@ if (process.env.TELEGRAM_BOT_TOKEN_CAR || process.env.TELEGRAM_BOT_TOKEN_DEBT) {
   }
 }
 
+// Initialize Warehouse Bot (Ombor uchun)
+if (process.env.TELEGRAM_BOT_TOKEN_WAREHOUSE) {
+  try {
+    const { initializeWarehouseBot } = require('./services/warehouseBotService');
+    initializeWarehouseBot();
+  } catch (error) {
+    console.error('⚠️ Warehouse bot initialization failed:', error);
+  }
+}
+
+// Initialize Warehouse Bot (must be after dotenv.config())
+if (process.env.TELEGRAM_BOT_TOKEN_WAREHOUSE) {
+  try {
+    require('./services/warehouseBotService');
+    console.log('✅ Warehouse Bot initialized');
+  } catch (error) {
+    console.error('⚠️ Warehouse Bot initialization failed:', error);
+  }
+}
+
 // Initialize Monthly Reset Cron Job
 import { startMonthlyResetJob } from './services/monthlyResetService';
 startMonthlyResetJob();

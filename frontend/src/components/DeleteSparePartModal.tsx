@@ -17,14 +17,14 @@ interface SparePart {
 interface DeleteSparePartModalProps {
   isOpen: boolean;
   onClose: () => void;
-  sparePart: SparePart;
+  sparePart: SparePart | null;
   onSuccess: () => void;
 }
 
 const DeleteSparePartModal: React.FC<DeleteSparePartModalProps> = ({ isOpen, onClose, sparePart, onSuccess }) => {
   const language = (localStorage.getItem('language') as 'latin' | 'cyrillic') || 'latin';
 
-  if (!isOpen) return null;
+  if (!isOpen || !sparePart) return null;
 
   const handleDelete = () => {
     // 1. DARHOL UI'ni yangilash (optimistic update) - 0.1 sekund ichida
