@@ -4,7 +4,7 @@ export interface IBooking extends Document {
   customerName: string;
   phoneNumber: string;
   licensePlate: string;
-  bookingDate: Date;
+  bookingDate?: Date; // Ixtiyoriy
   birthDate?: Date; // Tug'ilgan kun (ixtiyoriy)
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
   createdBy: mongoose.Types.ObjectId;
@@ -32,7 +32,7 @@ const bookingSchema = new Schema<IBooking>(
     },
     bookingDate: {
       type: Date,
-      required: true,
+      required: false, // Ixtiyoriy
     },
     birthDate: {
       type: Date,

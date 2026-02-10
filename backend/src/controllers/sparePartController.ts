@@ -186,28 +186,35 @@ export const getSparePartById = async (req: AuthRequest, res: Response) => {
 
 export const createSparePart = async (req: AuthRequest, res: Response) => {
   try {
-    const { name, costPrice, sellingPrice, price, quantity = 1, supplier } = req.body;
+    const { 
+      name, 
+      costPrice, 
+      sellingPrice, 
+      price, 
+      quantity = 1, 
+      supplier,
+      category = 'zapchast', // YANGI: Kategoriya (balon, zapchast, boshqa)
+      tireSize, // YANGI: Balon o'lchami
+      tireBrand, // YANGI: Balon brendi
+      tireType // YANGI: Balon turi (yozgi, qishki, universal)
+    } = req.body;
 
-    // Check if spare part with same name already exists
-    const existingSparePart = await SparePart.findOne({ 
-      name: { $regex: `^${name.trim()}$`, $options: 'i' },
-      isActive: true 
-    });
-
-    if (existingSparePart) {
-      return res.status(400).json({ 
-        message: 'Bu nom bilan zapchast allaqachon mavjud',
-        existingSparePart 
-      });
-    }
-
+    // TEZLASHTIRISH: Tekshiruvni o'chirish - frontend'da tekshiriladi
+    // Agar kerak bo'lsa, unique index MongoDB'da avtomatik tekshiradi
+    
     const sparePart = new SparePart({
       name: name.trim(),
       costPrice: costPrice || price, // Backward compatibility
       sellingPrice: sellingPrice || price, // Backward compatibility
       price: sellingPrice || price, // Deprecated field
       quantity,
-      supplier: supplier ? supplier.trim() : '' // Ixtiyoriy
+      supplier: supplier ? supplier.trim() : '', // Ixtiyoriy
+      category: category, // YANGI: Kategoriya
+      ...(category === 'balon' && {
+        tireSize: tireSize,
+        tireBrand: tireBrand || '',
+        tireType: tireType || 'universal'
+      })
     });
 
     await sparePart.save();
@@ -342,21 +349,49 @@ export const updateSparePart = async (req: AuthRequest, res: Response) => {
 
 export const deleteSparePart = async (req: AuthRequest, res: Response) => {
   try {
+    console.log('🗑️ DELETE REQUEST:', {
+      id: req.params.id,
+      user: req.user?._id,
+      timestamp: new Date().toISOString()
+    });
+
     const sparePart = await SparePart.findById(req.params.id);
     
     if (!sparePart) {
+      console.log('❌ Spare part not found:', req.params.id);
       return res.status(404).json({ message: 'Spare part not found' });
     }
 
+    console.log('✅ Found spare part:', {
+      id: sparePart._id,
+      name: sparePart.name,
+      isActive: sparePart.isActive
+    });
+
+    console.log('🔄 Attempting to save...');
+    
     // Soft delete - just mark as inactive
     sparePart.isActive = false;
     await sparePart.save();
 
-    res.json({
-      message: 'Zapchast muvaffaqiyatli o\'chirildi'
+    console.log('✅ Spare part deleted successfully:', sparePart._id);
+
+    return res.json({
+      message: 'Zapchast muvaffaqiyatli o\'chirildi',
+      success: true
     });
   } catch (error: any) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    console.error('❌ DELETE ERROR:', {
+      id: req.params.id,
+      error: error.message,
+      stack: error.stack,
+      fullError: error
+    });
+    return res.status(500).json({ 
+      message: 'Server error', 
+      error: error.message,
+      success: false
+    });
   }
 };
 

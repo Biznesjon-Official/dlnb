@@ -1,19 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { X, Plus, AlertCircle, Package } from 'lucide-react';
 import { t } from '@/lib/transliteration';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { formatNumber, parseFormattedNumber } from '@/lib/utils';
-import api from '@/lib/api';
-import { useQueryClient } from '@tanstack/react-query';
+import { useSpareParts } from '@/hooks/useSpareParts';
 
 interface CreateSparePartModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: (newPart?: any) => void; // Yangi tovarni qaytarish
+  onSuccess: (newPart?: any) => void;
+  createSparePart: (data: any) => Promise<any>; // YANGI: Function prop
 }
 
-const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({ isOpen, onClose, onSuccess }) => {
-  const queryClient = useQueryClient();
+const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  onSuccess,
+  createSparePart // YANGI: Function prop
+}) => {
+  // Mavjud zapchastlar nomlarini olish
+  const { data: sparePartsData } = useSpareParts();
+  const spareParts = useMemo(() => sparePartsData?.spareParts || [], [sparePartsData]);
   
   // localStorage'dan tilni o'qish
   const language = React.useMemo<'latin' | 'cyrillic'>(() => {
@@ -41,6 +48,17 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({ isOpen, onC
     tireCategory: '', // Balon kategoriyasi (R60, R22.5 va h.k.)
     tireSize: '' // Aniq o'lcham
   });
+
+  // Mavjud balon nomlarini olish (unique)
+  const existingTireNames = useMemo(() => {
+    if (!spareParts.length) return [];
+    
+    return spareParts
+      .filter((part: any) => part.category === 'balon' && part.name)
+      .map((part: any) => part.name)
+      .filter((name: string, index: number, self: string[]) => self.indexOf(name) === index) // Unique
+      .sort(); // Alifbo tartibida
+  }, [spareParts]);
 
   // Balon uchun avtomatik nom yaratish
   const generateTireName = () => {
@@ -256,32 +274,15 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({ isOpen, onC
       sellingPrice = sellingPrice * exchangeRate;
     }
 
-    // Yangi tovar obyektini yaratish (optimistic)
-    const newPart = {
-      _id: 'temp-' + Date.now(), // Vaqtinchalik ID
-      name: formData.category === 'balon' 
-        ? formData.name 
-        : `${formData.category === 'zapchast' ? t('Zapchast', language) : t('Boshqa', language)} ${formData.name}`,
-      costPrice: costPrice,
-      sellingPrice: sellingPrice,
-      price: sellingPrice,
-      currency: currency,
-      quantity: Number(formData.quantity),
-      category: formData.category,
-      tireSize: formData.tireSize,
-      tireBrand: formData.tireBrand || '',
-      tireType: formData.tireType,
-      supplier: '',
-      usageCount: 0,
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
+    // Kategoriya nomini qo'shish (faqat zapchast va boshqa uchun)
+    let finalName = formData.name;
+    if (formData.category === 'zapchast') {
+      finalName = `${t('Zapchast', language)} ${formData.name}`;
+    } else if (formData.category === 'boshqa') {
+      finalName = `${t('Boshqa', language)} ${formData.name}`;
+    }
+    // Balon uchun prefix qo'shilmaydi - to'g'ridan-to'g'ri nom
 
-    // 1. DARHOL modal yopish va UI'ga qo'shish (optimistic update)
-    onSuccess(newPart);
-    onClose();
-    
     // Form ni tozalash
     setFormData({
       name: '',
@@ -302,48 +303,25 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({ isOpen, onC
     setCurrency('UZS');
     setErrors({});
 
-    // 2. Background'da API so'rovini yuborish
-    try {
-      // Kategoriya nomini qo'shish
-      let finalName = formData.name;
-      if (formData.category === 'zapchast') {
-        finalName = `${t('Zapchast', language)} ${formData.name}`;
-      } else if (formData.category === 'boshqa') {
-        finalName = `${t('Boshqa', language)} ${formData.name}`;
-      }
-      
-      const response = await api.post('/spare-parts', {
-        name: finalName,
-        costPrice: costPrice,
-        sellingPrice: sellingPrice,
-        price: sellingPrice,
-        currency: currency,
-        quantity: Number(formData.quantity),
-        category: formData.category,
-        ...(formData.category === 'balon' && {
-          tireSize: formData.tireSize,
-          tireBrand: formData.tireBrand || undefined,
-          tireType: formData.tireType
-        })
-      });
+    // To'g'ridan-to'g'ri funksiyani chaqirish - hook ichida optimistic update
+    await createSparePart({
+      name: finalName,
+      costPrice: costPrice,
+      sellingPrice: sellingPrice,
+      price: sellingPrice,
+      currency: currency,
+      quantity: Number(formData.quantity),
+      category: formData.category,
+      ...(formData.category === 'balon' && {
+        tireSize: formData.tireSize,
+        tireBrand: formData.tireBrand || undefined,
+        tireType: formData.tireType
+      })
+    });
 
-      const realPart = response.data.sparePart || response.data;
-      
-      // Real ID bilan yangilash
-      queryClient.setQueryData(['spare-parts', {}], (oldData: any) => {
-        if (!oldData) return oldData;
-        return {
-          ...oldData,
-          spareParts: oldData.spareParts.map((part: any) => 
-            part._id === newPart._id ? { ...part, ...realPart } : part
-          )
-        };
-      });
-    } catch (error: any) {
-      console.error('Error creating spare part:', error);
-      // Xatolik bo'lsa, sahifani qayta yuklash
-      window.location.reload();
-    }
+    // Modal'ni yopish va callback
+    onSuccess();
+    onClose();
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -547,6 +525,36 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({ isOpen, onC
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     {t('4-qadam: Balon brendi', language)} ({t('ixtiyoriy', language)})
                   </label>
+                  
+                  {/* Mavjud balon nomlari ko'rsatish */}
+                  {existingTireNames.length > 0 && (
+                    <div className="mb-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+                      <p className="text-xs font-semibold text-blue-700 mb-1.5">
+                        💡 {t('Mavjud balonlar', language)} ({existingTireNames.length} ta):
+                      </p>
+                      <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
+                        {existingTireNames.slice(0, 10).map((name: string, index: number) => (
+                          <button
+                            key={index}
+                            type="button"
+                            onClick={() => {
+                              // Nomni input'ga qo'yish
+                              setFormData(prev => ({ ...prev, name: name }));
+                            }}
+                            className="px-2 py-1 text-xs bg-white border border-blue-300 rounded-md hover:bg-blue-100 hover:border-blue-400 transition-colors text-blue-700 font-medium"
+                          >
+                            {name}
+                          </button>
+                        ))}
+                        {existingTireNames.length > 10 && (
+                          <span className="px-2 py-1 text-xs text-blue-600 font-medium">
+                            +{existingTireNames.length - 10} ta
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
                   <select
                     name="tireBrand"
                     value={formData.tireBrand}

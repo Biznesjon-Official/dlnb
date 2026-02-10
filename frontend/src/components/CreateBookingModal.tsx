@@ -28,7 +28,7 @@ const CreateBookingModal: React.FC<CreateBookingModalProps> = ({ isOpen, onClose
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.customerName || !formData.phoneNumber || !formData.licensePlate || !formData.bookingDate) {
+    if (!formData.customerName || !formData.phoneNumber || !formData.licensePlate) {
       toast.error(t('Barcha majburiy maydonlarni to\'ldiring', language));
       return;
     }
@@ -36,6 +36,22 @@ const CreateBookingModal: React.FC<CreateBookingModalProps> = ({ isOpen, onClose
     setIsSubmitting(true);
     
     try {
+      // Bo'sh string'larni undefined'ga o'zgartirish (backend uchun)
+      const bookingData = {
+        customerName: formData.customerName,
+        phoneNumber: formData.phoneNumber,
+        licensePlate: formData.licensePlate,
+        ...(formData.bookingDate && formData.bookingDate.trim() !== '' && { bookingDate: formData.bookingDate }),
+        ...(formData.birthDate && formData.birthDate.trim() !== '' && { birthDate: formData.birthDate })
+      };
+      
+      console.log('=== FRONTEND: Bron yaratish ===');
+      console.log('Form data:', formData);
+      console.log('Yuborilayotgan data:', bookingData);
+      
+      // Background'da yaratish
+      await onCreate(bookingData);
+      
       // ⚡ INSTANT: Modal darhol yopiladi
       onClose();
       
@@ -47,9 +63,6 @@ const CreateBookingModal: React.FC<CreateBookingModalProps> = ({ isOpen, onClose
         bookingDate: '',
         birthDate: '',
       });
-      
-      // Background'da yaratish
-      await onCreate(formData);
     } catch (error: any) {
       toast.error(error.response?.data?.message || t('Xatolik yuz berdi', language));
     } finally {
@@ -187,15 +200,15 @@ const CreateBookingModal: React.FC<CreateBookingModalProps> = ({ isOpen, onClose
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 <Calendar className="h-4 w-4 inline mr-1" />
-                {t('Bron sanasi', language)} <span className="text-red-500">*</span>
+                {t('Bron sanasi', language)}
               </label>
               <input
                 type="date"
                 name="bookingDate"
                 value={formData.bookingDate}
                 onChange={handleChange}
+                min={new Date().toISOString().split('T')[0]}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
               />
             </div>
 

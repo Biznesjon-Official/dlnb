@@ -53,78 +53,101 @@ export const createBooking = async (req: AuthRequest, res: Response) => {
     const { customerName, phoneNumber, licensePlate, bookingDate, birthDate } = req.body;
 
     console.log('=== YANGI BRON YARATISH ===');
+    console.log('Request body:', JSON.stringify(req.body, null, 2));
     console.log('Mijoz:', customerName);
-    console.log('Kun (input):', bookingDate);
-    console.log('Tug\'ilgan kun:', birthDate);
+    console.log('Kun (input):', bookingDate, 'Type:', typeof bookingDate);
+    console.log('Tug\'ilgan kun:', birthDate, 'Type:', typeof birthDate);
 
-    // Sanani UTC formatida parse qilish
-    const [year, month, day] = bookingDate.split('-').map(Number);
-    const bookingDay = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
-    const nextDay = new Date(Date.UTC(year, month - 1, day + 1, 0, 0, 0, 0));
+    let bookingDay;
+    let nextDay;
 
-    console.log('Tekshiriladigan kun (UTC):', bookingDay.toISOString());
+    // Agar bron sanasi kiritilgan bo'lsa, tekshirish
+    if (bookingDate && typeof bookingDate === 'string' && bookingDate.trim() !== '') {
+      // Sanani UTC formatida parse qilish
+      const [year, month, day] = bookingDate.split('-').map(Number);
+      bookingDay = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+      nextDay = new Date(Date.UTC(year, month - 1, day + 1, 0, 0, 0, 0));
 
-    // Faqat kun bo'yicha tekshirish - bir kunda faqat bitta bron
-    const existingBooking = await Booking.findOne({
-      bookingDate: { $gte: bookingDay, $lt: nextDay },
-      status: { $in: ['pending', 'confirmed'] }
-    });
+      console.log('Tekshiriladigan kun (UTC):', bookingDay.toISOString());
 
-    console.log('Shu kunda bron topildi:', existingBooking ? 'HA' : 'YO\'Q');
-    if (existingBooking) {
-      console.log('   Mavjud bron:', existingBooking.customerName, existingBooking.bookingDate.toISOString());
-    }
-
-    if (existingBooking) {
-      console.log('❌ XATOLIK: Bu kun allaqachon band');
-      return res.status(400).json({ 
-        message: `Bu kun allaqachon band (${existingBooking.customerName})` 
+      // Faqat kun bo'yicha tekshirish - bir kunda faqat bitta bron
+      const existingBooking = await Booking.findOne({
+        bookingDate: { $gte: bookingDay, $lt: nextDay },
+        status: { $in: ['pending', 'confirmed'] }
       });
+
+      console.log('Shu kunda bron topildi:', existingBooking ? 'HA' : 'YO\'Q');
+      if (existingBooking) {
+        console.log('   Mavjud bron:', existingBooking.customerName, existingBooking.bookingDate?.toISOString());
+      }
+
+      if (existingBooking) {
+        console.log('❌ XATOLIK: Bu kun allaqachon band');
+        return res.status(400).json({ 
+          message: `Bu kun allaqachon band (${existingBooking.customerName})` 
+        });
+      }
     }
 
     console.log('✅ Bron yaratilmoqda...');
 
     // Tug'ilgan kunni parse qilish (agar mavjud bo'lsa)
     let parsedBirthDate;
-    if (birthDate) {
+    if (birthDate && typeof birthDate === 'string' && birthDate.trim() !== '') {
       const [bYear, bMonth, bDay] = birthDate.split('-').map(Number);
       parsedBirthDate = new Date(Date.UTC(bYear, bMonth - 1, bDay, 0, 0, 0, 0));
     }
 
-    const booking = new Booking({
+    const bookingDataToSave: any = {
       customerName,
       phoneNumber,
       licensePlate: licensePlate.toUpperCase(),
-      bookingDate: bookingDay,
-      birthDate: parsedBirthDate,
       createdBy: req.user!._id,
-    });
+    };
+
+    // Faqat mavjud bo'lsa qo'shish
+    if (bookingDay) {
+      bookingDataToSave.bookingDate = bookingDay;
+    }
+    if (parsedBirthDate) {
+      bookingDataToSave.birthDate = parsedBirthDate;
+    }
+
+    console.log('Saqlanadigan ma\'lumot:', JSON.stringify(bookingDataToSave, null, 2));
+
+    const booking = new Booking(bookingDataToSave);
 
     await booking.save();
     await booking.populate('createdBy', 'name username');
 
     console.log('✅ Bron muvaffaqiyatli yaratildi!');
-    console.log('   Saqlangan sana:', booking.bookingDate.toISOString());
+    if (bookingDay) {
+      console.log('   Saqlangan sana:', booking.bookingDate?.toISOString());
+    }
 
-    // SMS yuborish
-    const formattedDate = bookingDay.toLocaleDateString('uz-UZ', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    });
-    await smsService.sendBookingCreatedSms(
-      phoneNumber,
-      customerName,
-      formattedDate,
-      booking._id.toString()
-    );
+    // SMS yuborish (faqat bron sanasi mavjud bo'lsa)
+    if (bookingDay) {
+      const formattedDate = bookingDay.toLocaleDateString('uz-UZ', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+      await smsService.sendBookingCreatedSms(
+        phoneNumber,
+        customerName,
+        formattedDate,
+        booking._id.toString()
+      );
+    }
 
     res.status(201).json({ 
       message: 'Bron muvaffaqiyatli yaratildi',
       booking 
     });
   } catch (error: any) {
-    console.error('❌ Xatolik:', error);
+    console.error('❌ XATOLIK:', error);
+    console.error('❌ Xatolik xabari:', error.message);
+    console.error('❌ Stack trace:', error.stack);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
@@ -144,7 +167,7 @@ export const updateBooking = async (req: AuthRequest, res: Response) => {
     console.log('Bron ID:', id);
 
     // Agar sana o'zgartirilsa, tekshirish
-    if (bookingDate) {
+    if (bookingDate && typeof bookingDate === 'string' && bookingDate.trim() !== '') {
       const [year, month, day] = bookingDate.split('-').map(Number);
       const bookingDay = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
       const nextDay = new Date(Date.UTC(year, month - 1, day + 1, 0, 0, 0, 0));
@@ -169,11 +192,11 @@ export const updateBooking = async (req: AuthRequest, res: Response) => {
     if (customerName) booking.customerName = customerName;
     if (phoneNumber) booking.phoneNumber = phoneNumber;
     if (licensePlate) booking.licensePlate = licensePlate.toUpperCase();
-    if (bookingDate) {
+    if (bookingDate && typeof bookingDate === 'string' && bookingDate.trim() !== '') {
       const [year, month, day] = bookingDate.split('-').map(Number);
       booking.bookingDate = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
     }
-    if (birthDate) {
+    if (birthDate && typeof birthDate === 'string' && birthDate.trim() !== '') {
       const [bYear, bMonth, bDay] = birthDate.split('-').map(Number);
       booking.birthDate = new Date(Date.UTC(bYear, bMonth - 1, bDay, 0, 0, 0, 0));
     }
@@ -188,7 +211,7 @@ export const updateBooking = async (req: AuthRequest, res: Response) => {
     console.log('✅ Bron muvaffaqiyatli yangilandi!');
 
     // Status o'zgarganda SMS yuborish
-    if (status && status !== oldStatus) {
+    if (status && status !== oldStatus && booking.bookingDate) {
       const formattedDate = booking.bookingDate.toLocaleDateString('uz-UZ', { 
         year: 'numeric', 
         month: 'long', 

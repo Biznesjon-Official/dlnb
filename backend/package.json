@@ -31,7 +31,9 @@
     "clear-archived-cars": "ts-node src/scripts/clearArchivedCars.ts",
     "clear-cars": "ts-node src/scripts/clearCars.ts",
     "delete-all-cars": "ts-node src/scripts/deleteAllCars.ts",
+    "delete-all-spare-parts": "ts-node src/scripts/deleteAllSpareParts.ts",
     "clear-warehouse": "ts-node src/scripts/clearWarehouse.ts",
+    "delete-all-spare-parts": "ts-node src/scripts/deleteAllSpareParts.ts",
     "seed-cars": "ts-node src/scripts/seedCars.ts",
     "migrate:clientid": "ts-node src/scripts/addClientIdToExisting.ts",
     "create-second-master": "ts-node src/scripts/createSecondMaster.ts"

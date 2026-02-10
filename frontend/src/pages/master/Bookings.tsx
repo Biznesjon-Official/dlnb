@@ -102,11 +102,6 @@ const Bookings: React.FC = () => {
     });
   }, [filteredBookings]);
 
-  // Update booking status - optimistic
-  const handleStatusChange = useCallback((id: string, status: string) => {
-    updateBooking(id, { status });
-  }, [updateBooking]);
-
   const handleSendBirthdaySms = useCallback((booking: Booking) => {
     if (!booking.phoneNumber) {
       return;
@@ -126,28 +121,12 @@ const Bookings: React.FC = () => {
     setIsDeleteModalOpen(true);
   }, []);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'confirmed':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'completed':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'cancelled':
-        return 'bg-red-100 text-red-800 border-red-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('uz-UZ', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
   };
 
   if (isLoading) {
@@ -220,7 +199,7 @@ const Bookings: React.FC = () => {
             return (
               <div
                 key={booking._id}
-                className={`group relative bg-white rounded-xl shadow-sm border-2 transition-all duration-200 hover:shadow-lg hover:-translate-y-1 ${
+                className={`group relative bg-white rounded-xl shadow-sm border-2 transition-all duration-200 hover:shadow-lg hover:-translate-y-1 flex flex-col ${
                   isBirthdaySoon 
                     ? 'border-yellow-400 bg-gradient-to-br from-yellow-50 to-white' 
                     : 'border-gray-200 hover:border-blue-300'
@@ -266,73 +245,78 @@ const Bookings: React.FC = () => {
                 )}
 
                 {/* Card Content */}
-                <div className="p-4 space-y-3">
-                  {/* Header */}
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-base font-bold text-gray-900 truncate">
-                          {booking.customerName}
-                        </h3>
-                        {isBirthdaySoon && (
-                          <div className="flex items-center gap-1">
-                            {daysUntilBirthday === 0 ? (
-                              <PartyPopper className="h-5 w-5 text-pink-500 animate-bounce" />
-                            ) : (
-                              <Cake className="h-5 w-5 text-orange-500 animate-pulse" />
-                            )}
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-1.5 text-xs text-gray-600">
-                        <Phone className="h-3 w-3" />
-                        <span className="font-medium truncate">{booking.phoneNumber}</span>
+                <div className="p-4 flex flex-col h-full">
+                  {/* Content wrapper - flex-1 to take available space */}
+                  <div className="flex-1 flex flex-col">
+                    {/* Header */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="text-base font-bold text-gray-900 truncate">
+                            {booking.customerName}
+                          </h3>
+                          {isBirthdaySoon && (
+                            <div className="flex items-center gap-1">
+                              {daysUntilBirthday === 0 ? (
+                                <PartyPopper className="h-5 w-5 text-pink-500 animate-bounce" />
+                              ) : (
+                                <Cake className="h-5 w-5 text-orange-500 animate-pulse" />
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1.5 text-xs text-gray-600">
+                          <Phone className="h-3 w-3" />
+                          <span className="font-medium truncate">{booking.phoneNumber}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Status */}
-                  <select
-                    value={booking.status}
-                    onChange={(e) => handleStatusChange(booking._id, e.target.value)}
-                    className={`w-full px-3 py-1.5 rounded-lg text-xs font-bold border-2 cursor-pointer ${getStatusColor(booking.status)}`}
-                  >
-                    <option value="pending">{t('Kutilmoqda', language)}</option>
-                    <option value="confirmed">{t('Tasdiqlangan', language)}</option>
-                    <option value="completed">{t('Bajarilgan', language)}</option>
-                    <option value="cancelled">{t('Bekor qilingan', language)}</option>
-                  </select>
-
-                  {/* Info Grid */}
-                  <div className="space-y-2">
-                    {/* License Plate */}
+                    {/* Info Grid */}
+                    <div className="space-y-2 mt-3">{/* License Plate */}
                     <div className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg border border-blue-100">
                       <Car className="h-4 w-4 text-blue-600 flex-shrink-0" />
                       <span className="text-xs font-bold text-gray-900 truncate">{booking.licensePlate}</span>
                     </div>
 
                     {/* Booking Date */}
-                    <div className="flex items-center gap-2 p-2 bg-purple-50 rounded-lg border border-purple-100">
-                      <Calendar className="h-4 w-4 text-purple-600 flex-shrink-0" />
-                      <span className="text-xs font-medium text-gray-900 truncate">{formatDate(booking.bookingDate)}</span>
+                    <div className={`flex items-center gap-2 p-2 rounded-lg border ${
+                      booking.bookingDate 
+                        ? 'bg-purple-50 border-purple-100' 
+                        : 'bg-gray-50 border-gray-200'
+                    }`}>
+                      <Calendar className={`h-4 w-4 flex-shrink-0 ${
+                        booking.bookingDate ? 'text-purple-600' : 'text-gray-400'
+                      }`} />
+                      <span className={`text-xs font-medium truncate ${
+                        booking.bookingDate ? 'text-gray-900' : 'text-gray-400'
+                      }`}>
+                        {booking.bookingDate ? formatDate(booking.bookingDate) : 'XX/XX/XXXX'}
+                      </span>
                     </div>
 
                     {/* Birth Date */}
-                    {booking.birthDate && (
-                      <div className={`relative flex items-center gap-2 p-2 rounded-lg border overflow-hidden ${
-                        isBirthdaySoon 
+                    <div className={`relative flex items-center gap-2 p-2 rounded-lg border overflow-hidden ${
+                      booking.birthDate
+                        ? isBirthdaySoon 
                           ? 'bg-gradient-to-r from-yellow-100 via-orange-100 to-pink-100 border-yellow-300' 
                           : 'bg-green-50 border-green-100'
+                        : 'bg-gray-50 border-gray-200'
+                    }`}>
+                      {/* Animated background for birthday soon */}
+                      {booking.birthDate && isBirthdaySoon && (
+                        <div className="absolute inset-0 bg-gradient-to-r from-yellow-200/50 via-orange-200/50 to-pink-200/50 animate-pulse"></div>
+                      )}
+                      
+                      <div className={`relative z-10 flex items-center justify-center w-8 h-8 rounded-lg shadow-md ${
+                        booking.birthDate
+                          ? isBirthdaySoon 
+                            ? 'bg-gradient-to-br from-orange-400 to-pink-500' 
+                            : 'bg-green-500'
+                          : 'bg-gray-400'
                       }`}>
-                        {/* Animated background for birthday soon */}
-                        {isBirthdaySoon && (
-                          <div className="absolute inset-0 bg-gradient-to-r from-yellow-200/50 via-orange-200/50 to-pink-200/50 animate-pulse"></div>
-                        )}
-                        
-                        <div className={`relative z-10 flex items-center justify-center w-8 h-8 rounded-lg ${
-                          isBirthdaySoon ? 'bg-gradient-to-br from-orange-400 to-pink-500' : 'bg-green-500'
-                        } shadow-md`}>
-                          {isBirthdaySoon ? (
+                        {booking.birthDate ? (
+                          isBirthdaySoon ? (
                             daysUntilBirthday === 0 ? (
                               <PartyPopper className="h-4 w-4 text-white animate-bounce" />
                             ) : (
@@ -340,34 +324,40 @@ const Bookings: React.FC = () => {
                             )
                           ) : (
                             <Gift className="h-4 w-4 text-white" />
-                          )}
-                        </div>
-                        
-                        <div className="flex-1 min-w-0 relative z-10">
-                          <span className="text-xs font-medium text-gray-900 truncate block">{formatDate(booking.birthDate)}</span>
-                          {isBirthdaySoon && (
-                            <div className="flex items-center gap-1 mt-0.5">
-                              {daysUntilBirthday === 0 ? (
-                                <>
-                                  <Sparkles className="h-3 w-3 text-pink-600" />
-                                  <span className="text-xs font-bold text-pink-600">Bugun!</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Clock className="h-3 w-3 text-orange-600" />
-                                  <span className="text-xs font-bold text-orange-600">{daysUntilBirthday} kun qoldi</span>
-                                </>
-                              )}
-                            </div>
-                          )}
-                        </div>
+                          )
+                        ) : (
+                          <Gift className="h-4 w-4 text-white" />
+                        )}
                       </div>
-                    )}
+                      
+                      <div className="flex-1 min-w-0 relative z-10">
+                        <span className={`text-xs font-medium truncate block ${
+                          booking.birthDate ? 'text-gray-900' : 'text-gray-400'
+                        }`}>
+                          {booking.birthDate ? formatDate(booking.birthDate) : 'XX/XX/XXXX'}
+                        </span>
+                        {booking.birthDate && isBirthdaySoon && (
+                          <div className="flex items-center gap-1 mt-0.5">
+                            {daysUntilBirthday === 0 ? (
+                              <>
+                                <Sparkles className="h-3 w-3 text-pink-600" />
+                                <span className="text-xs font-bold text-pink-600">Bugun!</span>
+                              </>
+                            ) : (
+                              <>
+                                <Clock className="h-3 w-3 text-orange-600" />
+                                <span className="text-xs font-bold text-orange-600">{daysUntilBirthday} kun qoldi</span>
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                   </div>
 
-                  {/* Actions */}
-                  <div className="flex items-center gap-2 pt-2">
-                    {isBirthdaySoon && (
+                  {/* Actions - Always at bottom */}
+                  <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">{isBirthdaySoon && (
                       <button
                         onClick={() => handleSendBirthdaySms(booking)}
                         className="flex-1 relative overflow-hidden flex items-center justify-center gap-1.5 px-3 py-2 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white rounded-lg text-xs font-bold shadow-lg hover:shadow-xl transition-all group"

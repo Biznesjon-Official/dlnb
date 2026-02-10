@@ -51,14 +51,13 @@ export const useSpareParts = (filters: SparePartFilters = {}) => {
       const response = await api.get(`/spare-parts?${params.toString()}`);
       return response.data;
     },
-    staleTime: Infinity, // Hech qachon eski bo'lmaydi - instant loading
-    gcTime: Infinity, // Hech qachon o'chirilmaydi
-    retry: 0, // Retry yo'q - maksimal tezlik
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-    notifyOnChangeProps: ['data'],
-    placeholderData: (previousData) => previousData, // Cache'dan instant yuklash
+    staleTime: 1000, // 1 soniya - juda qisqa, lekin 0 emas (0 muammoli)
+    gcTime: 300000, // 5 daqiqa cache
+    retry: 2,
+    refetchOnMount: 'always', // Har doim mount'da yangilash (true o'rniga 'always')
+    refetchOnWindowFocus: false, // Focus'da yangilamaslik
+    refetchOnReconnect: true, // Reconnect'da yangilash
+    refetchInterval: false, // Avtomatik interval yo'q
   });
 };
 
@@ -119,14 +118,51 @@ export const useCreateSparePart = () => {
       const response = await api.post('/spare-parts', sparePartData);
       return response.data;
     },
+    onMutate: async (newPart) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['spare-parts'] });
+      
+      // Snapshot previous value
+      const previousParts = queryClient.getQueryData(['spare-parts']);
+      
+      // Optimistically update - darhol UI'ga qo'shish
+      queryClient.setQueryData(['spare-parts'], (old: any) => {
+        if (!old) return old;
+        
+        const optimisticPart = {
+          _id: 'temp-' + Date.now(),
+          ...newPart,
+          usageCount: 0,
+          isActive: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        
+        return {
+          ...old,
+          spareParts: [optimisticPart, ...(old.spareParts || [])],
+          pagination: {
+            ...old.pagination,
+            total: (old.pagination?.total || 0) + 1
+          }
+        };
+      });
+      
+      return { previousParts };
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['spare-parts'] });
-      queryClient.invalidateQueries({ queryKey: ['spare-parts-search'] });
-      queryClient.invalidateQueries({ queryKey: ['spare-parts-infinite'] });
-      queryClient.invalidateQueries({ queryKey: ['spare-part-categories'] });
+      // MAJBURIY refetch - invalidate o'rniga
+      queryClient.refetchQueries({ queryKey: ['spare-parts'], type: 'active' });
+      queryClient.refetchQueries({ queryKey: ['spare-parts-search'], type: 'active' });
+      queryClient.refetchQueries({ queryKey: ['spare-parts-infinite'], type: 'active' });
+      queryClient.refetchQueries({ queryKey: ['spare-part-categories'], type: 'active' });
       toast.success('Zapchast muvaffaqiyatli yaratildi');
     },
-    onError: (error: any) => {
+    onError: (error: any, _newPart, context) => {
+      // Rollback on error
+      if (context?.previousParts) {
+        queryClient.setQueryData(['spare-parts'], context.previousParts);
+      }
       toast.error(error.response?.data?.message || 'Zapchast yaratishda xatolik yuz berdi');
     },
   });
@@ -140,13 +176,40 @@ export const useUpdateSparePart = () => {
       const response = await api.put(`/spare-parts/${id}`, data);
       return response.data;
     },
+    onMutate: async ({ id, data }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['spare-parts'] });
+      
+      // Snapshot previous value
+      const previousParts = queryClient.getQueryData(['spare-parts']);
+      
+      // Optimistically update - darhol UI'ni yangilash
+      queryClient.setQueryData(['spare-parts'], (old: any) => {
+        if (!old) return old;
+        
+        return {
+          ...old,
+          spareParts: old.spareParts.map((part: any) => 
+            part._id === id 
+              ? { ...part, ...data, updatedAt: new Date().toISOString() }
+              : part
+          )
+        };
+      });
+      
+      return { previousParts };
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['spare-parts'] });
-      queryClient.invalidateQueries({ queryKey: ['spare-parts-search'] });
-      queryClient.invalidateQueries({ queryKey: ['spare-parts-infinite'] });
+      queryClient.refetchQueries({ queryKey: ['spare-parts'], type: 'active' });
+      queryClient.refetchQueries({ queryKey: ['spare-parts-search'], type: 'active' });
+      queryClient.refetchQueries({ queryKey: ['spare-parts-infinite'], type: 'active' });
       toast.success('Zapchast muvaffaqiyatli yangilandi');
     },
-    onError: (error: any) => {
+    onError: (error: any, _variables, context) => {
+      // Rollback on error
+      if (context?.previousParts) {
+        queryClient.setQueryData(['spare-parts'], context.previousParts);
+      }
       toast.error(error.response?.data?.message || 'Zapchastni yangilashda xatolik yuz berdi');
     },
   });
@@ -160,13 +223,40 @@ export const useDeleteSparePart = () => {
       const response = await api.delete(`/spare-parts/${id}`);
       return response.data;
     },
+    onMutate: async (id) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['spare-parts'] });
+      
+      // Snapshot previous value
+      const previousParts = queryClient.getQueryData(['spare-parts']);
+      
+      // Optimistically update - darhol UI'dan o'chirish
+      queryClient.setQueryData(['spare-parts'], (old: any) => {
+        if (!old) return old;
+        
+        return {
+          ...old,
+          spareParts: old.spareParts.filter((part: any) => part._id !== id),
+          pagination: {
+            ...old.pagination,
+            total: Math.max(0, (old.pagination?.total || 0) - 1)
+          }
+        };
+      });
+      
+      return { previousParts };
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['spare-parts'] });
-      queryClient.invalidateQueries({ queryKey: ['spare-parts-search'] });
-      queryClient.invalidateQueries({ queryKey: ['spare-parts-infinite'] });
+      queryClient.refetchQueries({ queryKey: ['spare-parts'], type: 'active' });
+      queryClient.refetchQueries({ queryKey: ['spare-parts-search'], type: 'active' });
+      queryClient.refetchQueries({ queryKey: ['spare-parts-infinite'], type: 'active' });
       toast.success('Zapchast muvaffaqiyatli o\'chirildi');
     },
-    onError: (error: any) => {
+    onError: (error: any, _id, context) => {
+      // Rollback on error
+      if (context?.previousParts) {
+        queryClient.setQueryData(['spare-parts'], context.previousParts);
+      }
       toast.error(error.response?.data?.message || 'Zapchastni o\'chirishda xatolik yuz berdi');
     },
   });
@@ -182,8 +272,8 @@ export const useIncrementSparePartUsage = () => {
     },
     onSuccess: () => {
       // Quietly update cache without showing toast
-      queryClient.invalidateQueries({ queryKey: ['spare-parts'] });
-      queryClient.invalidateQueries({ queryKey: ['spare-parts-infinite'] });
+      queryClient.refetchQueries({ queryKey: ['spare-parts'], type: 'active' });
+      queryClient.refetchQueries({ queryKey: ['spare-parts-infinite'], type: 'active' });
     },
     onError: () => {
       // Silent error handling for usage increment
@@ -200,7 +290,7 @@ export const useRemoveClientPart = () => {
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['client-parts'] });
+      queryClient.refetchQueries({ queryKey: ['client-parts'], type: 'active' });
       toast.success('Client qismi muvaffaqiyatli o\'chirildi');
     },
     onError: (error: any) => {

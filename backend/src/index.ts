@@ -29,8 +29,8 @@ import bookingRoutes from './routes/bookings';
 import smsRoutes from './routes/smsRoutes';
 
 // Initialize Telegram Service (must be after dotenv.config())
-// Only initialize if Telegram tokens are provided
-if (process.env.TELEGRAM_BOT_TOKEN_CAR || process.env.TELEGRAM_BOT_TOKEN_DEBT) {
+// Only initialize if Telegram tokens are provided and NOT in development mode
+if (process.env.NODE_ENV !== 'development' && (process.env.TELEGRAM_BOT_TOKEN_CAR || process.env.TELEGRAM_BOT_TOKEN_DEBT)) {
   try {
     require('./services/telegramService');
   } catch (error) {
@@ -39,23 +39,16 @@ if (process.env.TELEGRAM_BOT_TOKEN_CAR || process.env.TELEGRAM_BOT_TOKEN_DEBT) {
 }
 
 // Initialize Warehouse Bot (Ombor uchun)
-if (process.env.TELEGRAM_BOT_TOKEN_WAREHOUSE) {
+// Only in production to avoid conflicts with VPS
+if (process.env.NODE_ENV !== 'development' && process.env.TELEGRAM_BOT_TOKEN_WAREHOUSE) {
   try {
     const { initializeWarehouseBot } = require('./services/warehouseBotService');
     initializeWarehouseBot();
   } catch (error) {
     console.error('⚠️ Warehouse bot initialization failed:', error);
   }
-}
-
-// Initialize Warehouse Bot (must be after dotenv.config())
-if (process.env.TELEGRAM_BOT_TOKEN_WAREHOUSE) {
-  try {
-    require('./services/warehouseBotService');
-    console.log('✅ Warehouse Bot initialized');
-  } catch (error) {
-    console.error('⚠️ Warehouse Bot initialization failed:', error);
-  }
+} else if (process.env.NODE_ENV === 'development') {
+  console.log('ℹ️ Telegram bot\'lar development muhitida o\'chirilgan (VPS bilan konflikt oldini olish uchun)');
 }
 
 // Initialize Monthly Reset Cron Job

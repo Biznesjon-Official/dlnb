@@ -3,7 +3,6 @@ import { X, Edit3, AlertCircle, Package } from 'lucide-react';
 import { t } from '@/lib/transliteration';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { formatNumber, parseFormattedNumber } from '@/lib/utils';
-import api from '@/lib/api';
 
 interface SparePart {
   _id: string;
@@ -23,10 +22,17 @@ interface EditSparePartModalProps {
   isOpen: boolean;
   onClose: () => void;
   sparePart: SparePart;
-  onSuccess: (updatedPart?: any) => void; // Yangilangan tovarni qaytarish
+  onSuccess: (updatedPart?: any) => void;
+  updateSparePart: (id: string, data: any) => Promise<any>; // YANGI: Function prop
 }
 
-const EditSparePartModal: React.FC<EditSparePartModalProps> = ({ isOpen, onClose, sparePart, onSuccess }) => {
+const EditSparePartModal: React.FC<EditSparePartModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  sparePart, 
+  onSuccess,
+  updateSparePart // YANGI: Function prop
+}) => {
   const language = React.useMemo<'latin' | 'cyrillic'>(() => {
     const savedLanguage = localStorage.getItem('language');
     return (savedLanguage as 'latin' | 'cyrillic') || 'latin';
@@ -340,67 +346,36 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({ isOpen, onClose
       sellingPrice = sellingPrice * exchangeRate;
     }
 
-    // Optimistic update - darhol yangilangan ma'lumotni yaratish
-    const optimisticUpdate = {
-      ...sparePart,
-      name: formData.category === 'balon' 
-        ? formData.name 
-        : formData.category === 'zapchast' && !formData.name.startsWith(t('Zapchast', language))
-          ? `${t('Zapchast', language)} ${formData.name}`
-          : formData.category === 'boshqa' && !formData.name.startsWith(t('Boshqa', language))
-            ? `${t('Boshqa', language)} ${formData.name}`
-            : formData.name,
+    // Kategoriya nomini qo'shish (agar yo'q bo'lsa)
+    let finalName = formData.name;
+    
+    // Agar nom kategoriya nomi bilan boshlanmasa, qo'shish
+    if (formData.category === 'zapchast' && !finalName.startsWith(t('Zapchast', language))) {
+      finalName = `${t('Zapchast', language)} ${finalName}`;
+    } else if (formData.category === 'boshqa' && !finalName.startsWith(t('Boshqa', language))) {
+      finalName = `${t('Boshqa', language)} ${finalName}`;
+    }
+
+    setErrors({});
+
+    // YANGI: To'g'ridan-to'g'ri updateSparePart funksiyasini chaqirish
+    await updateSparePart(sparePart._id, {
+      name: finalName,
       costPrice: costPrice,
       sellingPrice: sellingPrice,
       price: sellingPrice,
       quantity: Number(formData.quantity),
-      updatedAt: new Date().toISOString(),
-      // @ts-ignore - balon maydonlari
       category: formData.category,
-      // @ts-ignore
-      tireSize: formData.tireSize,
-      // @ts-ignore
-      tireBrand: formData.tireBrand,
-      // @ts-ignore
-      tireType: formData.tireType
-    };
+      ...(formData.category === 'balon' && {
+        tireSize: formData.tireSize,
+        tireBrand: formData.tireBrand || undefined,
+        tireType: formData.tireType
+      })
+    });
 
-    // Darhol UI'ni yangilash (backend'dan javob kutmasdan)
-    onSuccess(optimisticUpdate);
+    // Modal'ni yopish va callback
+    onSuccess();
     onClose();
-    setErrors({});
-
-    // Background'da backend'ga yuborish
-    try {
-      // Kategoriya nomini qo'shish (agar yo'q bo'lsa)
-      let finalName = formData.name;
-      
-      // Agar nom kategoriya nomi bilan boshlanmasa, qo'shish
-      if (formData.category === 'zapchast' && !finalName.startsWith(t('Zapchast', language))) {
-        finalName = `${t('Zapchast', language)} ${finalName}`;
-      } else if (formData.category === 'boshqa' && !finalName.startsWith(t('Boshqa', language))) {
-        finalName = `${t('Boshqa', language)} ${finalName}`;
-      }
-      
-      await api.put(`/spare-parts/${sparePart._id}`, {
-        name: finalName,
-        costPrice: costPrice,
-        sellingPrice: sellingPrice,
-        price: sellingPrice,
-        quantity: Number(formData.quantity),
-        // Balon uchun qo'shimcha maydonlar
-        category: formData.category,
-        ...(formData.category === 'balon' && {
-          tireSize: formData.tireSize,
-          tireBrand: formData.tireBrand || undefined,
-          tireType: formData.tireType
-        })
-      });
-    } catch (error: any) {
-      console.error('Error updating spare part:', error);
-      // Xatolik bo'lsa, sahifani qayta yuklash
-      window.location.reload();
-    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {

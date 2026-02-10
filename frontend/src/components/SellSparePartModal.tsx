@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { X, DollarSign, Package, User, Phone } from 'lucide-react';
 import { t } from '@/lib/transliteration';
 import { formatCurrency } from '@/lib/utils';
-import api from '@/lib/api';
 import toast from 'react-hot-toast';
 
 interface SellSparePartModalProps {
@@ -10,13 +9,15 @@ interface SellSparePartModalProps {
   onClose: () => void;
   onSuccess: (updatedPart?: any) => void; // Yangilangan tovarni qaytarish
   sparePart: any;
+  sellSparePart: (id: string, quantity: number, sellingPrice?: number) => Promise<void>; // YANGI: Function prop
 }
 
 const SellSparePartModal: React.FC<SellSparePartModalProps> = ({
   isOpen,
   onClose,
   onSuccess,
-  sparePart
+  sparePart,
+  sellSparePart // YANGI: Function prop
 }) => {
   const [quantity, setQuantity] = useState(1);
   const [sellingPrice, setSellingPrice] = useState(sparePart?.sellingPrice || 0);
@@ -80,20 +81,14 @@ const SellSparePartModal: React.FC<SellSparePartModalProps> = ({
     setIsSubmitting(true);
 
     try {
-      await api.post('/spare-parts/sell', {
-        sparePartId: sparePart._id,
-        quantity,
-        sellingPrice,
-        customerName: customerName.trim() || undefined,
-        customerPhone: customerPhone.trim() || undefined
-      });
-
-      toast.success(t('Zapchast muvaffaqiyatli sotildi', language));
+      // YANGI: To'g'ridan-to'g'ri sellSparePart funksiyasini chaqirish
+      await sellSparePart(sparePart._id, quantity, sellingPrice);
+      
       onSuccess(quantity); // Sotilgan miqdorni qaytarish
       onClose();
     } catch (error: any) {
       console.error('Error selling spare part:', error);
-      toast.error(error.response?.data?.message || t('Xatolik yuz berdi', language));
+      // Xatolik toast hook ichida ko'rsatiladi
     } finally {
       setIsSubmitting(false);
     }

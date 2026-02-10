@@ -30,7 +30,8 @@ router.post(
     body('customerName').trim().notEmpty().withMessage('Mijoz ismi kiritilishi shart'),
     body('phoneNumber').trim().notEmpty().withMessage('Telefon raqam kiritilishi shart'),
     body('licensePlate').trim().notEmpty().withMessage('Davlat raqami kiritilishi shart'),
-    body('bookingDate').isISO8601().withMessage('To\'g\'ri sana kiritilishi shart'),
+    body('bookingDate').optional().isISO8601().withMessage('To\'g\'ri sana kiritilishi shart'),
+    body('birthDate').optional().isISO8601().withMessage('To\'g\'ri tug\'ilgan kun kiritilishi shart'),
     handleValidationErrors,
   ],
   createBooking
@@ -45,6 +46,7 @@ router.put(
     body('phoneNumber').optional().trim().notEmpty(),
     body('licensePlate').optional().trim().notEmpty(),
     body('bookingDate').optional().isISO8601(),
+    body('birthDate').optional().isISO8601(),
     body('status').optional().isIn(['pending', 'confirmed', 'completed', 'cancelled']),
     handleValidationErrors,
   ],

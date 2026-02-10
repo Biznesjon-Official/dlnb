@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Package, Plus, Search, AlertTriangle, Edit, Trash2, TrendingUp, Eye, DollarSign, Box } from 'lucide-react';
 import { t } from '@/lib/transliteration';
+import { useUpdateSparePart, useDeleteSparePart } from '@/hooks/useSpareParts';
 import SparePartExpenseModal from '../../components/SparePartExpenseModal';
 import EditSparePartModal from '../../components/EditSparePartModal';
 import ViewSparePartModal from '../../components/ViewSparePartModal';
@@ -32,6 +33,9 @@ const SpareParts: React.FC = () => {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedPart, setSelectedPart] = useState<SparePart | null>(null);
+
+  const { mutate: updateSparePart } = useUpdateSparePart();
+  const { mutate: deleteSparePart } = useDeleteSparePart();
 
   const language = React.useMemo<'latin' | 'cyrillic'>(() => {
     const savedLanguage = localStorage.getItem('language');
@@ -484,6 +488,14 @@ const SpareParts: React.FC = () => {
             onSuccess={() => {
               fetchSpareParts();
             }}
+            updateSparePart={(id, data) => {
+              return new Promise((resolve, reject) => {
+                updateSparePart({ id, data }, {
+                  onSuccess: resolve,
+                  onError: reject
+                } as any);
+              });
+            }}
           />
 
           <DeleteSparePartModal
@@ -491,6 +503,14 @@ const SpareParts: React.FC = () => {
             onClose={closeAllModals}
             sparePart={selectedPart}
             onSuccess={fetchSpareParts}
+            deleteSparePart={(id) => {
+              return new Promise((resolve, reject) => {
+                deleteSparePart(id, {
+                  onSuccess: resolve,
+                  onError: reject
+                } as any);
+              });
+            }}
           />
         </>
       )}

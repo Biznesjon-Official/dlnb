@@ -19,28 +19,41 @@ interface DeleteSparePartModalProps {
   onClose: () => void;
   sparePart: SparePart | null;
   onSuccess: () => void;
+  deleteSparePart: (id: string) => Promise<void>; // YANGI: Function prop
 }
 
-const DeleteSparePartModal: React.FC<DeleteSparePartModalProps> = ({ isOpen, onClose, sparePart, onSuccess }) => {
+const DeleteSparePartModal: React.FC<DeleteSparePartModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  sparePart, 
+  onSuccess,
+  deleteSparePart // YANGI: Function prop
+}) => {
   const language = (localStorage.getItem('language') as 'latin' | 'cyrillic') || 'latin';
+  const [isDeleting, setIsDeleting] = React.useState(false);
 
   if (!isOpen || !sparePart) return null;
 
-  const handleDelete = () => {
-    // 1. DARHOL UI'ni yangilash (optimistic update) - 0.1 sekund ichida
-    onSuccess();
-    onClose();
+  const handleDelete = async () => {
+    if (isDeleting) return; // Prevent double click
     
-    // 2. Background'da API so'rovini yuborish
-    const token = localStorage.getItem('token');
-    fetch(`${import.meta.env.VITE_API_URL}/spare-parts/${sparePart._id}`, {
-      method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    }).catch(error => {
-      console.error('Error deleting spare part:', error);
-    });
+    setIsDeleting(true);
+    
+    try {
+      // YANGI: To'g'ridan-to'g'ri deleteSparePart funksiyasini chaqirish
+      await deleteSparePart(sparePart._id);
+      
+      // Success callback
+      onSuccess();
+      
+      // Modal'ni yopish
+      onClose();
+    } catch (error: any) {
+      console.error('❌ Error deleting spare part:', error);
+      // Xatolik toast hook ichida ko'rsatiladi
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -51,7 +64,7 @@ const DeleteSparePartModal: React.FC<DeleteSparePartModalProps> = ({ isOpen, onC
         <div className="inline-block w-full max-w-md my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl">
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
             <h3 className="text-xl font-bold text-gray-900">{t('Zapchastni o\'chirish', language)}</h3>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-500">
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-500" disabled={isDeleting}>
               <X className="w-6 h-6" />
             </button>
           </div>
@@ -80,14 +93,19 @@ const DeleteSparePartModal: React.FC<DeleteSparePartModalProps> = ({ isOpen, onC
           <div className="flex justify-end space-x-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              disabled={isDeleting}
+              className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {t('Bekor qilish', language)}
             </button>
             <button
               onClick={handleDelete}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              disabled={isDeleting}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
+              {isDeleting && (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              )}
               {t('O\'chirish', language)}
             </button>
           </div>

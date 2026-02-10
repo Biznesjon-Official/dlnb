@@ -3,10 +3,9 @@
   "version": "1.0.0",
   "description": "Dalnoboy Shop - Full-stack Car Repair Workshop Management System",
   "scripts": {
-    "dev": "concurrently --kill-others-on-fail \"npm run dev:backend\" \"npm run dev:frontend:delayed\"",
-    "dev:backend": "cd backend && npm run dev",
-    "dev:frontend": "cd frontend && npm run dev",
-    "dev:frontend:delayed": "timeout /t 3 /nobreak >nul 2>&1 && cd frontend && npm run dev",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend & npm run dev",
+    "dev:frontend": "cd frontend & npm run dev",
     "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
     "build": "cd backend && npm run build && cd ../frontend && npm run build",
     "build:backend": "cd backend && npm run build",

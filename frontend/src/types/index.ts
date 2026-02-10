@@ -162,6 +162,7 @@ export interface SparePart {
   costPrice: number;
   sellingPrice: number;
   price: number; // Deprecated but kept for backward compatibility
+  currency?: 'UZS' | 'USD'; // Valyuta turi
   quantity: number;
   supplier: string;
   usageCount: number;
@@ -169,6 +170,14 @@ export interface SparePart {
   profit: number; // Virtual field from backend
   createdAt: string;
   updatedAt: string;
+  // Balon uchun maxsus maydonlar
+  category?: 'balon' | 'zapchast' | 'boshqa' | 'other';
+  tireSize?: string;
+  tireFullSize?: string;
+  tireBrand?: string;
+  tireType?: 'yozgi' | 'qishki' | 'universal';
+  tireCategory?: string;
+  unit?: string;
 }
 
 export interface SparePartFilters {
