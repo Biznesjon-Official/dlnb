@@ -63,7 +63,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     // Online bo'lsa barcha sahifalar
     return [
       { name: t('Kassa', language), href: '/app/master/cashier', icon: CreditCard },
-      { name: t('Xarajatlar', language), href: '/app/master/expenses', icon: BookOpen },
       { name: t('Mijozlar', language), href: '/app/master/bookings', icon: Users },
       { name: t('Avtomobillar', language), href: '/app/cars', icon: Car },
       { name: t('Shogirdlar', language), href: '/app/master/apprentices', icon: Users },

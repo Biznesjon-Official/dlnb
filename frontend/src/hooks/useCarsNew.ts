@@ -51,7 +51,8 @@ export function useCarsNew() {
       const networkStatus = networkManager.getStatus();
       
       // FAST PATH: Always load from IndexedDB first (instant)
-      const data = await carsRepository.getAll();
+      // MUHIM: Faqat faol mashinalarni yuklash (arxivlangan emas!)
+      const data = await carsRepository.getActiveCars();
       setCars(data);
       
       // ⚡ INSTANT: Save to localStorage for next page load (0ms)
@@ -67,7 +68,7 @@ export function useCarsNew() {
       // Background sync if online (user won't see this)
       if (networkStatus.isOnline && !silent) {
         // Fire and forget - update in background
-        carsRepository.getAll().then(freshData => {
+        carsRepository.getActiveCars().then(freshData => {
           // Only update if data changed
           if (JSON.stringify(freshData) !== JSON.stringify(data)) {
             setCars(freshData);

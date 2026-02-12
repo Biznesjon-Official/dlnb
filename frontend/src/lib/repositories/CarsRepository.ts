@@ -171,30 +171,41 @@ export class CarsRepository extends BaseRepository<Car> {
   // Cars specific methods
   async getActiveCars(): Promise<Car[]> {
     const allCars = await this.getAll();
-    return allCars.filter(car => !car.isDeleted);
+    // Faqat faol mashinalarni qaytarish (isDeleted === false yoki undefined)
+    return allCars.filter(car => car.isDeleted !== true);
   }
 
   async getArchivedCars(): Promise<Car[]> {
-    // Arxivlangan mashinalarni serverdan olish
+    // Arxivlangan mashinalarni olish
     if (this.networkManager.isOnline()) {
       try {
         const response = await api.get('/cars/archived/list');
         const archivedCars = response.data?.cars || [];
         
-        // Cache'ga saqlash (non-blocking)
-        this.storage.save(this.config.collection, archivedCars);
+        // Cache'ga saqlash (non-blocking) - arxivlangan mashinalarni ham saqlash
+        // MUHIM: Bu yerda faqat arxivlangan mashinalarni saqlamaslik kerak
+        // Chunki IndexedDB'da barcha mashinalar (faol + arxivlangan) saqlanadi
+        // Shuning uchun faqat yangilash kerak
+        if (archivedCars.length > 0) {
+          // Har bir arxivlangan mashinani alohida yangilash
+          archivedCars.forEach((car: any) => {
+            this.storage.update(this.config.collection, car._id, car).catch(err => {
+              console.error('Failed to update archived car in cache:', err);
+            });
+          });
+        }
         
         return archivedCars;
       } catch (error) {
         console.error('Failed to fetch archived cars from server:', error);
         // Fallback to IndexedDB
         const allCars = await this.storage.getAll<Car>(this.config.collection);
-        return allCars.filter(car => car.isDeleted);
+        return allCars.filter(car => car.isDeleted === true);
       }
     } else {
-      // Offline: IndexedDB'dan olish
+      // Offline: IndexedDB'dan barcha mashinalarni olish va arxivlanganlarni filter qilish
       const allCars = await this.storage.getAll<Car>(this.config.collection);
-      return allCars.filter(car => car.isDeleted);
+      return allCars.filter(car => car.isDeleted === true);
     }
   }
 

@@ -6,7 +6,6 @@ import {
   Plus,
   Calendar,
   BarChart3,
-  Eye,
   Wallet,
   CreditCard,
   Smartphone,
@@ -180,7 +179,7 @@ const MasterCashier: React.FC = memo(() => {
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-2 w-full lg:grid-cols-4 lg:w-auto">
+              <div className="grid grid-cols-2 gap-2 w-full lg:grid-cols-3 lg:w-auto lg:ml-auto">
                 <Link 
                   to="/app/master/warehouse"
                   className="group relative overflow-hidden px-3 sm:px-4 md:px-5 py-2.5 sm:py-3 bg-gradient-to-r from-purple-500 via-purple-600 to-indigo-600 text-white rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 flex items-center gap-1.5 sm:gap-2 justify-center"
@@ -206,19 +205,40 @@ const MasterCashier: React.FC = memo(() => {
                   <History className="h-3.5 w-3.5 sm:h-4 sm:w-4 group-hover:text-blue-600 transition-colors flex-shrink-0" />
                   <span className="group-hover:text-blue-600 transition-colors truncate">{t('Tarix', language)}</span>
                 </button>
-                <Link 
-                  to="/app/master/expenses"
-                  className="group relative overflow-hidden px-3 sm:px-4 md:px-5 py-2.5 sm:py-3 bg-white border-2 border-gray-200 text-gray-700 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold shadow-md hover:shadow-xl hover:border-indigo-400 transition-all duration-300 hover:scale-105 flex items-center gap-1.5 sm:gap-2 justify-center"
-                >
-                  <BarChart3 className="h-3.5 w-3.5 sm:h-4 sm:w-4 group-hover:text-indigo-600 transition-colors flex-shrink-0" />
-                  <span className="group-hover:text-indigo-600 transition-colors truncate">{t("Hisobot", language)}</span>
-                </Link>
               </div>
             </div>
           </div>
 
           {/* Stats Cards - Premium Design */}
           <div className="relative z-10 px-6 sm:px-8 lg:px-10 pb-6 sm:pb-8 lg:pb-10">
+          
+          {/* Action Buttons - Faqat mobil uchun birinchi (lg:hidden) */}
+          <div className="grid grid-cols-2 gap-3 mb-5 lg:hidden">
+            {/* KIRIM Button */}
+            <button
+              onClick={() => setIsIncomeModalOpen(true)}
+              className="group relative overflow-hidden bg-gradient-to-br from-green-500 via-green-600 to-emerald-600 text-white rounded-xl p-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+              <div className="relative z-10 flex items-center justify-center gap-2">
+                <TrendingUp className="h-5 w-5" />
+                <span className="text-sm font-bold">{t('KIRIM', language)}</span>
+              </div>
+            </button>
+
+            {/* CHIQIM Button */}
+            <button
+              onClick={() => setIsExpenseModalOpen(true)}
+              className="group relative overflow-hidden bg-gradient-to-br from-red-500 via-red-600 to-pink-600 text-white rounded-xl p-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+              <div className="relative z-10 flex items-center justify-center gap-2">
+                <TrendingDown className="h-5 w-5" />
+                <span className="text-sm font-bold">{t('CHIQIM', language)}</span>
+              </div>
+            </button>
+          </div>
+          
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
             {/* KIRIM CARD */}
             <div 
@@ -351,8 +371,8 @@ const MasterCashier: React.FC = memo(() => {
           </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="relative z-10 px-6 sm:px-8 lg:px-10 pb-6 sm:pb-8 lg:pb-10">
+          {/* Action Buttons - Faqat desktop uchun */}
+          <div className="relative z-10 px-6 sm:px-8 lg:px-10 pb-6 sm:pb-8 lg:pb-10 hidden lg:block">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* KIRIM Button */}
             <button
@@ -460,9 +480,9 @@ const MasterCashier: React.FC = memo(() => {
           </div>
 
           {/* Transactions List - Enhanced */}
-          <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {transactions.length === 0 ? (
-              <div className="text-center py-12">
+              <div className="text-center py-12 md:col-span-2">
                 <div className="relative inline-block mb-4">
                   <div className="absolute inset-0 bg-gray-200 rounded-full blur-xl opacity-50"></div>
                   <div className="relative p-5 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full">
@@ -478,34 +498,34 @@ const MasterCashier: React.FC = memo(() => {
               transactions.slice(0, 10).map((transaction: any) => (
                 <div 
                   key={transaction._id} 
-                  className={`group relative overflow-hidden rounded-2xl p-4 sm:p-5 border-2 hover:shadow-xl transition-all duration-300 hover:scale-[1.01] ${
+                  className={`group relative overflow-hidden rounded-xl p-3 sm:p-4 border-2 hover:shadow-lg transition-all duration-300 hover:scale-[1.02] ${
                     transaction.type === 'income' 
                       ? 'border-green-200 bg-gradient-to-r from-green-50 via-emerald-50/50 to-transparent hover:border-green-300' 
                       : 'border-red-200 bg-gradient-to-r from-red-50 via-pink-50/50 to-transparent hover:border-red-300'
                   }`}
                 >
                   {/* Decorative Border */}
-                  <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${
+                  <div className={`absolute left-0 top-0 bottom-0 w-1 ${
                     transaction.type === 'income' ? 'bg-gradient-to-b from-green-500 to-emerald-600' : 'bg-gradient-to-b from-red-500 to-pink-600'
                   }`}></div>
                   
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-start gap-4 flex-1">
-                      <div className={`p-3 rounded-xl shadow-md group-hover:shadow-lg transition-shadow ${
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                      <div className={`p-2 rounded-lg shadow-md group-hover:shadow-lg transition-shadow flex-shrink-0 ${
                         transaction.type === 'income' ? 'bg-gradient-to-br from-green-500 to-emerald-600' : 'bg-gradient-to-br from-red-500 to-pink-600'
                       }`}>
                         {transaction.type === 'income' ? (
-                          <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                          <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                         ) : (
-                          <TrendingDown className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                          <TrendingDown className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h4 className="font-bold text-base sm:text-lg text-gray-900 truncate">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-bold text-sm sm:text-base text-gray-900 truncate">
                             {transaction.category}
                           </h4>
-                          <span className={`px-2.5 py-1 text-xs font-bold rounded-full ${
+                          <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full flex-shrink-0 ${
                             transaction.type === 'income' 
                               ? 'bg-green-100 text-green-700 border border-green-200' 
                               : 'bg-red-100 text-red-700 border border-red-200'
@@ -513,37 +533,32 @@ const MasterCashier: React.FC = memo(() => {
                             {transaction.type === 'income' ? t('Kirim', language) : t('Chiqim', language)}
                           </span>
                         </div>
-                        <p className="text-sm text-gray-600 mb-3 line-clamp-2 font-medium">
+                        <p className="text-xs text-gray-600 mb-2 line-clamp-1 font-medium">
                           {transaction.description}
                         </p>
-                        <div className="flex items-center gap-4 text-xs text-gray-500 flex-wrap">
-                          <span className="flex items-center gap-1.5 bg-white/80 px-2.5 py-1 rounded-lg">
-                            <Calendar className="h-3.5 w-3.5" />
-                            {format(new Date(transaction.createdAt), 'dd.MM.yyyy HH:mm')}
+                        <div className="flex items-center gap-2 text-[10px] text-gray-500 flex-wrap">
+                          <span className="flex items-center gap-1 bg-white/80 px-2 py-0.5 rounded">
+                            <Calendar className="h-3 w-3" />
+                            {format(new Date(transaction.createdAt), 'dd.MM.yyyy')}
                           </span>
-                          <span className="flex items-center gap-1.5 bg-white/80 px-2.5 py-1 rounded-lg">
+                          <span className="flex items-center gap-1 bg-white/80 px-2 py-0.5 rounded">
                             {getPaymentMethodIcon(transaction.paymentMethod)}
                             {getPaymentMethodText(transaction.paymentMethod)}
                           </span>
                           {transaction.createdBy && typeof transaction.createdBy === 'object' && (
-                            <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-semibold ${
+                            <span className={`flex items-center gap-1 px-2 py-0.5 rounded font-semibold ${
                               transaction.createdBy._id === currentUser?._id
                                 ? 'bg-blue-100 text-blue-700 border border-blue-200'
                                 : 'bg-gray-100 text-gray-700 border border-gray-200'
                             }`}>
                               👤 {transaction.createdBy.name}
-                              {transaction.createdBy._id === currentUser?._id && (
-                                <span className="text-[10px] bg-blue-200 px-1.5 py-0.5 rounded-full">
-                                  {t('Siz', language)}
-                                </span>
-                              )}
                             </span>
                           )}
                         </div>
                       </div>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <div className={`text-lg sm:text-xl font-black ${
+                      <div className={`text-sm sm:text-base font-black ${
                         transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
                       }`}>
                         {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount, language)}
@@ -554,18 +569,6 @@ const MasterCashier: React.FC = memo(() => {
               ))
             )}
           </div>
-
-          {transactions.length > 10 && (
-            <div className="text-center mt-6 pt-6 border-t-2 border-gray-100">
-              <Link 
-                to="/app/master/expenses"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-              >
-                <Eye className="h-5 w-5" />
-                {t("Barchasini ko'rish", language)} ({transactions.length})
-              </Link>
-            </div>
-          )}
           </div>
         </div>
 

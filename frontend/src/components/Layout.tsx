@@ -12,10 +12,10 @@ import {
   Award,
   Globe,
   BookOpen,
-  Menu,
 } from 'lucide-react';
 import { t } from '@/lib/transliteration';
 import Sidebar from './Sidebar';
+import BottomNavbar from './BottomNavbar';
 import { OfflineIndicator } from './OfflineIndicator';
 import { OfflineTransitionModal } from './OfflineTransitionModal';
 import { useLowStockCount } from '@/hooks/useSpareParts';
@@ -76,7 +76,6 @@ const Layout: React.FC = () => {
     // Online bo'lsa barcha sahifalar
     return [
       { name: t('Kassa', language), href: '/app/master/cashier', icon: CreditCard },
-      { name: t('Xarajatlar', language), href: '/app/master/expenses', icon: BookOpen },
       { name: t('Mijozlar', language), href: '/app/master/bookings', icon: Users },
       { name: t('Avtomobillar', language), href: '/app/cars', icon: Car },
       { name: t('Shogirdlar', language), href: '/app/master/apprentices', icon: Users },
@@ -134,19 +133,6 @@ const Layout: React.FC = () => {
       {isMobile && !isWarehousePage && (
         <div className="fixed top-0 left-0 right-0 z-[60] bg-white/95 backdrop-blur-lg shadow-lg border-b border-gray-200/50">
           <div className="flex items-center justify-between px-4 py-3">
-            {/* Menu Button */}
-            <button
-              onClick={() => setIsSidebarOpen(true)}
-              className="relative p-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg hover:scale-105 transition-all duration-200 group"
-            >
-              <Menu className="h-5 w-5" />
-              {/* Notification Indicator - agar biror ogohlantirish bo'lsa */}
-              {((user?.role === 'master' && (lowStockCount > 0 || completedTasksCount > 0 || overdueDebtsCount > 0)) || 
-                (user?.role === 'apprentice' && lowStockCount > 0)) && (
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-600 rounded-full animate-pulse shadow-lg border-2 border-white"></div>
-              )}
-            </button>
-
             {/* Site Name */}
             <div className="flex items-center gap-2">
               <div>
@@ -320,12 +306,15 @@ const Layout: React.FC = () => {
 
       {/* Main content */}
       <div className={`transition-all duration-300 ${isMobile ? 'pl-0' : (isWarehousePage ? 'pl-0' : 'pl-72')}`}>
-        <main className={`${isMobile ? 'pt-20 pb-8' : (isWarehousePage ? 'py-0' : 'py-8')}`}>
+        <main className={`${isMobile ? 'pt-20 pb-20' : (isWarehousePage ? 'py-0' : 'py-8')}`}>
           <div className={`mx-auto ${isWarehousePage ? 'max-w-full px-0' : 'max-w-7xl px-4 sm:px-6 lg:px-8'}`}>
             <Outlet />
           </div>
         </main>
       </div>
+
+      {/* Bottom Navigation - faqat mobile uchun */}
+      {isMobile && !isWarehousePage && <BottomNavbar />}
     </div>
   );
 };
