@@ -180,7 +180,7 @@ frontend/
 ├── public/              # Static fayllar
 │   ├── sw.js           # Service Worker
 │   ├── manifest.json   # PWA manifest
-│   └── logo.png
+│   └── dlnb.png        # Logo
 ├── .env                # Environment variables
 └── package.json
 ```
@@ -324,7 +324,7 @@ frontend/
 ├── public/              # Static files
 │   ├── sw.js            # Service Worker
 │   ├── manifest.json    # PWA manifest
-│   └── logo.png         # Logo
+│   └── dlnb.png         # Logo
 ├── dist/                # Build output
 ├── package.json         # Frontend dependencies
 ├── vite.config.ts       # Vite configuration

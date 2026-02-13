@@ -16,6 +16,10 @@ export interface IUser extends Document {
   profileImage?: string; // Profil rasmi
   profession?: string; // Kasbi
   experience?: number; // Tajriba (yillarda)
+  // Kunlik ishchi uchun
+  paymentType?: 'percentage' | 'daily'; // To'lov turi: foizli yoki kunlik
+  dailyRate?: number; // Kunlik to'lov summasi (faqat kunlik ishchi uchun)
+  lastDailyPaymentDate?: Date; // Oxirgi kunlik to'lov sanasi
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -63,6 +67,20 @@ const userSchema = new Schema<IUser>({
     type: Number,
     min: 0,
     max: 100,
+    default: undefined
+  },
+  paymentType: {
+    type: String,
+    enum: ['percentage', 'daily'],
+    default: 'percentage'
+  },
+  dailyRate: {
+    type: Number,
+    min: 0,
+    default: undefined
+  },
+  lastDailyPaymentDate: {
+    type: Date,
     default: undefined
   },
   role: {

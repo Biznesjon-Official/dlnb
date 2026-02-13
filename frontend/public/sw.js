@@ -2,7 +2,7 @@ const CACHE_NAME = 'dalnoboy-v3';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/logo.png'
+  '/dlnb.png'
 ];
 
 // Install event - cache static assets
@@ -112,8 +112,8 @@ self.addEventListener('push', (event) => {
   const title = data.title || 'Dalnoboy Shop';
   const options = {
     body: data.body || 'Yangi xabar',
-    icon: '/logo.png',
-    badge: '/logo.png',
+    icon: '/dlnb.png',
+    badge: '/dlnb.png',
     data: data.url
   };
 

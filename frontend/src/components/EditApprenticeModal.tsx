@@ -23,7 +23,9 @@ const EditApprenticeModal: React.FC<EditApprenticeModalProps> = ({ isOpen, onClo
     percentage: 50,
     profession: '',
     experience: 0,
-    profileImage: ''
+    profileImage: '',
+    paymentType: 'percentage' as 'percentage' | 'daily',
+    dailyRate: 0
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -49,7 +51,9 @@ const EditApprenticeModal: React.FC<EditApprenticeModalProps> = ({ isOpen, onClo
         percentage: apprentice.percentage || 50,
         profession: apprentice.profession || '',
         experience: apprentice.experience || 0,
-        profileImage: apprentice.profileImage || ''
+        profileImage: apprentice.profileImage || '',
+        paymentType: apprentice.paymentType || 'percentage',
+        dailyRate: apprentice.dailyRate || 0
       });
       setImagePreview(apprentice.profileImage || '');
     }
@@ -76,6 +80,11 @@ const EditApprenticeModal: React.FC<EditApprenticeModalProps> = ({ isOpen, onClo
 
     if (formData.percentage < 0 || formData.percentage > 100) {
       newErrors.percentage = t("Foiz 0 dan 100 gacha bo'lishi kerak", language);
+    }
+
+    // Kunlik ishchi uchun kunlik ish haqi majburiy
+    if (formData.paymentType === 'daily' && (!formData.dailyRate || formData.dailyRate < 1000)) {
+      newErrors.dailyRate = t('Kunlik ish haqi kamida 1000 so\'m bo\'lishi kerak', language);
     }
 
     setErrors(newErrors);
@@ -105,7 +114,9 @@ const EditApprenticeModal: React.FC<EditApprenticeModalProps> = ({ isOpen, onClo
         percentage: formData.percentage,
         profession: formData.profession,
         experience: formData.experience,
-        profileImage: profileImageUrl
+        profileImage: profileImageUrl,
+        paymentType: formData.paymentType,
+        dailyRate: formData.dailyRate
       };
 
       // Agar onUpdateOptimistic prop berilgan bo'lsa, uni ishlatish (optimistic update)
@@ -405,37 +416,76 @@ const EditApprenticeModal: React.FC<EditApprenticeModalProps> = ({ isOpen, onClo
               )}
             </div>
 
-            {/* Percentage */}
-            <div>
-              <label htmlFor="percentage" className="block text-xs font-medium text-gray-700 mb-1">
-                {t('Foiz ulushi', language)} (%)
-              </label>
-              <div className="relative">
-                <Percent className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input
-                  type="number"
-                  id="percentage"
-                  name="percentage"
-                  value={formData.percentage}
-                  onChange={handleChange}
-                  required
-                  min="0"
-                  max="100"
-                  className={`w-full pl-8 pr-3 py-2 text-sm border-2 rounded-lg focus:outline-none transition-all ${
-                    errors.percentage 
-                      ? 'border-red-300 focus:border-red-500' 
-                      : 'border-gray-200 focus:border-blue-500'
-                  }`}
-                  placeholder="50"
-                />
+            {/* Percentage - faqat foizli ishchi uchun */}
+            {formData.paymentType === 'percentage' && (
+              <div>
+                <label htmlFor="percentage" className="block text-xs font-medium text-gray-700 mb-1">
+                  {t('Foiz ulushi', language)} (%)
+                </label>
+                <div className="relative">
+                  <Percent className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input
+                    type="number"
+                    id="percentage"
+                    name="percentage"
+                    value={formData.percentage}
+                    onChange={handleChange}
+                    required
+                    min="0"
+                    max="100"
+                    className={`w-full pl-8 pr-3 py-2 text-sm border-2 rounded-lg focus:outline-none transition-all ${
+                      errors.percentage 
+                        ? 'border-red-300 focus:border-red-500' 
+                        : 'border-gray-200 focus:border-blue-500'
+                    }`}
+                    placeholder="50"
+                  />
+                </div>
+                {errors.percentage && (
+                  <p className="mt-1 text-[10px] text-red-600 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {errors.percentage}
+                  </p>
+                )}
               </div>
-              {errors.percentage && (
-                <p className="mt-1 text-[10px] text-red-600 flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3" />
-                  {errors.percentage}
+            )}
+
+            {/* Daily Rate - faqat kunlik ishchi uchun */}
+            {formData.paymentType === 'daily' && (
+              <div>
+                <label htmlFor="dailyRate" className="block text-xs font-medium text-gray-700 mb-1">
+                  {t('Kunlik ish haqi', language)} ({t("so'm", language)})
+                </label>
+                <div className="relative">
+                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-sm">₸</span>
+                  <input
+                    type="number"
+                    id="dailyRate"
+                    name="dailyRate"
+                    value={formData.dailyRate}
+                    onChange={handleChange}
+                    required
+                    min="1000"
+                    step="1000"
+                    className={`w-full pl-8 pr-3 py-2 text-sm border-2 rounded-lg focus:outline-none transition-all ${
+                      errors.dailyRate 
+                        ? 'border-red-300 focus:border-red-500' 
+                        : 'border-gray-200 focus:border-green-500'
+                    }`}
+                    placeholder="100000"
+                  />
+                </div>
+                {errors.dailyRate && (
+                  <p className="mt-1 text-[10px] text-red-600 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {errors.dailyRate}
+                  </p>
+                )}
+                <p className="mt-1 text-[10px] text-green-600 font-medium">
+                  ✓ {t('Har kuni avtomatik to\'lov qo\'shiladi', language)}
                 </p>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Buttons */}
             <div className="flex items-center gap-2 pt-2">

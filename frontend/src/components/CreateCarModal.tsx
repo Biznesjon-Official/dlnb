@@ -501,7 +501,7 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
     try {
       // 1. Mashinani yaratish
       const totalEstimate = partsAndMaterials.reduce((sum, part) => sum + (part.price * part.quantity), 0) +
-                           laborItems.reduce((sum, item) => sum + item.price, 0);
+                           laborItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
       
       const carData = {
         make: formData.make,
@@ -524,7 +524,7 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
           name: item.name,
           description: 'Ish haqi',
           price: item.price,
-          quantity: 1,
+          quantity: item.quantity,
           category: 'labor' as const
         })),
         createdAt: new Date().toISOString(),
@@ -1343,7 +1343,7 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
                 </div>
                 
                 <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-3 gap-3">
                     <div>
                       <label className="block text-xs font-semibold text-purple-700 mb-1.5">
                         {t('Ish nomi', language)} *
@@ -1352,13 +1352,13 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
                         type="text"
                         value={itemName}
                         onChange={(e) => setItemName(e.target.value)}
-                        placeholder={t("Masalan: Dvigatel ta'mirlash", language)}
+                        placeholder={t("Masalan: Balon tuzatish", language)}
                         className="w-full px-3 py-2.5 border-2 border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white"
                       />
                     </div>
                     <div>
                       <label className="block text-xs font-semibold text-purple-700 mb-1.5">
-                        {t("To'lov summasi", language)} *
+                        {t("Narxi (dona)", language)} *
                       </label>
                       <input
                         type="text"
@@ -1366,29 +1366,56 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
                         onChange={handlePriceChange}
                         onFocus={handlePriceFocus}
                         onBlur={handlePriceBlur}
-                        placeholder="0"
+                        placeholder="10,000"
+                        className="w-full px-3 py-2.5 border-2 border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-purple-700 mb-1.5">
+                        {t("Soni", language)} *
+                      </label>
+                      <input
+                        type="number"
+                        value={itemQuantity}
+                        onChange={(e) => setItemQuantity(e.target.value)}
+                        min="1"
+                        placeholder="1"
                         className="w-full px-3 py-2.5 border-2 border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white"
                       />
                     </div>
                   </div>
+                  
+                  {/* Jami summa ko'rsatish */}
+                  {itemPrice && itemQuantity && parseFloat(itemPrice) > 0 && parseInt(itemQuantity) > 0 && (
+                    <div className="bg-purple-100 border-2 border-purple-300 rounded-lg p-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-semibold text-purple-700">{t('Jami:', language)}</span>
+                        <span className="text-lg font-bold text-purple-900">
+                          {formatCurrency(parseFloat(itemPrice) * parseInt(itemQuantity))}
+                        </span>
+                      </div>
+                    </div>
+                  )}
                   <button
                     type="button"
                     onClick={() => {
                       if (itemName) {
                         // Agar pul kiritilmagan bo'lsa, 0 qo'yamiz
                         const price = itemPrice && parseFloat(itemPrice) > 0 ? parseFloat(itemPrice) : 0;
+                        const quantity = itemQuantity && parseInt(itemQuantity) > 0 ? parseInt(itemQuantity) : 1;
                         
                         setItems(prev => [...prev, {
                           name: itemName,
                           description: '',
                           price: price,
-                          quantity: 1,
+                          quantity: quantity,
                           category: 'labor',
                           source: 'available' // Ish haqi har doim bizda bor
                         }]);
                         setItemName('');
                         setItemPrice('');
                         setDisplayItemPrice('0');
+                        setItemQuantity('1');
                       }
                     }}
                     disabled={!itemName}
@@ -1422,11 +1449,13 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
                             </div>
                             <div>
                               <p className="font-bold text-gray-900">{item.name}</p>
-                              <p className="text-xs text-purple-600">{t('Ish haqi', language)}</p>
+                              <p className="text-xs text-purple-600">
+                                {formatCurrency(item.price)} × {item.quantity} = {formatCurrency(item.price * item.quantity)}
+                              </p>
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
-                            <span className="text-xl font-bold text-purple-600">{formatCurrency(item.price)}</span>
+                            <span className="text-xl font-bold text-purple-600">{formatCurrency(item.price * item.quantity)}</span>
                             <button
                               type="button"
                               onClick={() => removeItem(items.indexOf(item))}
@@ -1445,7 +1474,7 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
                       <div className="flex items-center justify-between">
                         <span className="font-bold text-purple-900">{t('Jami ish haqi:', language)}</span>
                         <span className="text-2xl font-bold text-purple-600">
-                          {formatCurrency(laborItems.reduce((sum, item) => sum + item.price, 0))}
+                          {formatCurrency(laborItems.reduce((sum, item) => sum + (item.price * item.quantity), 0))}
                         </span>
                       </div>
                     </div>

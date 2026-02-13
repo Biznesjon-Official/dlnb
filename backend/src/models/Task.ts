@@ -113,7 +113,7 @@ const taskSchema = new Schema<ITask>({
   status: {
     type: String,
     enum: ['assigned', 'in-progress', 'completed', 'approved', 'rejected'],
-    default: 'assigned',
+    default: 'completed', // Vazifa yaratilganda darhol completed
     index: true // Tez qidirish uchun indeks
   },
   dueDate: {

@@ -55,6 +55,10 @@ if (process.env.NODE_ENV !== 'development' && process.env.TELEGRAM_BOT_TOKEN_WAR
 import { startMonthlyResetJob } from './services/monthlyResetService';
 startMonthlyResetJob();
 
+// Initialize Daily Payment Cron Job
+import { startDailyPaymentCron } from './services/dailyPaymentService';
+startDailyPaymentCron();
+
 const app = express();
 const PORT = Number(process.env.PORT) || 4000;
 

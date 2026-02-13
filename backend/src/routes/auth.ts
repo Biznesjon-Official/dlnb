@@ -123,4 +123,15 @@ router.post('/upload-profile-image', authenticate, upload.single('profileImage')
   }
 });
 
+// Add daily payment manually (master only) - for testing
+router.post('/users/:id/daily-payment', authenticate, authorize('master'), async (req, res) => {
+  try {
+    const { addDailyPaymentManually } = require('../services/dailyPaymentService');
+    const result = await addDailyPaymentManually(req.params.id);
+    res.json(result);
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
 export default router;

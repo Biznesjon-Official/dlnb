@@ -28,15 +28,21 @@
     "reset-apprentice-data": "ts-node src/scripts/resetApprenticeData.ts",
     "reset-apprentice-earnings": "ts-node src/scripts/resetApprenticeEarnings.ts",
     "reset-apprentice-all": "ts-node src/scripts/resetApprenticeEarningsAndTasks.ts",
+    "update-master-passwords": "ts-node src/scripts/updateMasterPasswords.ts",
     "clear-archived-cars": "ts-node src/scripts/clearArchivedCars.ts",
     "clear-cars": "ts-node src/scripts/clearCars.ts",
+    "clear-all-cars": "ts-node src/scripts/clearAllCars.ts",
     "delete-all-cars": "ts-node src/scripts/deleteAllCars.ts",
+    "delete-all-cars-complete": "ts-node src/scripts/deleteAllCarsComplete.ts",
     "delete-all-spare-parts": "ts-node src/scripts/deleteAllSpareParts.ts",
     "clear-warehouse": "ts-node src/scripts/clearWarehouse.ts",
-    "delete-all-spare-parts": "ts-node src/scripts/deleteAllSpareParts.ts",
+    "reset-spare-part-sales": "ts-node src/scripts/resetSparePartSales.ts",
     "seed-cars": "ts-node src/scripts/seedCars.ts",
     "migrate:clientid": "ts-node src/scripts/addClientIdToExisting.ts",
-    "create-second-master": "ts-node src/scripts/createSecondMaster.ts"
+    "create-second-master": "ts-node src/scripts/createSecondMaster.ts",
+    "seed-daily-worker": "ts-node src/scripts/seedDailyWorker.ts",
+    "create-booking-indexes": "ts-node src/scripts/createBookingIndexes.ts",
+    "create-car-indexes": "ts-node src/scripts/createCarIndexes.ts"
   },
   "dependencies": {
     "@types/compression": "^1.8.1",

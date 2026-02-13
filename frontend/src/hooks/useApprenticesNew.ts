@@ -166,9 +166,15 @@ export function useApprenticesNew() {
         }
       }).catch(err => {
         console.error('Failed to create apprentice:', err);
+        console.error('Error response:', err.response?.data);
+        console.error('Error status:', err.response?.status);
+        
         // Xatolik bo'lsa, temp'ni olib tashlash va xabar ko'rsatish
         setApprentices(prev => prev.filter(app => app._id !== tempApprentice._id));
-        toast.error('❌ Xatolik: Shogird yaratilmadi');
+        
+        // Backend'dan kelgan xatolik xabarini ko'rsatish
+        const errorMessage = err.response?.data?.message || 'Shogird yaratilmadi';
+        toast.error(`❌ Xatolik: ${errorMessage}`);
       });
       
       return tempApprentice; // Darhol qaytarish

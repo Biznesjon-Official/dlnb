@@ -145,3 +145,8 @@ Thumbs.db
 
 # MongoDB backups
 mongodb-backup/
+
+# Login credentials - NEVER commit!
+LOGIN_CREDENTIALS.md
+CREDENTIALS.md
+*_CREDENTIALS.md

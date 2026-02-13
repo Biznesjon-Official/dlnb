@@ -84,26 +84,6 @@ const Login: React.FC = () => {
       </div>
 
       <div className="w-full max-w-md relative z-10">
-        {/* Logo */}
-        <Link to="/" className="flex justify-center mb-4">
-          <div className="relative group">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl blur-xl opacity-40 animate-pulse group-hover:opacity-60 transition-opacity"></div>
-            <div className="relative bg-white rounded-2xl shadow-xl ring-2 ring-white p-3 group-hover:scale-105 transition-transform">
-              <div className="h-20 w-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-                <User className="h-12 w-12 text-white" />
-              </div>
-            </div>
-          </div>
-        </Link>
-
-        {/* App Name */}
-        <div className="text-center mb-5">
-          <h1 className="text-2xl font-black bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-1">
-            Dalnoboy Shop
-          </h1>
-          <p className="text-xs text-gray-600 font-medium">Professional Service Management</p>
-        </div>
-
         {/* Login Card - Compact */}
         <div className="relative">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl blur-xl opacity-20"></div>

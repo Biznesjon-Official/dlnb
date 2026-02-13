@@ -5,7 +5,16 @@ import { AuthRequest } from '../middleware/auth';
 
 export const register = async (req: Request, res: Response) => {
   try {
-    const { name, email, username, password, phone, percentage, role, profileImage, profession, experience } = req.body;
+    const { name, email, username, password, phone, percentage, role, profileImage, profession, experience, paymentType, dailyRate } = req.body;
+
+    console.log('📝 Register request body:', { 
+      name, 
+      username, 
+      role, 
+      paymentType, 
+      percentage, 
+      dailyRate 
+    });
 
     const existingUser = await User.findOne({ username });
     if (existingUser) {
@@ -39,15 +48,46 @@ export const register = async (req: Request, res: Response) => {
     if (phone && phone.trim()) {
       userData.phone = phone.trim();
     }
-    if (percentage !== undefined) {
-      userData.percentage = percentage;
-    }
     if (profileImage) userData.profileImage = profileImage;
     if (profession) userData.profession = profession;
     if (experience !== undefined) userData.experience = experience;
+    
+    // To'lov turi bo'yicha
+    if (paymentType) {
+      userData.paymentType = paymentType;
+      console.log('✅ PaymentType set to:', paymentType);
+      
+      if (paymentType === 'percentage') {
+        if (percentage !== undefined) {
+          userData.percentage = percentage;
+          console.log('✅ Percentage set to:', percentage);
+        }
+      } else if (paymentType === 'daily') {
+        if (dailyRate !== undefined) {
+          userData.dailyRate = dailyRate;
+          console.log('✅ DailyRate set to:', dailyRate);
+        }
+      }
+    } else {
+      // Default: foizli ishchi
+      userData.paymentType = 'percentage';
+      if (percentage !== undefined) {
+        userData.percentage = percentage;
+      }
+      console.log('⚠️ No paymentType provided, defaulting to percentage');
+    }
+
+    console.log('💾 Final userData:', userData);
 
     const user = new User(userData);
     await user.save();
+
+    console.log('✅ User saved:', {
+      id: user._id,
+      paymentType: user.paymentType,
+      percentage: user.percentage,
+      dailyRate: user.dailyRate
+    });
 
     const token = jwt.sign(
       { userId: user._id },
@@ -66,6 +106,8 @@ export const register = async (req: Request, res: Response) => {
         username: user.username,
         phone: user.phone,
         percentage: user.percentage,
+        paymentType: user.paymentType,
+        dailyRate: user.dailyRate,
         role: user.role,
         earnings: user.earnings || 0,
         totalEarnings: user.totalEarnings || 0,
@@ -77,6 +119,7 @@ export const register = async (req: Request, res: Response) => {
       }
     });
   } catch (error: any) {
+    console.error('❌ Register error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
@@ -325,7 +368,7 @@ export const getApprenticesWithStats = async (req: AuthRequest, res: Response) =
     
     // Shogirtlarni olish
     const apprentices = await User.find({ role: 'apprentice' })
-      .select('_id name username email phone percentage totalEarnings profileImage profession experience createdAt')
+      .select('_id name username email phone percentage earnings totalEarnings profileImage profession experience paymentType dailyRate lastDailyPaymentDate createdAt')
       .lean()
       .exec();
     
@@ -429,7 +472,7 @@ export const getApprenticesWithStats = async (req: AuthRequest, res: Response) =
 export const updateUser = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, username, password, phone, percentage, profileImage, profession, experience } = req.body;
+    const { name, username, password, phone, percentage, profileImage, profession, experience, paymentType, dailyRate } = req.body;
 
     // Check if user exists
     const user = await User.findById(id);
@@ -458,10 +501,33 @@ export const updateUser = async (req: AuthRequest, res: Response) => {
     if (username) user.username = username;
     if (password) user.password = password;
     if (phone !== undefined) user.phone = phone.trim() || undefined;
-    if (percentage !== undefined) user.percentage = percentage;
     if (profileImage !== undefined) user.profileImage = profileImage;
     if (profession !== undefined) user.profession = profession;
     if (experience !== undefined) user.experience = experience;
+
+    // To'lov turi bo'yicha yangilash
+    if (paymentType) {
+      user.paymentType = paymentType;
+      
+      if (paymentType === 'percentage') {
+        // Foizli ishchi
+        if (percentage !== undefined) {
+          user.percentage = percentage;
+        }
+        user.dailyRate = undefined; // Kunlik ish haqini tozalash
+        user.lastDailyPaymentDate = undefined;
+      } else if (paymentType === 'daily') {
+        // Kunlik ishchi
+        if (dailyRate !== undefined) {
+          user.dailyRate = dailyRate;
+        }
+        user.percentage = undefined; // Foizni tozalash
+      }
+    } else {
+      // Agar paymentType berilmagan bo'lsa, faqat percentage yoki dailyRate yangilash
+      if (percentage !== undefined) user.percentage = percentage;
+      if (dailyRate !== undefined) user.dailyRate = dailyRate;
+    }
 
     await user.save();
 
@@ -473,6 +539,8 @@ export const updateUser = async (req: AuthRequest, res: Response) => {
         username: user.username,
         phone: user.phone,
         percentage: user.percentage,
+        paymentType: user.paymentType,
+        dailyRate: user.dailyRate,
         role: user.role,
         profileImage: user.profileImage,
         profession: user.profession,

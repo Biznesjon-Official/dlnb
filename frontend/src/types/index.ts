@@ -12,6 +12,9 @@ export interface User {
   profileImage?: string;
   profession?: string;
   experience?: number;
+  paymentType?: 'percentage' | 'daily'; // To'lov turi
+  dailyRate?: number; // Kunlik to'lov summasi
+  lastDailyPaymentDate?: string; // Oxirgi kunlik to'lov sanasi
   createdAt: string;
   updatedAt: string;
   stats?: ApprenticeStats;
@@ -263,9 +266,9 @@ export interface Car {
   status: 'pending' | 'in-progress' | 'completed' | 'delivered';
   isDeleted?: boolean;
   deletedAt?: string;
+  completedAt?: string; // Mashina tugallangan sana
   createdAt: string;
   updatedAt: string;
-  completedAt?: string;
 }
 
 export interface Part {

@@ -44,6 +44,7 @@ export interface ICar extends Document {
   status: 'pending' | 'in-progress' | 'completed' | 'delivered';
   isDeleted: boolean;
   deletedAt?: Date;
+  completedAt?: Date; // Mashina tugallangan sana
   createdAt: Date;
   updatedAt: Date;
 }
@@ -199,9 +200,53 @@ const carSchema = new Schema<ICar>({
   },
   deletedAt: {
     type: Date
+  },
+  completedAt: {
+    type: Date
   }
 }, {
   timestamps: true
+});
+
+// ⚡ COMPOUND INDEX'LAR - SUPER TEZLIK!
+// 1. Faol mashinalar uchun (eng ko'p ishlatiladigan query)
+carSchema.index({ 
+  isDeleted: 1, 
+  status: 1, 
+  paymentStatus: 1, 
+  createdAt: -1 
+}, { 
+  name: 'active_cars_index',
+  background: true 
+});
+
+// 2. Qidiruv uchun (search)
+carSchema.index({ 
+  licensePlate: 1, 
+  make: 1, 
+  carModel: 1, 
+  ownerName: 1 
+}, { 
+  name: 'search_index',
+  background: true 
+});
+
+// 3. Status va payment status uchun
+carSchema.index({ 
+  status: 1, 
+  paymentStatus: 1 
+}, { 
+  name: 'status_index',
+  background: true 
+});
+
+// 4. isDeleted uchun (arxiv)
+carSchema.index({ 
+  isDeleted: 1, 
+  updatedAt: -1 
+}, { 
+  name: 'deleted_index',
+  background: true 
 });
 
 carSchema.pre('save', function(next) {

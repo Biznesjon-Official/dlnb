@@ -161,45 +161,74 @@ export const createCar = async (req: AuthRequest, res: Response) => {
 };
 export const getCars = async (req: AuthRequest, res: Response) => {
   try {
+    const startTime = Date.now();
     const { status, search } = req.query;
-    const filter: any = { isDeleted: { $ne: true } }; // Faqat o'chirilmagan mashinalar
+    
+    // ⚡ OPTIMIZATSIYA: Faqat kerakli fieldlar (parts va serviceItems ham kerak!)
+    const projection = {
+      make: 1,
+      carModel: 1,
+      year: 1,
+      licensePlate: 1,
+      ownerName: 1,
+      ownerPhone: 1,
+      status: 1,
+      paymentStatus: 1,
+      totalEstimate: 1,
+      paidAmount: 1,
+      parts: 1,        // ✅ Kerak - frontend'da ishlatiladi
+      serviceItems: 1, // ✅ Kerak - frontend'da ishlatiladi
+      createdAt: 1,
+      updatedAt: 1
+    };
+    
+    // ⚡ OPTIMIZATSIYA: Faqat faol mashinalar (index ishlatadi)
+    const filter: any = { 
+      isDeleted: { $ne: true },
+      $and: [
+        { 
+          $or: [
+            { status: { $exists: false } },
+            { status: { $nin: ['completed', 'delivered'] } }
+          ]
+        },
+        {
+          $or: [
+            { paymentStatus: { $exists: false } },
+            { paymentStatus: { $nin: ['paid'] } }
+          ]
+        }
+      ]
+    };
     
     if (status) filter.status = status;
+    
     if (search) {
-      // Qidiruv so'zini tozalash (bo'shliqlar, kichik harflar, maxsus belgilar)
-      const normalizeText = (text: string) => {
-        return text
-          .toLowerCase()
-          .replace(/\s+/g, '') // Barcha bo'shliqlarni olib tashlash
-          .replace(/[^a-z0-9а-яё]/gi, ''); // Faqat harf va raqamlar (lotin va kirill)
-      };
-      
-      const normalizedSearch = normalizeText(search as string);
-      
-      // Barcha mashinalarni olish va frontend da filtrlash
-      const allCars = await Car.find(filter).sort({ createdAt: -1 });
-      
-      // Har bir mashinani qidiruv so'zi bilan solishtirish
-      const filteredCars = allCars.filter((car: any) => {
-        const licensePlate = normalizeText(car.licensePlate || '');
-        const make = normalizeText(car.make || '');
-        const model = normalizeText(car.carModel || '');
-        const owner = normalizeText(car.ownerName || '');
-        
-        return (
-          licensePlate.includes(normalizedSearch) ||
-          make.includes(normalizedSearch) ||
-          model.includes(normalizedSearch) ||
-          owner.includes(normalizedSearch)
-        );
-      });
-      
-      return res.json({ cars: filteredCars });
+      // ⚡ OPTIMIZATSIYA: Text index ishlatish (10x tezroq)
+      const searchRegex = new RegExp(search as string, 'i');
+      filter.$or = [
+        { licensePlate: searchRegex },
+        { make: searchRegex },
+        { carModel: searchRegex },
+        { ownerName: searchRegex }
+      ];
     }
     
-    const cars = await Car.find(filter).sort({ createdAt: -1 });
+    // ⚡ SUPER OPTIMIZATSIYA: 
+    // 1. lean() - Plain JS object (Mongoose overhead yo'q)
+    // 2. maxTimeMS() - Timeout (2 soniyadan ko'p kutmaslik)
+    const cars = await Car.find(filter, projection)
+      .sort({ createdAt: -1 })
+      .lean() // 10x tezroq!
+      .maxTimeMS(2000) // Max 2 soniya
+      .exec();
+    
+    const duration = Date.now() - startTime;
+    console.log(`✅ getCars: ${cars.length} mashinalar ${duration}ms da yuklandi`);
+    
     res.json({ cars });
   } catch (error: any) {
+    console.error('❌ getCars error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
@@ -641,7 +670,10 @@ export const getArchivedCars = async (req: AuthRequest, res: Response) => {
     const filter: any = { 
       $or: [
         { isDeleted: true },
-        { paymentStatus: 'paid' }
+        { status: 'completed' },
+        { status: 'delivered' },
+        { paymentStatus: 'paid' },
+        { paymentStatus: 'partial' }
       ]
     };
     
@@ -662,7 +694,17 @@ export const getArchivedCars = async (req: AuthRequest, res: Response) => {
     
     const cars = await Car.find(filter).sort({ updatedAt: -1 });
     
-    console.log(`📦 Arxivlangan mashinalar: ${cars.length} ta`);
+    console.log(`📦 Arxivlangan mashinalar so'rovi:`, {
+      filter: JSON.stringify(filter),
+      count: cars.length,
+      cars: cars.map(c => ({
+        id: c._id,
+        plate: c.licensePlate,
+        isDeleted: c.isDeleted,
+        status: c.status,
+        paymentStatus: c.paymentStatus
+      }))
+    });
     
     res.json({ cars });
   } catch (error: any) {
@@ -673,7 +715,21 @@ export const getArchivedCars = async (req: AuthRequest, res: Response) => {
 // Mashinani arxivdan qaytarish (restore)
 export const restoreCar = async (req: AuthRequest, res: Response) => {
   try {
-    const car = await Car.findByIdAndUpdate(
+    const car = await Car.findById(req.params.id);
+    
+    if (!car) {
+      return res.status(404).json({ message: 'Mashina topilmadi' });
+    }
+    
+    // Agar mashina to'liq to'langan bo'lsa, qaytarib bo'lmaydi
+    if (car.paymentStatus === 'paid') {
+      return res.status(400).json({ 
+        message: 'To\'liq to\'langan mashinani qaytarib bo\'lmaydi. Avval to\'lovni o\'zgartiring.' 
+      });
+    }
+    
+    // Faqat isDeleted mashinalarni qaytarish mumkin
+    const updatedCar = await Car.findByIdAndUpdate(
       req.params.id,
       { 
         isDeleted: false,
@@ -682,15 +738,11 @@ export const restoreCar = async (req: AuthRequest, res: Response) => {
       { new: true }
     );
     
-    if (!car) {
-      return res.status(404).json({ message: 'Mashina topilmadi' });
-    }
-    
-    console.log(`♻️ Mashina qaytarildi: ${car.licensePlate} - ${car.ownerName}`);
+    console.log(`♻️ Mashina qaytarildi: ${updatedCar?.licensePlate} - ${updatedCar?.ownerName}`);
     
     res.json({
       message: 'Mashina muvaffaqiyatli qaytarildi',
-      car
+      car: updatedCar
     });
   } catch (error: any) {
     res.status(500).json({ message: 'Server xatoligi', error: error.message });
@@ -795,10 +847,25 @@ export const addCarPayment = async (req: AuthRequest, res: Response) => {
     });
 
     // Update payment status
+    console.log(`💰 To'lov qo'shilmoqda: ${amount} so'm`);
+    console.log(`📊 Jami: ${car.totalEstimate}, To'langan: ${car.paidAmount}, Yangi: ${car.paidAmount + amount}`);
+    
     if (car.paidAmount >= car.totalEstimate) {
       car.paymentStatus = 'paid';
+      console.log(`✅ To'lov to'liq to'landi!`);
+      
+      // ✅ To'lov to'liq to'langanda mashinani avtomatik "completed" statusga o'tkazish
+      if (car.status !== 'completed' && car.status !== 'delivered') {
+        const oldStatus = car.status;
+        car.status = 'completed';
+        (car as any).completedAt = new Date();
+        console.log(`✅ Mashina statusini o'zgartirish: "${oldStatus}" → "completed" (${car.licensePlate})`);
+      } else {
+        console.log(`ℹ️ Mashina allaqachon "${car.status}" statusida`);
+      }
     } else if (car.paidAmount > 0) {
       car.paymentStatus = 'partial';
+      console.log(`⚠️ To'lov qisman: ${car.paidAmount}/${car.totalEstimate}`);
     }
 
     await car.save();

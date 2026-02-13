@@ -81,10 +81,11 @@ const SellSparePartModal: React.FC<SellSparePartModalProps> = ({
     setIsSubmitting(true);
 
     try {
-      // YANGI: To'g'ridan-to'g'ri sellSparePart funksiyasini chaqirish
+      // Sotish operatsiyasini bajarish
       await sellSparePart(sparePart._id, quantity, sellingPrice);
       
-      onSuccess(quantity); // Sotilgan miqdorni qaytarish
+      // Muvaffaqiyatli bo'lsa, modal'ni yopish va callback'ni chaqirish
+      onSuccess(quantity);
       onClose();
     } catch (error: any) {
       console.error('Error selling spare part:', error);

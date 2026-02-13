@@ -58,5 +58,8 @@ const bookingSchema = new Schema<IBooking>(
 bookingSchema.index({ bookingDate: 1, status: 1 });
 bookingSchema.index({ phoneNumber: 1 });
 bookingSchema.index({ licensePlate: 1 });
+bookingSchema.index({ createdBy: 1 }); // ⚡ Populate tezroq ishlashi uchun
+bookingSchema.index({ createdAt: -1 }); // ⚡ Sort tezroq ishlashi uchun
+bookingSchema.index({ status: 1, bookingDate: 1, createdAt: -1 }); // ⚡ Compound index
 
 export default mongoose.model<IBooking>('Booking', bookingSchema);

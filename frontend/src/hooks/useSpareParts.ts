@@ -48,13 +48,16 @@ export const useSpareParts = (filters: SparePartFilters = {}) => {
       if (filters.limit) params.append('limit', filters.limit.toString());
       if (filters.lowStock) params.append('lowStock', 'true');
       
+      // Cache'ni bypass qilish uchun timestamp qo'shamiz
+      params.append('_t', Date.now().toString());
+      
       const response = await api.get(`/spare-parts?${params.toString()}`);
       return response.data;
     },
-    staleTime: 1000, // 1 soniya - juda qisqa, lekin 0 emas (0 muammoli)
-    gcTime: 300000, // 5 daqiqa cache
+    staleTime: 0, // Har doim yangi ma'lumot olish
+    gcTime: 0, // Cache'ni darhol tozalash
     retry: 2,
-    refetchOnMount: 'always', // Har doim mount'da yangilash (true o'rniga 'always')
+    refetchOnMount: true, // Mount'da yangilash
     refetchOnWindowFocus: false, // Focus'da yangilamaslik
     refetchOnReconnect: true, // Reconnect'da yangilash
     refetchInterval: false, // Avtomatik interval yo'q
@@ -151,11 +154,11 @@ export const useCreateSparePart = () => {
       return { previousParts };
     },
     onSuccess: () => {
-      // MAJBURIY refetch - invalidate o'rniga
-      queryClient.refetchQueries({ queryKey: ['spare-parts'], type: 'active' });
-      queryClient.refetchQueries({ queryKey: ['spare-parts-search'], type: 'active' });
-      queryClient.refetchQueries({ queryKey: ['spare-parts-infinite'], type: 'active' });
-      queryClient.refetchQueries({ queryKey: ['spare-part-categories'], type: 'active' });
+      // MAJBURIY refetch - cache'ni tozalash
+      queryClient.invalidateQueries({ queryKey: ['spare-parts'] });
+      queryClient.invalidateQueries({ queryKey: ['spare-parts-search'] });
+      queryClient.invalidateQueries({ queryKey: ['spare-parts-infinite'] });
+      queryClient.invalidateQueries({ queryKey: ['spare-part-categories'] });
       toast.success('Zapchast muvaffaqiyatli yaratildi');
     },
     onError: (error: any, _newPart, context) => {
@@ -200,9 +203,10 @@ export const useUpdateSparePart = () => {
       return { previousParts };
     },
     onSuccess: () => {
-      queryClient.refetchQueries({ queryKey: ['spare-parts'], type: 'active' });
-      queryClient.refetchQueries({ queryKey: ['spare-parts-search'], type: 'active' });
-      queryClient.refetchQueries({ queryKey: ['spare-parts-infinite'], type: 'active' });
+      // Cache'ni tozalash
+      queryClient.invalidateQueries({ queryKey: ['spare-parts'] });
+      queryClient.invalidateQueries({ queryKey: ['spare-parts-search'] });
+      queryClient.invalidateQueries({ queryKey: ['spare-parts-infinite'] });
       toast.success('Zapchast muvaffaqiyatli yangilandi');
     },
     onError: (error: any, _variables, context) => {
@@ -247,9 +251,10 @@ export const useDeleteSparePart = () => {
       return { previousParts };
     },
     onSuccess: () => {
-      queryClient.refetchQueries({ queryKey: ['spare-parts'], type: 'active' });
-      queryClient.refetchQueries({ queryKey: ['spare-parts-search'], type: 'active' });
-      queryClient.refetchQueries({ queryKey: ['spare-parts-infinite'], type: 'active' });
+      // Cache'ni tozalash
+      queryClient.invalidateQueries({ queryKey: ['spare-parts'] });
+      queryClient.invalidateQueries({ queryKey: ['spare-parts-search'] });
+      queryClient.invalidateQueries({ queryKey: ['spare-parts-infinite'] });
       toast.success('Zapchast muvaffaqiyatli o\'chirildi');
     },
     onError: (error: any, _id, context) => {
@@ -310,7 +315,9 @@ export const useLowStockCount = () => {
       }
       
       try {
-        const response = await api.get('/spare-parts?limit=1', {
+        // Cache'ni bypass qilish uchun timestamp qo'shamiz
+        const timestamp = Date.now();
+        const response = await api.get(`/spare-parts?limit=1&_t=${timestamp}`, {
           timeout: 10000 // 10 sekund timeout
         });
         const count = response.data.statistics?.lowStockCount || 0;
@@ -324,10 +331,10 @@ export const useLowStockCount = () => {
         return 0;
       }
     },
-    staleTime: 30000, // 30 seconds
-    refetchInterval: 60000, // Refetch every 60 seconds (kamroq tez-tez)
+    staleTime: 0, // Har doim yangi ma'lumot olish
+    refetchInterval: 60000, // Refetch every 60 seconds
     retry: 1, // Faqat 1 marta retry
-    refetchOnMount: false, // Mount'da avtomatik refetch qilmaslik
+    refetchOnMount: true, // Mount'da avtomatik refetch qilish
     refetchOnWindowFocus: false, // Focus'da avtomatik refetch qilmaslik
     enabled: navigator.onLine, // Faqat online bo'lganda ishlaydi
   });

@@ -39,7 +39,7 @@ export const getApprenticeEarnings = async (req: AuthRequest, res: Response) => 
     const apprenticeId = req.user!._id;
 
     // Shogirdning asosiy ma'lumotlari
-    const apprentice = await User.findById(apprenticeId).select('name earnings totalEarnings');
+    const apprentice = await User.findById(apprenticeId).select('name earnings totalEarnings paymentType dailyRate');
 
     if (!apprentice) {
       return res.status(404).json({
@@ -103,6 +103,28 @@ export const getApprenticeEarnings = async (req: AuthRequest, res: Response) => 
     // Tasdiqlangan vazifalardan jami daromad
     const approvedTasksEarnings = allApprovedTasks.reduce((sum, task) => sum + (task.earning || 0), 0);
 
+    // Kunlik to'lovlar (agar kunlik ishchi bo'lsa)
+    let dailyPaymentsCount = 0;
+    let dailyPaymentsTotal = 0;
+
+    if (apprentice.paymentType === 'daily') {
+      const Transaction = require('../models/Transaction').default;
+      
+      // Joriy oyning boshidan hozirgi kungacha
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+
+      const dailyPayments = await Transaction.find({
+        apprenticeId: apprenticeId,
+        category: 'daily_payment',
+        createdAt: { $gte: startOfMonth }
+      });
+
+      dailyPaymentsCount = dailyPayments.length;
+      dailyPaymentsTotal = dailyPayments.reduce((sum: number, payment: any) => sum + payment.amount, 0);
+    }
+
     res.json({
       success: true,
       data: {
@@ -111,7 +133,11 @@ export const getApprenticeEarnings = async (req: AuthRequest, res: Response) => 
         totalEarnings, // Jami daromad (barcha vaqt)
         approvedTasksCount: allApprovedTasks.length,
         approvedTasksEarnings, // Tasdiqlangan vazifalardan jami
-        approvedTasks: allApprovedTasks
+        approvedTasks: allApprovedTasks,
+        paymentType: apprentice.paymentType || 'percentage',
+        dailyRate: apprentice.dailyRate || 0,
+        dailyPaymentsCount,
+        dailyPaymentsTotal
       }
     });
   } catch (error: any) {

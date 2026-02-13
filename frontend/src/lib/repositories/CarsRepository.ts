@@ -170,13 +170,83 @@ export class CarsRepository extends BaseRepository<Car> {
 
   // Cars specific methods
   async getActiveCars(): Promise<Car[]> {
-    const allCars = await this.getAll();
-    // Faqat faol mashinalarni qaytarish (isDeleted === false yoki undefined)
-    return allCars.filter(car => car.isDeleted !== true);
+    // Network-First Strategy: Online bo'lsa server'dan, offline bo'lsa IndexedDB'dan
+    if (this.networkManager.isOnline()) {
+      try {
+        const startTime = Date.now();
+        
+        // ⚡ SUPER OPTIMIZATSIYA: Server'dan faqat faol mashinalarni olish
+        // Timeout: 5 soniya (tezroq javob olish uchun)
+        const response = await Promise.race([
+          api.get('/cars'),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Request timeout')), 5000)
+          )
+        ]) as any;
+        
+        const allCars = response.data?.cars || [];
+        
+        const duration = Date.now() - startTime;
+        console.log(`⚡ Server'dan ${allCars.length} mashina ${duration}ms da yuklandi`);
+        
+        // ⚡ FIX: Faqat FAOL mashinalarni filter qilish
+        // Faol mashina: isDeleted !== true, status !== completed/delivered, paymentStatus !== paid
+        const activeCars = allCars.filter((car: Car) => {
+          // O'chirilgan mashinalar chiqmasin
+          if (car.isDeleted === true) return false;
+          
+          // To'liq tugallangan mashinalar chiqmasin
+          if (car.status === 'completed' || car.status === 'delivered') return false;
+          
+          // To'liq to'langan mashinalar chiqmasin
+          if (car.paymentStatus === 'paid') return false;
+          
+          // Qolgan barcha mashinalar faol
+          return true;
+        });
+        
+        console.log(`✅ Faol mashinalar: ${activeCars.length} / ${allCars.length}`);
+        
+        // ⚡ FIX: Cache'ni to'liq yangilash (eski ma'lumotlarni o'chirish)
+        if (allCars.length >= 0) {
+          // Yangi ma'lumotlarni saqlash (non-blocking, background)
+          this.storage.save(this.config.collection, allCars).then(() => {
+            console.log(`✅ Cache yangilandi: ${allCars.length} mashina saqlandi`);
+          }).catch(err => {
+            console.error('Failed to cache cars:', err);
+          });
+        }
+        
+        return activeCars;
+      } catch (error) {
+        console.error('Failed to fetch cars from server:', error);
+        // Fallback to IndexedDB
+        const allCars = await this.storage.getAll<Car>(this.config.collection);
+        const activeCars = allCars.filter(car => 
+          car.isDeleted !== true && 
+          car.status !== 'completed' && 
+          car.status !== 'delivered' &&
+          car.paymentStatus !== 'paid'
+        );
+        console.log('Offline: Active cars from IndexedDB:', activeCars.length);
+        return activeCars;
+      }
+    } else {
+      // Offline: IndexedDB'dan faqat faol mashinalarni olish
+      const allCars = await this.storage.getAll<Car>(this.config.collection);
+      const activeCars = allCars.filter(car => 
+        car.isDeleted !== true && 
+        car.status !== 'completed' && 
+        car.status !== 'delivered' &&
+        car.paymentStatus !== 'paid'
+      );
+      console.log('Offline mode: Active cars from IndexedDB:', activeCars.length);
+      return activeCars;
+    }
   }
 
   async getArchivedCars(): Promise<Car[]> {
-    // Arxivlangan mashinalarni olish
+    // Arxivlangan mashinalarni olish (isDeleted, completed, delivered, paid yoki partial)
     if (this.networkManager.isOnline()) {
       try {
         const response = await api.get('/cars/archived/list');
@@ -200,18 +270,49 @@ export class CarsRepository extends BaseRepository<Car> {
         console.error('Failed to fetch archived cars from server:', error);
         // Fallback to IndexedDB
         const allCars = await this.storage.getAll<Car>(this.config.collection);
-        return allCars.filter(car => car.isDeleted === true);
+        // Arxivlangan: isDeleted, completed, delivered, paid yoki partial
+        return allCars.filter(car => 
+          car.isDeleted === true || 
+          car.status === 'completed' || 
+          car.status === 'delivered' || 
+          car.paymentStatus === 'paid' ||
+          car.paymentStatus === 'partial'
+        );
       }
     } else {
       // Offline: IndexedDB'dan barcha mashinalarni olish va arxivlanganlarni filter qilish
       const allCars = await this.storage.getAll<Car>(this.config.collection);
-      return allCars.filter(car => car.isDeleted === true);
+      // Arxivlangan: isDeleted, completed, delivered, paid yoki partial
+      return allCars.filter(car => 
+        car.isDeleted === true || 
+        car.status === 'completed' || 
+        car.status === 'delivered' || 
+        car.paymentStatus === 'paid' ||
+        car.paymentStatus === 'partial'
+      );
     }
   }
 
   async getAllCarsIncludingArchived(): Promise<Car[]> {
     // IndexedDB'dan barcha mashinalarni olish (arxivlangan ham)
     return this.storage.getAll<Car>(this.config.collection);
+  }
+
+  async clearCache(): Promise<void> {
+    // IndexedDB cache'ni to'liq tozalash
+    try {
+      const allCars = await this.storage.getAll<Car>(this.config.collection);
+      console.log('🗑️ Clearing IndexedDB cache:', allCars.length, 'cars');
+      
+      // Barcha mashinalarni o'chirish
+      for (const car of allCars) {
+        await this.storage.delete(this.config.collection, car._id);
+      }
+      
+      console.log('✅ IndexedDB cache cleared');
+    } catch (err) {
+      console.error('Failed to clear IndexedDB cache:', err);
+    }
   }
 
   async getCarsByStatus(status: Car['status']): Promise<Car[]> {

@@ -11,63 +11,30 @@ import toast from 'react-hot-toast';
 import api from '@/lib/api';
 
 export function useSparePartsNew() {
-  // ⚡ INSTANT LOADING: Initial state'ni localStorage'dan olish (0ms)
-  const [spareParts, setSpareParts] = useState<SparePart[]>(() => {
-    try {
-      const cached = localStorage.getItem('spare_parts_cache');
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        // Cache 24 soat amal qiladi
-        if (Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000) {
-          return parsed.data || [];
-        }
-      }
-    } catch (err) {
-      console.error('Failed to load spare parts from localStorage:', err);
-    }
-    return [];
-  });
+  // ⚡ STATE: Server'dan olingan ma'lumotlar (cache yo'q)
+  const [spareParts, setSpareParts] = useState<SparePart[]>([]);
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Load spare parts - ULTRA OPTIMIZED (instant loading)
+  // Load spare parts - CACHE YO'Q (har doim server'dan)
   const loadSpareParts = useCallback(async (silent = false) => {
     try {
       if (!silent) setLoading(true);
       setError(null);
       
-      // Backend'dan yuklash
-      const response = await api.get('/spare-parts');
+      // Backend'dan yuklash (cache bypass)
+      const timestamp = Date.now();
+      const response = await api.get(`/spare-parts?_t=${timestamp}`);
       const data = response.data.spareParts || [];
       
-      setSpareParts(data);
+      // Faqat valid ma'lumotlarni saqlash
+      const validData = data.filter((part: any) => part && part._id);
+      setSpareParts(validData);
       
-      // ⚡ INSTANT: Save to localStorage for next page load (0ms)
-      try {
-        localStorage.setItem('spare_parts_cache', JSON.stringify({
-          data,
-          timestamp: Date.now()
-        }));
-      } catch (err) {
-        console.error('Failed to cache spare parts to localStorage:', err);
-      }
     } catch (err: any) {
       console.error('Failed to load spare parts:', err);
       setError(err.message);
-      
-      // Fallback: localStorage'dan yuklash (offline bo'lsa)
-      try {
-        const cached = localStorage.getItem('spare_parts_cache');
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          if (Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000) {
-            setSpareParts(parsed.data || []);
-          }
-        }
-      } catch (cacheErr) {
-        console.error('Failed to load from cache:', cacheErr);
-      }
     } finally {
       if (!silent) setLoading(false);
     }
@@ -78,7 +45,7 @@ export function useSparePartsNew() {
     loadSpareParts(false); // Loading spinner bilan yuklash
   }, [loadSpareParts]);
 
-  // Create spare part - OPTIMIZED (instant UI update)
+  // Create spare part - OPTIMIZED (instant UI update, cache yo'q)
   const createSparePart = useCallback(async (sparePartData: any) => {
     try {
       // OPTIMIZATION 1: INSTANT UI update with temp part
@@ -92,36 +59,24 @@ export function useSparePartsNew() {
         updatedAt: new Date().toISOString()
       };
       
-      setSpareParts(prev => [tempPart, ...prev]);
+      setSpareParts(prev => [tempPart, ...prev.filter(p => p && p._id)]);
       
       // OPTIMIZATION 2: Fire and forget - background'da saqlash
       api.post('/spare-parts', sparePartData).then((response) => {
         const realPart = response.data.sparePart || response.data;
         
-        // Replace temp with real part
-        setSpareParts(prev => prev.map(part => 
-          part._id === tempPart._id ? realPart : part
-        ));
-        
-        // Update localStorage
-        try {
-          const cached = localStorage.getItem('spare_parts_cache');
-          if (cached) {
-            const parsed = JSON.parse(cached);
-            parsed.data = parsed.data.map((p: SparePart) => 
-              p._id === tempPart._id ? realPart : p
-            );
-            localStorage.setItem('spare_parts_cache', JSON.stringify(parsed));
-          }
-        } catch (err) {
-          console.error('Failed to update cache:', err);
+        if (realPart && realPart._id) {
+          // Replace temp with real part
+          setSpareParts(prev => prev.map(part => 
+            part && part._id === tempPart._id ? realPart : part
+          ).filter(p => p && p._id));
         }
         
         toast.success('Zapchast muvaffaqiyatli yaratildi');
       }).catch(err => {
         console.error('Failed to create spare part:', err);
         // Remove temp part on error
-        setSpareParts(prev => prev.filter(part => part._id !== tempPart._id));
+        setSpareParts(prev => prev.filter(part => part && part._id !== tempPart._id));
         toast.error(`Xatolik: ${err.response?.data?.message || err.message}`);
       });
       
@@ -133,33 +88,23 @@ export function useSparePartsNew() {
     }
   }, []);
 
-  // Update spare part - OPTIMIZED (instant UI update)
+  // Update spare part - OPTIMIZED (instant UI update, cache yo'q)
   const updateSparePart = useCallback(async (id: string, sparePartData: Partial<SparePart>) => {
     try {
       // OPTIMIZATION 1: INSTANT UI update
       setSpareParts(prev => prev.map(part => 
-        part._id === id ? { ...part, ...sparePartData, updatedAt: new Date().toISOString() } : part
-      ));
+        part && part._id === id ? { ...part, ...sparePartData, updatedAt: new Date().toISOString() } : part
+      ).filter(p => p && p._id));
       
       // OPTIMIZATION 2: Fire and forget - background'da saqlash
       api.put(`/spare-parts/${id}`, sparePartData).then((response) => {
         const updatedPart = response.data.sparePart || response.data;
         
-        // Real data bilan yangilash
-        setSpareParts(prev => prev.map(part => part._id === id ? updatedPart : part));
-        
-        // Update localStorage
-        try {
-          const cached = localStorage.getItem('spare_parts_cache');
-          if (cached) {
-            const parsed = JSON.parse(cached);
-            parsed.data = parsed.data.map((p: SparePart) => 
-              p._id === id ? updatedPart : p
-            );
-            localStorage.setItem('spare_parts_cache', JSON.stringify(parsed));
-          }
-        } catch (err) {
-          console.error('Failed to update cache:', err);
+        if (updatedPart && updatedPart._id) {
+          // Real data bilan yangilash
+          setSpareParts(prev => prev.map(part => 
+            part && part._id === id ? updatedPart : part
+          ).filter(p => p && p._id));
         }
         
         toast.success('Zapchast muvaffaqiyatli yangilandi');
@@ -178,24 +123,14 @@ export function useSparePartsNew() {
     }
   }, [loadSpareParts]);
 
-  // Delete spare part - OPTIMIZED (instant UI update)
+  // Delete spare part - OPTIMIZED (instant UI update, cache yo'q)
   const deleteSparePart = useCallback(async (id: string) => {
     try {
       // OPTIMIZATION 1: INSTANT UI update - faqat faol ro'yxatdan olib tashlash
-      const updatedParts = spareParts.filter(part => part._id !== id);
+      const updatedParts = spareParts.filter(part => part && part._id && part._id !== id);
       setSpareParts(updatedParts);
       
-      // OPTIMIZATION 2: DARHOL localStorage'ni yangilash (sync)
-      try {
-        localStorage.setItem('spare_parts_cache', JSON.stringify({
-          data: updatedParts,
-          timestamp: Date.now()
-        }));
-      } catch (err) {
-        console.error('Failed to update cache:', err);
-      }
-      
-      // OPTIMIZATION 3: Backend'ga o'chirish so'rovi yuborish
+      // OPTIMIZATION 2: Backend'ga o'chirish so'rovi yuborish
       await api.delete(`/spare-parts/${id}`);
       
       toast.success('Zapchast muvaffaqiyatli o\'chirildi');
@@ -208,44 +143,44 @@ export function useSparePartsNew() {
     }
   }, [spareParts, loadSpareParts]);
 
-  // Sell spare part - OPTIMIZED (instant UI update)
+  // Sell spare part - OPTIMIZED (instant UI update, cache yo'q)
   const sellSparePart = useCallback(async (id: string, quantity: number, sellingPrice?: number) => {
     try {
       // OPTIMIZATION 1: INSTANT UI update - miqdorni kamaytirish
       setSpareParts(prev => prev.map(part => 
-        part._id === id ? { ...part, quantity: part.quantity - quantity } : part
-      ));
+        part && part._id === id ? { ...part, quantity: Math.max(0, part.quantity - quantity) } : part
+      ).filter(part => part && part._id)); // undefined'larni olib tashlash
       
       // OPTIMIZATION 2: Backend'ga sotish so'rovi yuborish
-      api.post('/spare-parts/sell', {
+      const response = await api.post('/spare-parts/sell', {
         sparePartId: id,
         quantity,
         sellingPrice
-      }).then(() => {
-        // Update localStorage
-        try {
-          const cached = localStorage.getItem('spare_parts_cache');
-          if (cached) {
-            const parsed = JSON.parse(cached);
-            parsed.data = parsed.data.map((p: SparePart) => 
-              p._id === id ? { ...p, quantity: p.quantity - quantity } : p
-            );
-            localStorage.setItem('spare_parts_cache', JSON.stringify(parsed));
-          }
-        } catch (err) {
-          console.error('Failed to update cache:', err);
-        }
-        
-        toast.success('Zapchast muvaffaqiyatli sotildi');
-      }).catch((err: any) => {
-        console.error('Failed to sell spare part:', err);
-        // Rollback on error
-        loadSpareParts(true);
-        toast.error(`Xatolik: ${err.response?.data?.message || err.message}`);
       });
+      
+      // OPTIMIZATION 3: Backend'dan yangi ma'lumotlarni olish
+      const updatedPart = response.data.sparePart;
+      
+      // Agar updatedPart mavjud bo'lsa, UI'ni real ma'lumotlar bilan yangilash
+      if (updatedPart && updatedPart._id) {
+        setSpareParts(prev => prev.map(part => 
+          part && part._id === id ? updatedPart : part
+        ).filter(part => part && part._id)); // undefined'larni olib tashlash
+      } else {
+        // Agar updatedPart yo'q bo'lsa, server'dan qayta yuklash
+        console.warn('Updated part not found in response, reloading...');
+        await loadSpareParts(true);
+      }
+      
+      toast.success('Zapchast muvaffaqiyatli sotildi');
+      
+      // OPTIMIZATION 4: Sahifani yangilash uchun signal qaytarish
+      return updatedPart;
     } catch (err: any) {
       console.error('Failed to sell spare part:', err);
-      toast.error(`Xatolik: ${err.message}`);
+      // Rollback on error
+      loadSpareParts(true);
+      toast.error(`Xatolik: ${err.response?.data?.message || err.message}`);
       throw err;
     }
   }, [loadSpareParts]);
@@ -258,6 +193,7 @@ export function useSparePartsNew() {
     updateSparePart,
     deleteSparePart,
     sellSparePart,
-    loadSpareParts
+    loadSpareParts,
+    refetch: () => loadSpareParts(false) // Yangilash funksiyasi
   };
 }

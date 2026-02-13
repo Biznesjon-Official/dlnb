@@ -214,6 +214,12 @@ export function t(latinText: string, language: 'latin' | 'cyrillic'): string {
     'Oylik tarix': 'Ойлик тарих',
     'Tarix mavjud emas': 'Тарих мавжуд эмас',
     'Ma\'lumotlar tarixga saqlanadi va statistika 0 ga qaytariladi': 'Маълумотлар тарихга сақланади ва статистика 0 га қайтарилади',
+    // Archive statistics translations
+    'Jami arxivlangan': 'Жами архивланган',
+    'O\'chirilgan': 'Ўчирилган',
+    'Tugallangan': 'Тугалланган',
+    'To\'liq to\'langan': 'Тўлиқ тўланган',
+    'Qisman to\'langan': 'Қисман тўланган',
   };
 
   if (language === 'cyrillic') {

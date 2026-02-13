@@ -15,23 +15,9 @@ import toast from 'react-hot-toast';
 import api from '@/lib/api';
 
 export function useCarsNew() {
-  // ⚡ INSTANT LOADING: Initial state'ni localStorage'dan olish (0ms)
-  const [cars, setCars] = useState<Car[]>(() => {
-    try {
-      const cached = localStorage.getItem('cars_cache');
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        // Cache 24 soat amal qiladi
-        if (Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000) {
-          return parsed.data || [];
-        }
-      }
-    } catch (err) {
-      console.error('Failed to load cars from localStorage:', err);
-    }
-    return [];
-  });
-  const [loading] = useState(false); // Always false - instant loading
+  // ⚡ INSTANT LOADING: Initial state bo'sh array (cache ishlatmaymiz)
+  const [cars, setCars] = useState<Car[]>([]);
+  const [loading, setLoading] = useState(true); // Initial load uchun true
   const [error, setError] = useState<string | null>(null);
   const [isOnline, setIsOnline] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
@@ -44,52 +30,59 @@ export function useCarsNew() {
   // Load cars - ULTRA OPTIMIZED (instant loading, no spinner)
   const loadCars = useCallback(async (silent = false) => {
     try {
-      // NEVER show loading - instant UI
+      // Show loading faqat initial load'da
+      if (!silent) {
+        setLoading(true);
+      }
+      
       setError(null);
       
       // INSTANT: Load from cache immediately (0ms)
       const networkStatus = networkManager.getStatus();
       
-      // FAST PATH: Always load from IndexedDB first (instant)
-      // MUHIM: Faqat faol mashinalarni yuklash (arxivlangan emas!)
+      // FAST PATH: Always load from server/IndexedDB (faqat faol mashinalar)
       const data = await carsRepository.getActiveCars();
+      
+      console.log('📊 Loaded cars:', {
+        total: data.length,
+        statuses: {
+          pending: data.filter(c => c.status === 'pending').length,
+          inProgress: data.filter(c => c.status === 'in-progress').length,
+          completed: data.filter(c => c.status === 'completed').length,
+          delivered: data.filter(c => c.status === 'delivered').length
+        },
+        paymentStatuses: {
+          unpaid: data.filter(c => !c.paymentStatus || c.paymentStatus === 'pending').length,
+          partial: data.filter(c => c.paymentStatus === 'partial').length,
+          paid: data.filter(c => c.paymentStatus === 'paid').length
+        }
+      });
+      
+      // ⚡ FIX: REPLACE (not append) - eski ma'lumotlarni to'liq almashtirish
       setCars(data);
+      setLoading(false);
       
-      // ⚡ INSTANT: Save to localStorage for next page load (0ms)
-      try {
-        localStorage.setItem('cars_cache', JSON.stringify({
-          data,
-          timestamp: Date.now()
-        }));
-      } catch (err) {
-        console.error('Failed to cache cars to localStorage:', err);
-      }
-      
-      // Background sync if online (user won't see this)
+      // Background sync if online (user won't see this) - INSTANT!
       if (networkStatus.isOnline && !silent) {
-        // Fire and forget - update in background
-        carsRepository.getActiveCars().then(freshData => {
-          // Only update if data changed
-          if (JSON.stringify(freshData) !== JSON.stringify(data)) {
-            setCars(freshData);
-            // Update localStorage cache
-            try {
-              localStorage.setItem('cars_cache', JSON.stringify({
-                data: freshData,
-                timestamp: Date.now()
-              }));
-            } catch (err) {
-              console.error('Failed to update cars cache:', err);
+        // Fire and forget - update in background (0ms kutish - INSTANT!)
+        setTimeout(() => {
+          carsRepository.getActiveCars().then(freshData => {
+            // Only update if data changed
+            if (JSON.stringify(freshData) !== JSON.stringify(data)) {
+              console.log('🔄 Background refresh: data changed, updating...');
+              // ⚡ FIX: REPLACE (not append)
+              setCars(freshData);
             }
-          }
-        }).catch(err => {
-          console.error('Background refresh failed:', err);
-        });
+          }).catch(err => {
+            console.error('Background refresh failed:', err);
+          });
+        }, 0); // 0ms - INSTANT!
       }
     } catch (err: any) {
       console.error('Failed to load cars:', err);
       setError(err.message);
       setCars([]);
+      setLoading(false);
     }
   }, [networkManager]);
 
@@ -167,11 +160,71 @@ export function useCarsNew() {
 
   // Initial load
   useEffect(() => {
-    loadCars(); // Initial load with loading spinner
+    loadCars(); // Initial load
     updatePendingCount();
     
-    // REMOVED: Page visibility change listener to prevent frequent refreshes
-    // Sync will happen automatically when network status changes
+    // ⚡ Custom event listener (to'lov qo'shilganda) - INSTANT yangilash
+    const handleCarsRefresh = () => {
+      console.log('🔄 Custom event: cars-refresh - INSTANT yangilanmoqda...');
+      // INSTANT yangilash (0ms kutish yo'q!)
+      loadCars(true).then(() => {
+        console.log('✅ cars-refresh: Ma\'lumotlar yangilandi');
+      });
+      updatePendingCount();
+    };
+    
+    // ⚡ OPTIMISTIC UPDATE: To'liq to'langan mashina DARHOL yo'qoladi
+    const handleCarFullyPaid = (event: any) => {
+      const carId = event.detail?.carId;
+      if (!carId) return;
+      
+      console.log('⚡ OPTIMISTIC: Mashina to\'liq to\'landi - DARHOL olib tashlanmoqda:', carId);
+      
+      // INSTANT: Mashinani faol ro'yxatdan olib tashlash (0ms)
+      setCars(prev => {
+        const filtered = prev.filter(car => car._id !== carId);
+        console.log('📊 After optimistic remove:', {
+          before: prev.length,
+          after: filtered.length,
+          removedCarId: carId
+        });
+        return filtered;
+      });
+    };
+    
+    // ⚡ Sahifaga qaytganda avtomatik refresh (visibility change)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log('👁️ Sahifa ko\'rinmoqda - INSTANT refresh...');
+        // INSTANT refresh (0ms kutish yo'q!)
+        loadCars(true).then(() => {
+          console.log('✅ Visibility change: Ma\'lumotlar yangilandi');
+        });
+        updatePendingCount();
+      }
+    };
+    
+    // ⚡ Focus event listener (sahifaga qaytganda)
+    const handleFocus = () => {
+      console.log('🎯 Sahifa focus oldi - INSTANT refresh...');
+      // INSTANT refresh (0ms kutish yo'q!)
+      loadCars(true).then(() => {
+        console.log('✅ Focus: Ma\'lumotlar yangilandi');
+      });
+      updatePendingCount();
+    };
+    
+    window.addEventListener('cars-refresh', handleCarsRefresh);
+    window.addEventListener('car-fully-paid', handleCarFullyPaid as EventListener);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      window.removeEventListener('cars-refresh', handleCarsRefresh);
+      window.removeEventListener('car-fully-paid', handleCarFullyPaid as EventListener);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, [loadCars, updatePendingCount]);
 
   // Create car - OPTIMIZED (instant UI update, silent)
@@ -289,8 +342,14 @@ export function useCarsNew() {
   const restoreCar = useCallback(async (id: string) => {
     try {
       // OPTIMIZATION 1: INSTANT UI update - arxivdan faol ro'yxatga qaytarish
+      // Faqat isDeleted mashinalarni qaytarish mumkin
       setCars(prev => prev.map(car => 
-        car._id === id ? { ...car, isDeleted: false, deletedAt: undefined, _pending: !isOnline } : car
+        car._id === id ? { 
+          ...car, 
+          isDeleted: false, 
+          deletedAt: undefined,
+          _pending: !isOnline 
+        } : car
       ));
       
       // OPTIMIZATION 2: Backend'ga restore so'rovi yuborish
@@ -303,7 +362,8 @@ export function useCarsNew() {
           loadCars(true);
         }).catch((err: any) => {
           console.error('Failed to restore car:', err);
-          toast.error(`Xatolik: ${err.message}`);
+          const errorMsg = err.response?.data?.message || err.message;
+          toast.error(`Xatolik: ${errorMsg}`);
           // Rollback on error
           loadCars(true); // silent reload
         });

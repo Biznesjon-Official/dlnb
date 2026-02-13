@@ -198,7 +198,43 @@ export const createTask = async (req: AuthRequest, res: Response) => {
     await task.save();
     await task.populate(['assignedTo', 'assignedBy', 'car', 'service', 'assignments.apprentice']);
 
-    console.log('✅ Vazifa muvaffaqiyatli yaratildi:', task._id);
+    // ✅ YANGI: Vazifa yaratilganda darhol shogirdga pul qo'shish
+    console.log('💰 Vazifa yaratildi - darhol shogirdga pul qo\'shilmoqda...');
+    
+    // Yangi tizim: Ko'p shogirdlar
+    if (taskData.assignments && taskData.assignments.length > 0) {
+      console.log('👥 Ko\'p shogirdli tizim - Pul qo\'shilmoqda...');
+      for (const assignment of taskData.assignments) {
+        console.log(`  → Shogird ${assignment.apprentice} ga ${assignment.earning} so'm qo'shilmoqda`);
+        const updatedUser = await User.findByIdAndUpdate(
+          assignment.apprentice,
+          { 
+            $inc: { 
+              earnings: assignment.earning
+            } 
+          },
+          { new: true }
+        );
+        console.log(`  ✅ Yangilandi! Joriy oylik: ${updatedUser?.earnings}`);
+      }
+    } 
+    // Eski tizim: Bitta shogird
+    else if (taskData.assignedTo && taskData.apprenticeEarning) {
+      console.log('👤 Bitta shogirdli tizim - Pul qo\'shilmoqda...');
+      console.log(`  → Shogird ${taskData.assignedTo} ga ${taskData.apprenticeEarning} so'm qo'shilmoqda`);
+      const updatedUser = await User.findByIdAndUpdate(
+        taskData.assignedTo,
+        { 
+          $inc: { 
+            earnings: taskData.apprenticeEarning
+          } 
+        },
+        { new: true }
+      );
+      console.log(`  ✅ Yangilandi! Joriy oylik: ${updatedUser?.earnings}`);
+    }
+
+    console.log('✅ Vazifa muvaffaqiyatli yaratildi va pul qo\'shildi:', task._id);
 
     res.status(201).json({
       message: 'Task created successfully',

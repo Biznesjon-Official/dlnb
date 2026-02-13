@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTasks } from '@/hooks/useTasks';
 import { 
   Award, 
+  TrendingUp,
   Clock,
+  CheckCircle
 } from 'lucide-react';
 import { t } from '@/lib/transliteration';
 import api from '@/lib/api';
@@ -84,6 +86,7 @@ const ApprenticeAchievements: React.FC = () => {
     return false;
   });
   const approvedTasks = myTasks.filter((task: any) => task.status === 'approved');
+  const completedTasks = myTasks.filter((task: any) => task.status === 'completed' || task.status === 'approved');
 
   // Vaqt bo'yicha filtrlash
   const getFilteredTasks = () => {
@@ -123,7 +126,16 @@ const ApprenticeAchievements: React.FC = () => {
   };
 
   const filteredTasks = getFilteredTasks();
+  
+  // Filtrlangan vazifalardan daromad
+  const filteredEarnings = filteredTasks.reduce((total, task) => total + (task.earning || 0), 0);
 
+  // Statistikalar
+  // Jami ish soatlari - berilgan vazifalarning estimatedHours yig'indisi
+  const totalHours = myTasks.reduce((total: number, task: any) => total + (task.estimatedHours || 0), 0);
+  
+  // Bajarish foizi - berilgan vazifalarning necha foizi bajarilgan
+  const completionRate = myTasks.length > 0 ? Math.round((completedTasks.length / myTasks.length) * 100) : 0;
 
   // Haftalik faoliyat
   const getWeeklyActivity = () => {
@@ -275,7 +287,7 @@ const ApprenticeAchievements: React.FC = () => {
                         </p>
                         {task.percentage && task.totalPayment > 0 && (
                           <p className="text-xs text-blue-600 mt-1">
-                            {t('Umumiy:', language)} {new Intl.NumberFormat('uz-UZ').format(task.totalPayment)} • {task.percentage}%
+                            {t('Umumiy:', language)} {new Intl.NumberFormat('uz-UZ').format(task.totalPayment)} вЂў {task.percentage}%
                           </p>
                         )}
                       </div>

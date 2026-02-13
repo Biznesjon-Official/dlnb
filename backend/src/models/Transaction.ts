@@ -11,6 +11,7 @@ export interface ITransaction extends Document {
     type: 'debt' | 'car' | 'expense_category' | 'other';
     id?: mongoose.Types.ObjectId;
   };
+  apprenticeId?: mongoose.Types.ObjectId; // Kunlik ishchi uchun
   createdBy: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
@@ -56,6 +57,11 @@ const transactionSchema = new Schema<ITransaction>({
       type: Schema.Types.ObjectId,
       refPath: 'relatedTo.type'
     }
+  },
+  apprenticeId: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    required: false
   },
   createdBy: {
     type: Schema.Types.ObjectId,

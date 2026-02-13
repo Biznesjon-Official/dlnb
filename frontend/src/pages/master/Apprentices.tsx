@@ -156,10 +156,15 @@ const ApprenticeCard = React.memo(({
               <Wallet className="h-4 w-4 text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-emerald-600 font-medium">{t("Jami daromad", language)}</p>
+              <p className="text-xs text-emerald-600 font-medium">{t("Joriy oylik", language)}</p>
               <p className="text-sm sm:text-base font-bold text-emerald-900 truncate">
-                {(apprentice.totalEarnings || 0).toLocaleString()} {t("so'm", language)}
+                {(apprentice.earnings || 0).toLocaleString()} {t("so'm", language)}
               </p>
+              {apprentice.paymentType === 'daily' && apprentice.dailyRate && (
+                <p className="text-xs text-emerald-600 mt-0.5">
+                  {t("Kunlik:", language)} {apprentice.dailyRate.toLocaleString()} {t("so'm", language)}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -193,12 +198,19 @@ const ApprenticeCard = React.memo(({
       </div>
 
       {/* Status Badge */}
-      <div className="absolute top-16 sm:top-24 right-3 sm:right-4">
+      <div className="absolute top-16 sm:top-24 right-3 sm:right-4 flex flex-col gap-1">
         <span className="inline-flex items-center px-2 sm:px-2.5 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 border border-green-200 shadow-sm">
           <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1 sm:mr-1.5 animate-pulse"></span>
           <span className="hidden sm:inline">{t("Faol", language)}</span>
           <span className="sm:hidden">●</span>
         </span>
+        {apprentice.paymentType === 'daily' && (
+          <span className="inline-flex items-center px-2 sm:px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-800 border border-amber-200 shadow-sm">
+            <Calendar className="h-3 w-3 mr-1" />
+            <span className="hidden sm:inline">{t("Kunlik", language)}</span>
+            <span className="sm:hidden">K</span>
+          </span>
+        )}
       </div>
     </div>
   );

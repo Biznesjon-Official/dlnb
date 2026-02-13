@@ -304,7 +304,7 @@ export default function AIChatWidget() {
         {isLandingPage ? (
           <div className="relative">
             <img 
-              src="/logo.jpg" 
+              src="/dlnb.png" 
               alt="Biznes AI" 
               className="w-16 h-16 object-cover rounded-full shadow-2xl hover:shadow-3xl transition-shadow"
             />
@@ -329,7 +329,7 @@ export default function AIChatWidget() {
         ) : (
           <div className="relative">
             <img 
-              src="/logo.jpg" 
+              src="/dlnb.png" 
               alt="Biznes AI" 
               className={`w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-full shadow-xl ${shouldAnimate ? 'animate-wiggle' : ''}`} 
             />
@@ -361,7 +361,7 @@ export default function AIChatWidget() {
       <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-3 sm:p-4 rounded-t-xl sm:rounded-t-2xl flex items-center justify-between">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
           <div className="relative flex-shrink-0">
-            <img src="/logo.jpg" alt="Biznes AI" className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded-full shadow-lg" />
+            <img src="/dlnb.png" alt="Biznes AI" className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded-full shadow-lg" />
             <span className="absolute bottom-0 right-0 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-green-400 rounded-full border-2 border-white"></span>
           </div>
           <div className="min-w-0 flex-1">

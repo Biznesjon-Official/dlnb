@@ -66,7 +66,8 @@ const MasterWarehouse: React.FC = memo(() => {
     createSparePart,
     updateSparePart,
     deleteSparePart,
-    sellSparePart
+    sellSparePart,
+    refetch: refetchSpareParts
   } = useSparePartsNew();
 
   // Umumiy loading holati - barcha statistikalar bir vaqtda
@@ -74,15 +75,18 @@ const MasterWarehouse: React.FC = memo(() => {
 
   const filteredParts = useMemo(() => {
     if (!spareParts.length) return [];
-    if (!debouncedSearch) return spareParts;
+    if (!debouncedSearch) return spareParts.filter((part: any) => part && part._id);
     
     const searchLower = debouncedSearch.toLowerCase();
     return spareParts.filter((part: any) => {
+      // Null/undefined check
+      if (!part || !part._id) return false;
+      
       // Nom bo'yicha qidirish
-      const nameMatch = part.name.toLowerCase().includes(searchLower);
+      const nameMatch = part.name && part.name.toLowerCase().includes(searchLower);
       
       // Supplier bo'yicha qidirish
-      const supplierMatch = part.supplier?.toLowerCase().includes(searchLower);
+      const supplierMatch = part.supplier && part.supplier.toLowerCase().includes(searchLower);
       
       // Kategoriya bo'yicha qidirish - YAXSHILANGAN
       const categoryMatch = part.category && (
@@ -118,7 +122,7 @@ const MasterWarehouse: React.FC = memo(() => {
   }, [spareParts, debouncedSearch]);
 
   const lowStockParts = useMemo(() => {
-    return spareParts.filter((part: any) => part.quantity <= 3);
+    return spareParts.filter((part: any) => part && typeof part.quantity === 'number' && part.quantity <= 3);
   }, [spareParts]);
 
   const statistics = useMemo(() => {
@@ -129,14 +133,17 @@ const MasterWarehouse: React.FC = memo(() => {
       totalQuantity: 0
     };
 
+    // Faqat valid part'larni hisoblash
+    const validParts = spareParts.filter((part: any) => part && part._id && typeof part.quantity === 'number');
+
     return {
-      totalValue: spareParts.reduce((sum: number, part: any) => 
-        sum + (part.sellingPrice * part.quantity), 0),
-      totalProfit: spareParts.reduce((sum: number, part: any) => 
-        sum + ((part.sellingPrice - part.costPrice) * part.quantity), 0),
-      totalItems: spareParts.length,
-      totalQuantity: spareParts.reduce((sum: number, part: any) => 
-        sum + part.quantity, 0)
+      totalValue: validParts.reduce((sum: number, part: any) => 
+        sum + ((part.sellingPrice || 0) * (part.quantity || 0)), 0),
+      totalProfit: validParts.reduce((sum: number, part: any) => 
+        sum + (((part.sellingPrice || 0) - (part.costPrice || 0)) * (part.quantity || 0)), 0),
+      totalItems: validParts.length,
+      totalQuantity: validParts.reduce((sum: number, part: any) => 
+        sum + (part.quantity || 0), 0)
     };
   }, [spareParts]);
 
@@ -206,7 +213,9 @@ const MasterWarehouse: React.FC = memo(() => {
   const fetchSalesStats = useCallback(async () => {
     setIsLoadingStats(true);
     try {
-      const response = await api.get('/spare-parts/sales/statistics');
+      // Cache'ni bypass qilish uchun timestamp qo'shamiz
+      const timestamp = Date.now();
+      const response = await api.get(`/spare-parts/sales/statistics?_t=${timestamp}`);
       setSalesStats(response.data.statistics);
     } catch (error) {
       console.error('Error fetching sales statistics:', error);
@@ -215,15 +224,16 @@ const MasterWarehouse: React.FC = memo(() => {
     }
   }, []);
 
-  const handleSellSuccess = useCallback((_soldQuantity: number) => {
-    // Modal'ni yopish - optimistic update hook ichida
+  const handleSellSuccess = useCallback(async (_soldQuantity: number) => {
+    // Modal'ni yopish
     setIsSellModalOpen(false);
     setSelectedPart(null);
     
-    // Background'da statistikani yangilash
-    setTimeout(() => {
-      fetchSalesStats();
-    }, 500);
+    // Loading state'ni yoqish
+    setIsLoadingStats(true);
+    
+    // DARHOL statistikani yangilash (cache'siz)
+    await fetchSalesStats();
   }, [fetchSalesStats]);
 
   useEffect(() => {
@@ -681,14 +691,18 @@ const MasterWarehouse: React.FC = memo(() => {
       <CreateSparePartModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        onSuccess={() => {
-          // Modal'ni yopish - hook allaqachon UI'ni yangilagan
+        onSuccess={async () => {
+          // Modal'ni yopish
           setIsCreateModalOpen(false);
           
-          // Background'da statistikani yangilash
-          setTimeout(() => {
-            fetchSalesStats();
-          }, 500);
+          // Loading state'ni yoqish
+          setIsLoadingStats(true);
+          
+          // Ma'lumotlarni yangilash
+          await Promise.all([
+            refetchSpareParts(),
+            fetchSalesStats()
+          ]);
         }}
         createSparePart={createSparePart}
       />
@@ -700,10 +714,13 @@ const MasterWarehouse: React.FC = memo(() => {
               setIsEditModalOpen(false);
               setSelectedPart(null);
             }}
-            onSuccess={() => {
-              // Modal'ni yopish - hook allaqachon UI'ni yangilagan
+            onSuccess={async () => {
+              // Modal'ni yopish
               setIsEditModalOpen(false);
               setSelectedPart(null);
+              
+              // Ma'lumotlarni yangilash
+              await refetchSpareParts();
             }}
             sparePart={selectedPart}
             updateSparePart={updateSparePart}
@@ -714,15 +731,19 @@ const MasterWarehouse: React.FC = memo(() => {
               setIsDeleteModalOpen(false);
               setSelectedPart(null);
             }}
-            onSuccess={() => {
-              // Modal'ni yopish - hook allaqachon UI'ni yangilagan
+            onSuccess={async () => {
+              // Modal'ni yopish
               setIsDeleteModalOpen(false);
               setSelectedPart(null);
               
-              // Background'da statistikani yangilash
-              setTimeout(() => {
-                fetchSalesStats();
-              }, 500);
+              // Loading state'ni yoqish
+              setIsLoadingStats(true);
+              
+              // Ma'lumotlarni yangilash
+              await Promise.all([
+                refetchSpareParts(),
+                fetchSalesStats()
+              ]);
             }}
             sparePart={selectedPart}
             deleteSparePart={deleteSparePart}

@@ -70,6 +70,7 @@ const Cars: React.FC = () => {
   // New hook - avtomatik online/offline rejimni boshqaradi
   const { 
     cars, 
+    loading,
     updateCar,
     getArchivedCars
   } = useCarsNew();
@@ -79,7 +80,10 @@ const Cars: React.FC = () => {
   
   React.useEffect(() => {
     if (activeTab === 'archive') {
-      getArchivedCars().then(setArchivedCarsData).catch(err => {
+      getArchivedCars().then(data => {
+        console.log('📦 Serverdan arxivlangan mashinalar:', data.length);
+        setArchivedCarsData(data);
+      }).catch(err => {
         console.error('Failed to load archived cars:', err);
         toast.error('Arxivlangan mashinalarni yuklashda xatolik');
       });
@@ -132,44 +136,55 @@ const Cars: React.FC = () => {
   // ⚡ OPTIMIZED: Faol mashinalar - memoized
   const activeCars = React.useMemo(() => 
     filteredCars.filter((car: Car) => {
-      // Offline holatda faqat faol mashinalarni ko'rsatish
-      if (!isOnline) {
-        return !car.isDeleted && car.status !== 'completed' && car.status !== 'delivered';
-      }
-      // Online holatda qarzli mashinalarni ham hisobga olish
-      return !car.isDeleted && 
-             car.status !== 'completed' && 
-             car.status !== 'delivered' &&
-             !carsWithActiveDebtIds.has(car._id);
+      // ⚡ FIX: Repository allaqachon faol mashinalarni qaytaradi
+      // Shuning uchun bu yerda faqat qo'shimcha filter kerak emas
+      // Repository filter: isDeleted !== true, status !== completed/delivered, paymentStatus !== paid
+      
+      // Qo'shimcha xavfsizlik uchun tekshirish
+      if (car.isDeleted === true) return false;
+      if (car.status === 'completed' || car.status === 'delivered') return false;
+      if (car.paymentStatus === 'paid') return false;
+      
+      return true;
     }),
-    [filteredCars, isOnline, carsWithActiveDebtIds]
+    [filteredCars]
   );
   
   // ⚡ OPTIMIZED: Arxiv mashinalar - memoized
   const archivedCars = React.useMemo(() => {
     // Agar arxiv tab'da bo'lsak, serverdan olingan ma'lumotlarni ishlatamiz
-    if (activeTab === 'archive' && archivedCarsData.length > 0) {
-      return archivedCarsData.filter((car: Car) => {
-        // Qidiruv va filtr
-        if (searchTerm) {
-          const search = searchTerm.toLowerCase();
-          const matches = car.licensePlate?.toLowerCase().includes(search) ||
-            car.ownerPhone?.toLowerCase().includes(search) ||
-            car.ownerName?.toLowerCase().includes(search) ||
-            car.make?.toLowerCase().includes(search) ||
-            car.carModel?.toLowerCase().includes(search);
-          if (!matches) return false;
-        }
+    if (activeTab === 'archive') {
+      // Agar serverdan ma'lumot kelgan bo'lsa, uni ishlatamiz
+      if (archivedCarsData.length > 0) {
+        const filtered = archivedCarsData.filter((car: Car) => {
+          // Qidiruv va filtr
+          if (searchTerm) {
+            const search = searchTerm.toLowerCase();
+            const matches = car.licensePlate?.toLowerCase().includes(search) ||
+              car.ownerPhone?.toLowerCase().includes(search) ||
+              car.ownerName?.toLowerCase().includes(search) ||
+              car.make?.toLowerCase().includes(search) ||
+              car.carModel?.toLowerCase().includes(search);
+            if (!matches) return false;
+          }
+          
+          if (statusFilter && car.status !== statusFilter) {
+            return false;
+          }
+          
+          return true;
+        });
         
-        if (statusFilter && car.status !== statusFilter) {
-          return false;
-        }
-        
-        return true;
-      });
+        console.log('📦 Arxiv: Serverdan:', archivedCarsData.length, 'Filtrlangandan keyin:', filtered.length);
+        return filtered;
+      }
+      
+      // Agar serverdan hali ma'lumot kelmagan bo'lsa, bo'sh array qaytaramiz
+      // (useEffect ichida yuklanyapti)
+      return [];
     }
     
-    // Aks holda, local ma'lumotlardan filtrlash
+    // Aks holda, local ma'lumotlardan filtrlash (faol tab'da)
     return filteredCars.filter((car: Car) => {
       // Arxivlangan mashinalar: isDeleted yoki to'liq to'langan
       return car.isDeleted || 
@@ -435,7 +450,27 @@ const Cars: React.FC = () => {
           </div>
 
         {/* Cars Grid */}
-        {displayedCars.length === 0 ? (
+        {loading ? (
+          // ⚡ SKELETON LOADER - Ma'lumotlar yuklanayotganda
+          <div className="space-y-4">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="bg-white rounded-lg sm:rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6 animate-pulse">
+                <div className="flex items-center gap-4">
+                  <div className="flex-shrink-0 h-12 w-12 bg-gray-200 rounded-xl"></div>
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                    <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                  </div>
+                  <div className="flex gap-2">
+                    <div className="h-8 w-8 bg-gray-200 rounded-lg"></div>
+                    <div className="h-8 w-8 bg-gray-200 rounded-lg"></div>
+                    <div className="h-8 w-8 bg-gray-200 rounded-lg"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : displayedCars.length === 0 ? (
           <div className="bg-white rounded-lg sm:rounded-2xl shadow-lg border border-gray-100 p-6 sm:p-16 text-center">
             <div className="max-w-md mx-auto">
               <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-full w-16 h-16 sm:w-24 sm:h-24 flex items-center justify-center mx-auto mb-4 sm:mb-6">
@@ -472,116 +507,129 @@ const Cars: React.FC = () => {
             </div>
           </div>
         ) : activeTab === 'archive' ? (
-          // Arxiv - Ro'yxat ko'rinishi
-          <div className="bg-white rounded-lg sm:rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-            <div className="overflow-x-auto">
+          // Arxiv - Optimized UX Desktop Table
+          <div className="bg-white rounded-lg sm:rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+            {/* Desktop Table - faqat katta ekranlarda */}
+            <div className="hidden lg:block overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gradient-to-r from-green-50 to-emerald-50 border-b-2 border-green-200">
+                <thead className="bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-green-700 uppercase tracking-wider">
-                      {t("Egasi", language)}
+                    <th className="px-4 py-4 text-left text-xs font-bold text-white uppercase tracking-wider w-[20%]">
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4" />
+                        {t("Mijoz", language)}
+                      </div>
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-green-700 uppercase tracking-wider">
-                      {t("Mashina", language)}
+                    <th className="px-4 py-4 text-left text-xs font-bold text-white uppercase tracking-wider w-[18%]">
+                      <div className="flex items-center gap-2">
+                        <CarIcon className="h-4 w-4" />
+                        {t("Avtomobil", language)}
+                      </div>
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-green-700 uppercase tracking-wider">
-                      {t("Raqam", language)}
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-green-700 uppercase tracking-wider">
+                    <th className="px-4 py-4 text-center text-xs font-bold text-white uppercase tracking-wider w-[10%]">
                       {t("Status", language)}
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-green-700 uppercase tracking-wider">
-                      {t("Telefon", language)}
+                    <th className="px-4 py-4 text-left text-xs font-bold text-white uppercase tracking-wider w-[15%]">
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="h-4 w-4" />
+                        {t("Moliya", language)}
+                      </div>
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-green-700 uppercase tracking-wider">
-                      {t("Narx", language)}
+                    <th className="px-4 py-4 text-center text-xs font-bold text-white uppercase tracking-wider w-[12%]">
+                      <div className="flex items-center justify-center gap-2">
+                        <Phone className="h-4 w-4" />
+                        {t("Aloqa", language)}
+                      </div>
                     </th>
-                    <th className="px-4 py-3 text-center text-xs font-bold text-green-700 uppercase tracking-wider">
+                    <th className="px-4 py-4 text-center text-xs font-bold text-white uppercase tracking-wider w-[25%]">
                       {t("Amallar", language)}
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {displayedCars.map((car: Car) => {
+                <tbody className="divide-y divide-gray-100">
+                  {displayedCars.map((car: Car, index: number) => {
                     const partsTotal = (car.parts || []).reduce((sum, part) => sum + (part.quantity * part.price), 0);
                     const serviceItemsTotal = ((car as any).serviceItems || []).reduce((sum: number, item: any) => sum + (item.quantity * item.price), 0);
                     const calculatedTotal = partsTotal + serviceItemsTotal;
                     const displayTotal = car.totalEstimate || calculatedTotal;
                     
-                    // Qarzi bor yoki yo'qligini tekshirish
                     const paidAmount = car.paidAmount || 0;
-                    const hasCarDebt = displayTotal > paidAmount; // Mashina qarzi
-                    const hasActiveDebt = carsWithActiveDebtIds.has(car._id); // Qarzlar sahifasidagi qarz
+                    const hasCarDebt = displayTotal > paidAmount;
+                    const hasActiveDebt = carsWithActiveDebtIds.has(car._id);
                     const remainingAmount = displayTotal - paidAmount;
-                    
-                    // Agar qarzlar sahifasida faol qarz bo'lsa yoki mashina qarzi bo'lsa
                     const hasDebt = hasActiveDebt || hasCarDebt;
                     
                     return (
-                      <tr key={car._id} className={`hover:bg-gray-50 transition-colors ${
-                        car.isDeleted ? 'bg-red-50/50' : 
-                        hasDebt ? 'bg-red-50/30 border-l-4 border-l-red-500' : 'bg-green-50/30'
+                      <tr key={car._id} className={`hover:bg-gradient-to-r hover:from-gray-50 hover:to-green-50/30 transition-all duration-200 ${
+                        car.isDeleted ? 'bg-red-50/40' : 
+                        hasDebt ? 'bg-gradient-to-r from-red-50/40 to-orange-50/30 border-l-4 border-l-red-500' : 
+                        index % 2 === 0 ? 'bg-white' : 'bg-green-50/20'
                       }`}>
+                        {/* Mijoz */}
                         <td className="px-4 py-4">
-                          <div className="flex items-center">
-                            <div className={`flex-shrink-0 h-10 w-10 ${
-                              car.isDeleted ? 'bg-gradient-to-br from-red-100 to-pink-100' : 
-                              hasDebt ? 'bg-gradient-to-br from-red-100 to-orange-100' :
-                              'bg-gradient-to-br from-green-100 to-emerald-100'
-                            } rounded-full flex items-center justify-center`}>
-                              <span className={`${
-                                car.isDeleted ? 'text-red-700' : 
-                                hasDebt ? 'text-red-700' : 'text-green-700'
-                              } font-bold text-sm`}>
+                          <div className="flex items-center gap-3">
+                            <div className={`flex-shrink-0 h-11 w-11 ${
+                              car.isDeleted ? 'bg-gradient-to-br from-red-400 to-pink-500' : 
+                              hasDebt ? 'bg-gradient-to-br from-red-400 to-orange-500' :
+                              'bg-gradient-to-br from-emerald-400 to-teal-500'
+                            } rounded-xl flex items-center justify-center shadow-md ring-2 ring-white`}>
+                              <span className="text-white font-bold text-base">
                                 {car.ownerName.charAt(0).toUpperCase()}
                               </span>
                             </div>
-                            <div className="ml-3">
-                              <p className="text-sm font-semibold text-gray-900">{car.ownerName}</p>
-                              <div className="flex items-center gap-2">
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-bold text-gray-900 truncate">{car.ownerName}</p>
+                              <div className="flex items-center gap-1.5 mt-1">
                                 {car.isDeleted && (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-red-100 text-red-800 border border-red-200">
+                                    <XCircle className="h-2.5 w-2.5 mr-0.5" />
                                     {t("O'chirilgan", language)}
                                   </span>
                                 )}
                                 {hasDebt && !car.isDeleted && (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
-                                    <DollarSign className="h-3 w-3 mr-1" />
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-red-100 text-red-800 border border-red-200">
+                                    <DollarSign className="h-2.5 w-2.5 mr-0.5" />
                                     {t("Qarzi bor", language)}
                                   </span>
                                 )}
                                 {!hasDebt && !car.isDeleted && (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                                    <CheckCircle className="h-3 w-3 mr-1" />
-                                    {t("To'liq to'langan", language)}
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                    <CheckCircle className="h-2.5 w-2.5 mr-0.5" />
+                                    {t("To'langan", language)}
                                   </span>
                                 )}
                               </div>
                             </div>
                           </div>
                         </td>
+                        
+                        {/* Avtomobil */}
                         <td className="px-4 py-4">
-                          <div className="flex items-center">
-                            <CarIcon className="h-5 w-5 text-gray-400 mr-2" />
-                            <div>
-                              <p className="text-sm font-semibold text-gray-900">
-                                {car.make} {car.carModel}
-                              </p>
-                              <p className="text-xs text-gray-500">{car.year}</p>
+                          <div className="space-y-1.5">
+                            <div className="flex items-center gap-2">
+                              <div className="flex-shrink-0 h-8 w-8 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-lg flex items-center justify-center">
+                                <CarIcon className="h-4 w-4 text-blue-600" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-sm font-bold text-gray-900 truncate">
+                                  {car.make} {car.carModel}
+                                </p>
+                                <p className="text-xs text-gray-500 font-medium">{car.year}</p>
+                              </div>
                             </div>
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-black bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-sm">
+                              {car.licensePlate}
+                            </span>
                           </div>
                         </td>
-                        <td className="px-4 py-4">
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-blue-100 text-blue-800 border border-blue-200">
-                            {car.licensePlate}
-                          </span>
-                        </td>
-                        <td className="px-4 py-4">
-                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
-                            car.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                            car.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
-                            car.status === 'completed' ? 'bg-green-100 text-green-800' :
-                            'bg-gray-100 text-gray-800'
+                        
+                        {/* Status */}
+                        <td className="px-4 py-4 text-center">
+                          <span className={`inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm ${
+                            car.status === 'pending' ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' :
+                            car.status === 'in-progress' ? 'bg-blue-100 text-blue-800 border border-blue-200' :
+                            car.status === 'completed' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' :
+                            'bg-gray-100 text-gray-800 border border-gray-200'
                           }`}>
                             {car.status === 'pending' && t('Kutilmoqda', language)}
                             {car.status === 'in-progress' && t('Jarayonda', language)}
@@ -589,44 +637,46 @@ const Cars: React.FC = () => {
                             {car.status === 'delivered' && t('Topshirilgan', language)}
                           </span>
                         </td>
-                        <td className="px-4 py-4">
-                          <div className="flex items-center text-sm text-gray-600">
-                            <Phone className="h-4 w-4 mr-1.5 text-gray-400" />
-                            {car.ownerPhone}
-                          </div>
-                        </td>
+                        
+                        {/* Moliya */}
                         <td className="px-4 py-4">
                           <div className="space-y-1">
-                            <div className="text-sm font-bold text-gray-900">
-                              {formatCurrency(displayTotal, language)}
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-gray-500 font-medium">{t("Jami", language)}:</span>
+                              <span className="text-sm font-black text-gray-900">
+                                {formatCurrency(displayTotal, language)}
+                              </span>
                             </div>
                             {paidAmount > 0 && (
-                              <div className="text-xs text-green-600">
-                                {t("To'langan", language)}: {formatCurrency(paidAmount, language)}
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-gray-500 font-medium">{t("To'langan", language)}:</span>
+                                <span className="text-xs font-bold text-emerald-600">
+                                  {formatCurrency(paidAmount, language)}
+                                </span>
                               </div>
                             )}
                             {hasDebt && (
-                              <div className="text-xs font-bold text-red-600">
-                                {t("Qarz", language)}: {formatCurrency(remainingAmount, language)}
+                              <div className="flex items-center justify-between pt-1 border-t border-red-200">
+                                <span className="text-xs text-red-600 font-bold">{t("Qarz", language)}:</span>
+                                <span className="text-sm font-black text-red-600">
+                                  {formatCurrency(remainingAmount, language)}
+                                </span>
                               </div>
                             )}
                           </div>
                         </td>
-                        <td className="px-4 py-4 text-center">
-                          <div className="flex items-center justify-center gap-2">
-                            <button
-                              onClick={() => handleViewCar(car)}
-                              className="inline-flex items-center justify-center p-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition-all duration-200 font-medium group"
-                              title={t("Ko'rish", language)}
-                            >
-                              <Eye className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                            </button>
-                            
-                            {/* SMS Button - Arxivdagi mashinalar uchun */}
+                        
+                        {/* Aloqa */}
+                        <td className="px-4 py-4">
+                          <div className="flex flex-col items-center gap-2">
+                            <div className="flex items-center gap-1.5 text-xs font-medium text-gray-700 bg-gray-50 px-2.5 py-1.5 rounded-lg">
+                              <Phone className="h-3.5 w-3.5 text-gray-500" />
+                              <span className="truncate">{car.ownerPhone}</span>
+                            </div>
                             {car.ownerPhone && (
                               <a
                                 href={`sms:${car.ownerPhone}?body=${encodeURIComponent(getSmsMessage(car))}`}
-                                className="inline-flex items-center px-3 py-2 bg-purple-50 text-purple-600 hover:bg-purple-100 rounded-lg transition-all duration-200 font-medium group"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-500 to-pink-600 text-white hover:from-purple-600 hover:to-pink-700 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105 text-xs font-bold"
                                 title={t("SMS yuborish", language)}
                                 onClick={(e) => {
                                   if (!/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
@@ -635,30 +685,50 @@ const Cars: React.FC = () => {
                                   }
                                 }}
                               >
-                                <MessageSquare className="h-4 w-4 mr-1.5 group-hover:scale-110 transition-transform" />
-                                <span className="text-sm">{t("SMS", language)}</span>
+                                <MessageSquare className="h-3.5 w-3.5" />
+                                {t("SMS", language)}
                               </a>
                             )}
+                          </div>
+                        </td>
+                        
+                        {/* Amallar */}
+                        <td className="px-4 py-4">
+                          <div className="flex items-center justify-center gap-2">
+                            <button
+                              onClick={() => handleViewCar(car)}
+                              className="inline-flex items-center justify-center p-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-110"
+                              title={t("Ko'rish", language)}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </button>
                             
                             {car.isDeleted && (
                               <button
                                 onClick={() => handleRestoreCar(car)}
-                                className="inline-flex items-center px-3 py-2 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg transition-all duration-200 font-medium group"
+                                className="inline-flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 text-xs font-bold"
                                 title={t("Qaytarish", language)}
                               >
-                                <RotateCcw className="h-4 w-4 mr-1.5 group-hover:rotate-180 transition-transform duration-500" />
-                                <span className="text-sm">{t("Qaytarish", language)}</span>
+                                <RotateCcw className="h-3.5 w-3.5" />
+                                {t("Qaytarish", language)}
                               </button>
+                            )}
+                            
+                            {!car.isDeleted && !hasDebt && (
+                              <span className="inline-flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-700 rounded-lg text-xs font-bold shadow-sm">
+                                <CheckCircle className="h-3.5 w-3.5" />
+                                {t("Tugallangan", language)}
+                              </span>
                             )}
                             
                             {!car.isDeleted && (
                               <button
                                 onClick={() => handleDeleteCar(car)}
-                                className="inline-flex items-center px-3 py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-all duration-200 font-medium group"
+                                className="inline-flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-red-500 to-pink-600 text-white hover:from-red-600 hover:to-pink-700 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 text-xs font-bold"
                                 title={t("O'chirish", language)}
                               >
-                                <Trash2 className="h-4 w-4 mr-1.5 group-hover:scale-110 transition-transform" />
-                                <span className="text-sm">{t("O'chirish", language)}</span>
+                                <Trash2 className="h-3.5 w-3.5" />
+                                {t("O'chirish", language)}
                               </button>
                             )}
                           </div>
@@ -670,31 +740,240 @@ const Cars: React.FC = () => {
               </table>
             </div>
             
-            {/* Arxiv statistikasi */}
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-6 py-4 border-t border-green-200">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="h-5 w-5 text-green-600" />
-                    <span className="text-sm font-semibold text-green-700">
-                      {t("Jami arxivlangan", language)}: {displayedCars.length} ta
-                    </span>
+            {/* Mobile Cards - faqat kichik ekranlarda */}
+            <div className="lg:hidden divide-y divide-gray-200">
+              {displayedCars.map((car: Car) => {
+                const partsTotal = (car.parts || []).reduce((sum, part) => sum + (part.quantity * part.price), 0);
+                const serviceItemsTotal = ((car as any).serviceItems || []).reduce((sum: number, item: any) => sum + (item.quantity * item.price), 0);
+                const calculatedTotal = partsTotal + serviceItemsTotal;
+                const displayTotal = car.totalEstimate || calculatedTotal;
+                
+                const paidAmount = car.paidAmount || 0;
+                const hasCarDebt = displayTotal > paidAmount;
+                const hasActiveDebt = carsWithActiveDebtIds.has(car._id);
+                const remainingAmount = displayTotal - paidAmount;
+                const hasDebt = hasActiveDebt || hasCarDebt;
+                
+                return (
+                  <div 
+                    key={car._id} 
+                    className={`p-4 ${
+                      car.isDeleted ? 'bg-red-50/50' : 
+                      hasDebt ? 'bg-red-50/30 border-l-4 border-l-red-500' : 'bg-green-50/30'
+                    }`}
+                  >
+                    {/* Header - Egasi va Status */}
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className={`flex-shrink-0 h-12 w-12 ${
+                          car.isDeleted ? 'bg-gradient-to-br from-red-100 to-pink-100' : 
+                          hasDebt ? 'bg-gradient-to-br from-red-100 to-orange-100' :
+                          'bg-gradient-to-br from-green-100 to-emerald-100'
+                        } rounded-full flex items-center justify-center`}>
+                          <span className={`${
+                            car.isDeleted ? 'text-red-700' : 
+                            hasDebt ? 'text-red-700' : 'text-green-700'
+                          } font-bold text-lg`}>
+                            {car.ownerName.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <div>
+                          <p className="text-base font-bold text-gray-900">{car.ownerName}</p>
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <Phone className="h-3.5 w-3.5 text-gray-400" />
+                            <span className="text-sm text-gray-600">{car.ownerPhone}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
+                        car.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                        car.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
+                        car.status === 'completed' ? 'bg-green-100 text-green-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {car.status === 'pending' && t('Kutilmoqda', language)}
+                        {car.status === 'in-progress' && t('Jarayonda', language)}
+                        {car.status === 'completed' && t('Tayyor', language)}
+                        {car.status === 'delivered' && t('Topshirilgan', language)}
+                      </span>
+                    </div>
+                    
+                    {/* Mashina ma'lumotlari */}
+                    <div className="bg-white rounded-lg p-3 mb-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <CarIcon className="h-5 w-5 text-gray-400" />
+                          <span className="text-sm font-semibold text-gray-900">
+                            {car.make} {car.carModel}
+                          </span>
+                        </div>
+                        <span className="text-xs text-gray-500">{car.year}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-500">{t("Raqam", language)}:</span>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold bg-blue-100 text-blue-800 border border-blue-200">
+                          {car.licensePlate}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {/* Moliyaviy ma'lumotlar */}
+                    <div className="bg-white rounded-lg p-3 mb-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-500">{t("Jami", language)}:</span>
+                        <span className="text-sm font-bold text-gray-900">
+                          {formatCurrency(displayTotal, language)}
+                        </span>
+                      </div>
+                      {paidAmount > 0 && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-500">{t("To'langan", language)}:</span>
+                          <span className="text-sm font-semibold text-green-600">
+                            {formatCurrency(paidAmount, language)}
+                          </span>
+                        </div>
+                      )}
+                      {hasDebt && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-500">{t("Qarz", language)}:</span>
+                          <span className="text-sm font-bold text-red-600">
+                            {formatCurrency(remainingAmount, language)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Status badges */}
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {car.isDeleted && (
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-red-100 text-red-800">
+                          {t("O'chirilgan", language)}
+                        </span>
+                      )}
+                      {hasDebt && !car.isDeleted && (
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-red-100 text-red-800">
+                          <DollarSign className="h-3 w-3 mr-1" />
+                          {t("Qarzi bor", language)}
+                        </span>
+                      )}
+                      {!hasDebt && !car.isDeleted && (
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-green-100 text-green-800">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          {t("To'liq to'langan", language)}
+                        </span>
+                      )}
+                    </div>
+                    
+                    {/* Action buttons */}
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => handleViewCar(car)}
+                        className="flex-1 min-w-[100px] inline-flex items-center justify-center px-3 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition-all duration-200 font-medium text-sm"
+                      >
+                        <Eye className="h-4 w-4 mr-1.5" />
+                        {t("Ko'rish", language)}
+                      </button>
+                      
+                      {car.ownerPhone && (
+                        <a
+                          href={`sms:${car.ownerPhone}?body=${encodeURIComponent(getSmsMessage(car))}`}
+                          className="flex-1 min-w-[100px] inline-flex items-center justify-center px-3 py-2 bg-purple-50 text-purple-600 hover:bg-purple-100 rounded-lg transition-all duration-200 font-medium text-sm"
+                          onClick={(e) => {
+                            if (!/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+                              e.preventDefault();
+                              toast.error(t('SMS yuborish faqat mobil qurilmalarda ishlaydi', language));
+                            }
+                          }}
+                        >
+                          <MessageSquare className="h-4 w-4 mr-1.5" />
+                          {t("SMS", language)}
+                        </a>
+                      )}
+                      
+                      {car.isDeleted && (
+                        <button
+                          onClick={() => handleRestoreCar(car)}
+                          className="flex-1 min-w-[100px] inline-flex items-center justify-center px-3 py-2 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg transition-all duration-200 font-medium text-sm"
+                        >
+                          <RotateCcw className="h-4 w-4 mr-1.5" />
+                          {t("Qaytarish", language)}
+                        </button>
+                      )}
+                      
+                      {!car.isDeleted && (
+                        <button
+                          onClick={() => handleDeleteCar(car)}
+                          className="flex-1 min-w-[100px] inline-flex items-center justify-center px-3 py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-all duration-200 font-medium text-sm"
+                        >
+                          <Trash2 className="h-4 w-4 mr-1.5" />
+                          {t("O'chirish", language)}
+                        </button>
+                      )}
+                    </div>
                   </div>
+                );
+              })}
+            </div>
+            
+            {/* Arxiv statistikasi */}
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-4 sm:px-6 py-4 border-t border-green-200">
+              <div className="flex flex-col gap-3">
+                {/* Birinchi qator - Mobile: vertikal, Desktop: gorizontal */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+                      <span className="text-xs sm:text-sm font-semibold text-green-700">
+                        {t("Jami arxivlangan", language)}: {displayedCars.length} ta
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Trash2 className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
+                      <span className="text-xs sm:text-sm font-semibold text-gray-700">
+                        {t("O'chirilgan", language)}: {displayedCars.filter((car: Car) => car.isDeleted === true).length} ta
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                      <span className="text-xs sm:text-sm font-semibold text-blue-700">
+                        {t("Tugallangan", language)}: {displayedCars.filter((car: Car) => car.status === 'completed' || car.status === 'delivered').length} ta
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Ikkinchi qator - To'lov statistikasi - Mobile: vertikal, Desktop: gorizontal */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                   <div className="flex items-center gap-2">
-                    <DollarSign className="h-5 w-5 text-red-600" />
-                    <span className="text-sm font-semibold text-red-700">
-                      {t("Qarzi bor", language)}: {displayedCars.filter((car: Car) => {
+                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600" />
+                    <span className="text-xs sm:text-sm font-semibold text-emerald-700">
+                      {t("To'liq to'langan", language)}: {displayedCars.filter((car: Car) => {
                         const total = car.totalEstimate || 0;
                         const paid = car.paidAmount || 0;
-                        const hasCarDebt = total > paid; // Mashina qarzi
-                        const hasActiveDebt = carsWithActiveDebtIds.has(car._id); // Qarzlar sahifasidagi qarz
-                        return hasActiveDebt || hasCarDebt; // Ikkala holatni tekshirish
+                        return total > 0 && paid >= total; // To'liq to'langan
                       }).length} ta
                     </span>
                   </div>
-                </div>
-                <div className="text-sm text-gray-600">
-                  {t("Tugatilgan mashinalar", language)}
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />
+                    <span className="text-xs sm:text-sm font-semibold text-amber-700">
+                      {t("Qisman to'langan", language)}: {displayedCars.filter((car: Car) => {
+                        const total = car.totalEstimate || 0;
+                        const paid = car.paidAmount || 0;
+                        return total > 0 && paid > 0 && paid < total; // Qisman to'langan
+                      }).length} ta
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <XCircle className="h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
+                    <span className="text-xs sm:text-sm font-semibold text-red-700">
+                      {t("To'lanmagan", language)}: {displayedCars.filter((car: Car) => {
+                        const total = car.totalEstimate || 0;
+                        const paid = car.paidAmount || 0;
+                        return total > 0 && paid === 0; // To'lanmagan
+                      }).length} ta
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -761,19 +1040,24 @@ const Cars: React.FC = () => {
               setSelectedCar(null);
             }}
             onSuccess={() => {
-              // ⚡ INSTANT: Cache'ni darhol yangilash (IncomeModal'dagi kabi)
-              // Bu kassa sahifasida ham kirim ko'rinishini ta'minlaydi
-              queryClient.invalidateQueries({ queryKey: ['cars'] });
-              queryClient.invalidateQueries({ queryKey: ['transactions'] });
-              queryClient.invalidateQueries({ queryKey: ['transactionSummary'] });
-              queryClient.invalidateQueries({ queryKey: ['transaction-summary'] });
-              queryClient.invalidateQueries({ queryKey: ['transactionStats'] });
-              queryClient.invalidateQueries({ queryKey: ['transaction-stats'] });
-              queryClient.invalidateQueries({ queryKey: ['car-services'] });
-              
               // Modal yopish
               setIsPaymentModalOpen(false);
               setSelectedCar(null);
+              
+              // ⚡ INSTANT REFRESH: Darhol mashinalar ro'yxatini yangilash (reload yo'q!)
+              console.log('🔄 onSuccess: To\'lov qo\'shildi, mashinalar yangilanmoqda...');
+              
+              // Cache'ni tozalash
+              queryClient.invalidateQueries({ queryKey: ['cars'] });
+              queryClient.invalidateQueries({ queryKey: ['transactions'] });
+              queryClient.invalidateQueries({ queryKey: ['car-services'] });
+              queryClient.invalidateQueries({ queryKey: ['debts'] });
+              
+              // Darhol refetch qilish (reload yo'q!)
+              queryClient.refetchQueries({ queryKey: ['cars'] });
+              
+              // Custom event dispatch
+              window.dispatchEvent(new CustomEvent('cars-refresh'));
             }}
             car={selectedCar}
           />
@@ -961,7 +1245,7 @@ const CarCard: React.FC<{
               <Package2 className="h-3 w-3 sm:h-4 sm:w-4 text-purple-600" />
               <span className="text-xs font-semibold text-purple-600 uppercase hidden sm:inline">{t("Qismlar", language)}</span>
             </div>
-            <p className="text-base sm:text-2xl font-bold text-purple-900">{car.parts.length}</p>
+            <p className="text-base sm:text-2xl font-bold text-purple-900">{car.parts?.length || 0}</p>
             <p className="text-xs text-gray-500 sm:hidden">{t("qism", language)}</p>
           </div>
           <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg sm:rounded-xl p-2.5 sm:p-4 border border-green-100">

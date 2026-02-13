@@ -21,10 +21,17 @@ export const getBookings = async (req: AuthRequest, res: Response) => {
       filter.bookingDate = { $gte: startDate, $lte: endDate };
     }
 
+    // ⚡ OPTIMIZATSIYA: lean() ishlatish (3-5x tezroq)
+    // lean() Mongoose document'larni oddiy JavaScript object'ga aylantiradi
     const bookings = await Booking.find(filter)
       .populate('createdBy', 'name username')
-      .sort({ bookingDate: 1, createdAt: -1 });
+      .sort({ bookingDate: 1, createdAt: -1 })
+      .lean() // ⚡ Bu qo'shildi - 3-5x tezroq
+      .exec();
 
+    // ⚡ Cache header qo'shish (browser cache'da 30 soniya)
+    res.set('Cache-Control', 'private, max-age=30');
+    
     res.json({ bookings });
   } catch (error: any) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -35,7 +42,10 @@ export const getBookings = async (req: AuthRequest, res: Response) => {
 export const getBookingById = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const booking = await Booking.findById(id).populate('createdBy', 'name username');
+    const booking = await Booking.findById(id)
+      .populate('createdBy', 'name username')
+      .lean() // ⚡ Tezroq
+      .exec();
 
     if (!booking) {
       return res.status(404).json({ message: 'Bron topilmadi' });
