@@ -11,6 +11,7 @@ import { format } from 'date-fns';
 import { safeFormatDate } from '@/lib/utils';
 import api from '@/lib/api';
 import DeleteTaskModal from './DeleteTaskModal';
+import { useTheme } from '@/contexts/ThemeContext';
 
 
 interface Part {
@@ -34,6 +35,7 @@ interface EditCarStepModalProps {
 }
 
 const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, car, updateCar }) => {
+  const { isDarkMode } = useTheme();
   const [currentStep, setCurrentStep] = useState(1);
   const { isOnline } = useBackendStatus();
   
@@ -397,9 +399,17 @@ const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, ca
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-2 sm:p-4">
-      <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col mx-2 sm:mx-0 my-4 sm:my-0">
+      <div className={`rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col mx-2 sm:mx-0 my-4 sm:my-0 ${
+        isDarkMode
+          ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800'
+          : 'bg-white'
+      }`}>
         {/* Header */}
-        <div className="relative bg-gradient-to-r from-blue-600 to-indigo-600 px-3 sm:px-6 py-3 sm:py-4">
+        <div className={`relative px-3 sm:px-6 py-3 sm:py-4 ${
+          isDarkMode
+            ? 'bg-gradient-to-r from-red-600 via-red-700 to-gray-900'
+            : 'bg-gradient-to-r from-blue-600 to-indigo-600'
+        }`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 sm:space-x-3">
               <div className="bg-white/20 backdrop-blur-sm p-1.5 sm:p-2 rounded-lg sm:rounded-xl">
@@ -417,7 +427,11 @@ const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, ca
         </div>
 
         {/* Steps */}
-        <div className="bg-gray-50 border-b border-gray-200 px-3 sm:px-6 py-3 sm:py-4">
+        <div className={`border-b px-3 sm:px-6 py-3 sm:py-4 ${
+          isDarkMode
+            ? 'bg-gray-800/50 border-red-900/30'
+            : 'bg-gray-50 border-gray-200'
+        }`}>
           <div className="flex items-center justify-center space-x-2 sm:space-x-4 md:space-x-8 overflow-x-auto">
             {[
               { step: 1, title: t('Mashina', language) },
@@ -428,20 +442,32 @@ const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, ca
               <div key={step} className="flex items-center flex-shrink-0">
                 <div className={`flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-full text-xs sm:text-sm font-medium ${
                   step === currentStep 
-                    ? 'bg-blue-600 text-white' 
+                    ? isDarkMode
+                      ? 'bg-red-600 text-white'
+                      : 'bg-blue-600 text-white'
                     : step < currentStep 
                       ? 'bg-green-600 text-white' 
-                      : 'bg-gray-300 text-gray-600'
+                      : isDarkMode
+                        ? 'bg-gray-700 text-gray-400'
+                        : 'bg-gray-300 text-gray-600'
                 }`}>
                   {step < currentStep ? <Check className="h-3 w-3 sm:h-4 sm:w-4" /> : step}
                 </div>
                 <span className={`ml-1 sm:ml-2 text-xs sm:text-sm font-medium ${
-                  step === currentStep ? 'text-blue-600' : 'text-gray-500'
+                  step === currentStep 
+                    ? isDarkMode
+                      ? 'text-red-400'
+                      : 'text-blue-600'
+                    : isDarkMode
+                      ? 'text-gray-400'
+                      : 'text-gray-500'
                 } hidden sm:inline`}>
                   {title}
                 </span>
                 {step < 4 && (
-                  <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400 mx-1 sm:mx-4" />
+                  <ArrowRight className={`h-3 w-3 sm:h-4 sm:w-4 mx-1 sm:mx-4 ${
+                    isDarkMode ? 'text-gray-600' : 'text-gray-400'
+                  }`} />
                 )}
               </div>
             ))}
@@ -452,15 +478,23 @@ const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, ca
         <div className="flex-1 overflow-y-auto scrollbar-hide p-3 sm:p-6">
           {currentStep === 1 && (
             <div className="space-y-4">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">{t("Mashina ma'lumotlari", language)}</h3>
+              <h3 className={`text-base sm:text-lg font-semibold mb-4 ${
+                isDarkMode ? 'text-white' : 'text-gray-900'
+              }`}>{t("Mashina ma'lumotlari", language)}</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('Marka', language)} *</label>
+                  <label className={`block text-sm font-medium mb-2 ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                  }`}>{t('Marka', language)} *</label>
                   <select
                     name="make"
                     value={formData.make}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className={`w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 transition-colors ${
+                      isDarkMode
+                        ? 'bg-gray-800 border-red-900/30 text-white focus:ring-red-500 focus:border-red-500'
+                        : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                    }`}
                   >
                     <option value="">{t('Tanlang', language)}</option>
                     {carMakes.map((make) => (
@@ -469,23 +503,35 @@ const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, ca
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('Model', language)} *</label>
+                  <label className={`block text-sm font-medium mb-2 ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                  }`}>{t('Model', language)} *</label>
                   <input
                     type="text"
                     name="carModel"
                     value={formData.carModel}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className={`w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 transition-colors ${
+                      isDarkMode
+                        ? 'bg-gray-800 border-red-900/30 text-white placeholder:text-gray-500 focus:ring-red-500 focus:border-red-500'
+                        : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                    }`}
                     placeholder="Lacetti"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('Yili', language)} *</label>
+                  <label className={`block text-sm font-medium mb-2 ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                  }`}>{t('Yili', language)} *</label>
                   <select
                     name="year"
                     value={formData.year}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className={`w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 transition-colors ${
+                      isDarkMode
+                        ? 'bg-gray-800 border-red-900/30 text-white focus:ring-red-500 focus:border-red-500'
+                        : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                    }`}
                   >
                     {years.map((year) => (
                       <option key={year} value={year}>{year}</option>
@@ -493,39 +539,61 @@ const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, ca
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('Davlat raqami', language)} *</label>
+                  <label className={`block text-sm font-medium mb-2 ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                  }`}>{t('Davlat raqami', language)} *</label>
                   <input
                     type="text"
                     name="licensePlate"
                     value={formData.licensePlate}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className={`w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 transition-colors ${
+                      isDarkMode
+                        ? 'bg-gray-800 border-red-900/30 text-white placeholder:text-gray-500 focus:ring-red-500 focus:border-red-500'
+                        : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                    }`}
                     placeholder="01 A 123 BC"
                   />
                 </div>
               </div>
-              <div className="border-t border-gray-200 pt-4">
-                <h4 className="text-sm sm:text-md font-medium text-gray-900 mb-3">{t('Egasi', language)}</h4>
+              <div className={`border-t pt-4 ${
+                isDarkMode ? 'border-red-900/30' : 'border-gray-200'
+              }`}>
+                <h4 className={`text-sm sm:text-md font-medium mb-3 ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}>{t('Egasi', language)}</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">{t('Ism', language)} *</label>
+                    <label className={`block text-sm font-medium mb-2 ${
+                      isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                    }`}>{t('Ism', language)} *</label>
                     <input
                       type="text"
                       name="ownerName"
                       value={formData.ownerName}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className={`w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 transition-colors ${
+                        isDarkMode
+                          ? 'bg-gray-800 border-red-900/30 text-white placeholder:text-gray-500 focus:ring-red-500 focus:border-red-500'
+                          : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                      }`}
                       placeholder={t("To'liq ism", language)}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">{t('Telefon', language)} *</label>
+                    <label className={`block text-sm font-medium mb-2 ${
+                      isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                    }`}>{t('Telefon', language)} *</label>
                     <input
                       type="tel"
                       name="ownerPhone"
                       value={formData.ownerPhone}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className={`w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 transition-colors ${
+                        isDarkMode
+                          ? 'bg-gray-800 border-red-900/30 text-white placeholder:text-gray-500 focus:ring-red-500 focus:border-red-500'
+                          : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                      }`}
                       placeholder="+998 XX XXX XX XX"
                     />
                   </div>
@@ -537,18 +605,28 @@ const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, ca
           {currentStep === 2 && (
             <div className="space-y-4">
               {/* Ixtiyoriy xabar */}
-              <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded-lg">
+              <div className={`border-l-4 p-3 rounded-lg ${
+                isDarkMode
+                  ? 'bg-blue-900/40 border-blue-700'
+                  : 'bg-blue-50 border-blue-500'
+              }`}>
                 <div className="flex items-start">
                   <div className="flex-shrink-0">
-                    <svg className="h-5 w-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                    <svg className={`h-5 w-5 ${
+                      isDarkMode ? 'text-blue-400' : 'text-blue-500'
+                    }`} fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                     </svg>
                   </div>
                   <div className="ml-3">
-                    <p className="text-sm text-blue-700 font-medium">
+                    <p className={`text-sm font-medium ${
+                      isDarkMode ? 'text-blue-300' : 'text-blue-700'
+                    }`}>
                       {t('Bu qism ixtiyoriy', language)}
                     </p>
-                    <p className="text-xs text-blue-600 mt-1">
+                    <p className={`text-xs mt-1 ${
+                      isDarkMode ? 'text-blue-400' : 'text-blue-600'
+                    }`}>
                       {t('Zapchast qo\'shmasangiz ham keyingi qismga o\'tishingiz mumkin', language)}
                     </p>
                   </div>
@@ -556,42 +634,70 @@ const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, ca
               </div>
 
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">{t("Qism qo'shish (ixtiyoriy)", language)}</h3>
-                <span className="text-sm text-gray-500">{parts.length} {t('ta', language)}</span>
+                <h3 className={`text-lg font-semibold ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}>{t("Qism qo'shish (ixtiyoriy)", language)}</h3>
+                <span className={`text-sm ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                }`}>{parts.length} {t('ta', language)}</span>
               </div>
               
               {/* Qism qo'shish formi */}
-              <div className="bg-green-50 rounded-xl p-3 sm:p-4 border border-green-100">
+              <div className={`rounded-xl p-3 sm:p-4 border ${
+                isDarkMode
+                  ? 'bg-green-900/40 border-green-700'
+                  : 'bg-green-50 border-green-100'
+              }`}>
                 <div className="space-y-3">
                   {/* Qidiruv input - Ombordan qidirish */}
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 ${
+                      isDarkMode ? 'text-gray-500' : 'text-gray-400'
+                    }`} />
                     <input
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className={`w-full pl-10 pr-3 py-2 text-sm border rounded-lg focus:ring-2 transition-colors ${
+                        isDarkMode
+                          ? 'bg-gray-800 border-green-700 text-white placeholder:text-gray-500 focus:ring-green-500 focus:border-green-500'
+                          : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                      }`}
                       placeholder={t('Ombordan qidirish...', language)}
                     />
                     
                     {/* Qidiruv natijalari */}
                     {filteredSpareParts.length > 0 && (
-                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      <div className={`absolute z-10 w-full mt-1 border rounded-lg shadow-lg max-h-60 overflow-y-auto ${
+                        isDarkMode
+                          ? 'bg-gray-800 border-red-900/30'
+                          : 'bg-white border-gray-200'
+                      }`}>
                         {filteredSpareParts.map((part: any) => (
                           <button
                             key={part._id}
                             type="button"
                             onClick={() => handleSelectSparePart(part)}
-                            className="w-full px-3 py-2 text-left hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-b-0"
+                            className={`w-full px-3 py-2 text-left transition-colors border-b last:border-b-0 ${
+                              isDarkMode
+                                ? 'hover:bg-gray-700 border-red-900/30'
+                                : 'hover:bg-blue-50 border-gray-100'
+                            }`}
                           >
                             <div className="flex items-center justify-between">
                               <div className="flex-1">
-                                <p className="text-sm font-medium text-gray-900">{part.name}</p>
-                                <p className="text-xs text-gray-500">
+                                <p className={`text-sm font-medium ${
+                                  isDarkMode ? 'text-white' : 'text-gray-900'
+                                }`}>{part.name}</p>
+                                <p className={`text-xs ${
+                                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                                }`}>
                                   {part.quantity} {part.unit} • {(part.sellingPrice || part.price || 0).toLocaleString()} {t("so'm", language)}
                                 </p>
                               </div>
-                              <Plus className="h-4 w-4 text-blue-600" />
+                              <Plus className={`h-4 w-4 ${
+                                isDarkMode ? 'text-green-400' : 'text-blue-600'
+                              }`} />
                             </div>
                           </button>
                         ))}
@@ -606,7 +712,11 @@ const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, ca
                       value={newPart.name}
                       onChange={handlePartNameChange}
                       onKeyDown={handleKeyDown}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      className={`w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 transition-colors ${
+                        isDarkMode
+                          ? 'bg-gray-800 border-green-700 text-white placeholder:text-gray-500 focus:ring-green-500 focus:border-green-500'
+                          : 'border-gray-300 focus:ring-green-500 focus:border-green-500'
+                      }`}
                       placeholder={t('Qism nomi (mijoz keltiradi)', language) + ' *'}
                     />
                   </div>
@@ -622,7 +732,11 @@ const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, ca
                         const numValue = value === '' ? 1 : Math.max(1, Number(value));
                         setNewPart({ ...newPart, quantity: numValue });
                       }}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      className={`w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 transition-colors ${
+                        isDarkMode
+                          ? 'bg-gray-800 border-green-700 text-white placeholder:text-gray-500 focus:ring-green-500 focus:border-green-500'
+                          : 'border-gray-300 focus:ring-green-500 focus:border-green-500'
+                      }`}
                       placeholder={t('Soni', language)}
                     />
                     <input
@@ -635,7 +749,11 @@ const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, ca
                         const numValue = value === '' ? 0 : Math.max(0, Number(value));
                         setNewPart({ ...newPart, price: numValue });
                       }}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      className={`w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 transition-colors ${
+                        isDarkMode
+                          ? 'bg-gray-800 border-green-700 text-white placeholder:text-gray-500 focus:ring-green-500 focus:border-green-500'
+                          : 'border-gray-300 focus:ring-green-500 focus:border-green-500'
+                      }`}
                       placeholder={t("Narx (so'm)", language) + ' *'}
                     />
                     <div className="flex items-center justify-center bg-gray-50 rounded-lg px-2 py-1 col-span-2 sm:col-span-1">
@@ -667,25 +785,45 @@ const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, ca
 
               {/* Qismlar ro'yxati */}
               <div className="space-y-2">
-                <h4 className="text-sm font-medium text-gray-700">{t("Qismlar ro'yxati", language)}</h4>
+                <h4 className={`text-sm font-medium ${
+                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                }`}>{t("Qismlar ro'yxati", language)}</h4>
                 {parts.length === 0 ? (
-                  <p className="text-sm text-gray-500 text-center py-8">{t("Qismlar qo'shilmagan", language)}</p>
+                  <p className={`text-sm text-center py-8 ${
+                    isDarkMode ? 'text-gray-500' : 'text-gray-500'
+                  }`}>{t("Qismlar qo'shilmagan", language)}</p>
                 ) : (
                   parts.map((part, index) => {
                     return (
-                      <div key={index} className="flex flex-col sm:flex-row sm:items-center justify-between bg-white border border-gray-200 rounded-lg p-3 gap-3 sm:gap-0">
+                      <div key={index} className={`flex flex-col sm:flex-row sm:items-center justify-between rounded-lg p-3 gap-3 sm:gap-0 border ${
+                        isDarkMode
+                          ? 'bg-gray-800 border-red-900/30'
+                          : 'bg-white border-gray-200'
+                      }`}>
                         <div className="flex items-center space-x-3 flex-1 min-w-0">
-                          <div className="bg-blue-100 p-2 rounded-lg flex-shrink-0">
-                            <Edit className="h-4 w-4 text-blue-600" />
+                          <div className={`p-2 rounded-lg flex-shrink-0 ${
+                            isDarkMode
+                              ? 'bg-red-900/40'
+                              : 'bg-blue-100'
+                          }`}>
+                            <Edit className={`h-4 w-4 ${
+                              isDarkMode ? 'text-red-400' : 'text-blue-600'
+                            }`} />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                              <h5 className="text-sm font-medium text-gray-900 truncate">{part.name}</h5>
+                              <h5 className={`text-sm font-medium truncate ${
+                                isDarkMode ? 'text-white' : 'text-gray-900'
+                              }`}>{part.name}</h5>
                             </div>
-                            <div className="flex flex-wrap items-center gap-1 sm:gap-2 text-xs text-gray-500 mt-1">
+                            <div className={`flex flex-wrap items-center gap-1 sm:gap-2 text-xs mt-1 ${
+                              isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                            }`}>
                               <span>{part.quantity} {t('dona', language)}</span>
                               <span className="hidden sm:inline">×</span>
-                              <span className="text-green-600 font-medium">{part.price.toLocaleString()} {t("so'm", language)}</span>
+                              <span className={`font-medium ${
+                                isDarkMode ? 'text-green-400' : 'text-green-600'
+                              }`}>{part.price.toLocaleString()} {t("so'm", language)}</span>
                               <span className="hidden sm:inline">=</span>
                               <span className="font-medium">{(part.quantity * part.price).toLocaleString()} {t("so'm", language)}</span>
                             </div>
@@ -695,14 +833,22 @@ const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, ca
                           <button
                             type="button"
                             onClick={() => handleEditPart(index)}
-                            className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                            className={`p-1.5 rounded-lg transition-all ${
+                              isDarkMode
+                                ? 'text-gray-400 hover:text-red-400 hover:bg-red-900/40'
+                                : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50'
+                            }`}
                           >
                             <Edit className="h-4 w-4" />
                           </button>
                           <button
                             type="button"
                             onClick={() => handleRemovePart(index)}
-                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                            className={`p-1.5 rounded-lg transition-all ${
+                              isDarkMode
+                                ? 'text-gray-400 hover:text-red-400 hover:bg-red-900/40'
+                                : 'text-gray-400 hover:text-red-600 hover:bg-red-50'
+                            }`}
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
@@ -715,10 +861,18 @@ const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, ca
 
               {/* Jami */}
               {parts.length > 0 && (
-                <div className="bg-green-50 rounded-lg p-3 sm:p-4 border border-green-100">
+                <div className={`rounded-lg p-3 sm:p-4 border ${
+                  isDarkMode
+                    ? 'bg-green-900/40 border-green-700'
+                    : 'bg-green-50 border-green-100'
+                }`}>
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
-                    <span className="text-sm font-medium text-gray-700">{t('Jami qismlar:', language)}</span>
-                    <span className="text-lg font-bold text-green-600">
+                    <span className={`text-sm font-medium ${
+                      isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                    }`}>{t('Jami qismlar:', language)}</span>
+                    <span className={`text-lg font-bold ${
+                      isDarkMode ? 'text-green-400' : 'text-green-600'
+                    }`}>
                       {parts.reduce((sum, part) => sum + (part.quantity * part.price), 0).toLocaleString()} {t("so'm", language)}
                     </span>
                   </div>
@@ -730,18 +884,28 @@ const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, ca
           {currentStep === 3 && (
             <div className="space-y-4">
               {/* Ixtiyoriy xabar */}
-              <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded-lg">
+              <div className={`border-l-4 p-3 rounded-lg ${
+                isDarkMode
+                  ? 'bg-blue-900/40 border-blue-700'
+                  : 'bg-blue-50 border-blue-500'
+              }`}>
                 <div className="flex items-start">
                   <div className="flex-shrink-0">
-                    <svg className="h-5 w-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                    <svg className={`h-5 w-5 ${
+                      isDarkMode ? 'text-blue-400' : 'text-blue-500'
+                    }`} fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                     </svg>
                   </div>
                   <div className="ml-3">
-                    <p className="text-sm text-blue-700 font-medium">
+                    <p className={`text-sm font-medium ${
+                      isDarkMode ? 'text-blue-300' : 'text-blue-700'
+                    }`}>
                       {t('Bu qism ixtiyoriy', language)}
                     </p>
-                    <p className="text-xs text-blue-600 mt-1">
+                    <p className={`text-xs mt-1 ${
+                      isDarkMode ? 'text-blue-400' : 'text-blue-600'
+                    }`}>
                       {t('Ish haqi qo\'shmasangiz ham keyingi qismga o\'tishingiz mumkin', language)}
                     </p>
                   </div>
@@ -749,19 +913,31 @@ const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, ca
               </div>
 
               <div className="flex items-center justify-between">
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900">{t('Ish haqi va xizmatlar (ixtiyoriy)', language)}</h3>
-                <span className="text-sm text-gray-500">{serviceItems.length} {t('ta', language)}</span>
+                <h3 className={`text-base sm:text-lg font-semibold ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}>{t('Ish haqi va xizmatlar (ixtiyoriy)', language)}</h3>
+                <span className={`text-sm ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                }`}>{serviceItems.length} {t('ta', language)}</span>
               </div>
               
               {/* Xizmat qo'shish formi */}
-              <div className="bg-purple-50 rounded-xl p-3 sm:p-4 border border-purple-100">
+              <div className={`rounded-xl p-3 sm:p-4 border ${
+                isDarkMode
+                  ? 'bg-purple-900/40 border-purple-700'
+                  : 'bg-purple-50 border-purple-100'
+              }`}>
                 <div className="space-y-3">
                   <div>
                     <input
                       type="text"
                       value={newServiceItem.name}
                       onChange={(e) => setNewServiceItem({ ...newServiceItem, name: e.target.value })}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      className={`w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 transition-colors ${
+                        isDarkMode
+                          ? 'bg-gray-800 border-purple-700 text-white placeholder:text-gray-500 focus:ring-purple-500 focus:border-purple-500'
+                          : 'border-gray-300 focus:ring-purple-500 focus:border-purple-500'
+                      }`}
                       placeholder={t('Xizmat nomi', language) + ' *'}
                     />
                   </div>
@@ -776,7 +952,11 @@ const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, ca
                         const numValue = value === '' ? 0 : Math.max(0, Number(value));
                         setNewServiceItem({ ...newServiceItem, price: numValue });
                       }}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      className={`w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 transition-colors ${
+                        isDarkMode
+                          ? 'bg-gray-800 border-purple-700 text-white placeholder:text-gray-500 focus:ring-purple-500 focus:border-purple-500'
+                          : 'border-gray-300 focus:ring-purple-500 focus:border-purple-500'
+                      }`}
                       placeholder={t("Narx (so'm)", language) + ' *'}
                     />
                     <input
@@ -788,11 +968,19 @@ const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, ca
                         const numValue = value === '' ? 1 : Math.max(1, Number(value));
                         setNewServiceItem({ ...newServiceItem, quantity: numValue });
                       }}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      className={`w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 transition-colors ${
+                        isDarkMode
+                          ? 'bg-gray-800 border-purple-700 text-white placeholder:text-gray-500 focus:ring-purple-500 focus:border-purple-500'
+                          : 'border-gray-300 focus:ring-purple-500 focus:border-purple-500'
+                      }`}
                       placeholder={t('Soni', language) + ' *'}
                     />
-                    <div className="flex items-center justify-center bg-gray-50 rounded-lg px-2 py-1 col-span-2 sm:col-span-1">
-                      <span className="text-xs font-medium text-gray-600 text-center">
+                    <div className={`flex items-center justify-center rounded-lg px-2 py-1 col-span-2 sm:col-span-1 ${
+                      isDarkMode ? 'bg-gray-800' : 'bg-gray-50'
+                    }`}>
+                      <span className={`text-xs font-medium text-center ${
+                        isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                      }`}>
                         = {((newServiceItem.quantity || 1) * (newServiceItem.price || 0)).toLocaleString()} {t("so'm", language)}
                       </span>
                     </div>
@@ -800,7 +988,11 @@ const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, ca
                       type="button"
                       onClick={editingServiceIndex !== null ? handleUpdateServiceItem : handleAddServiceItem}
                       disabled={!newServiceItem.name.trim() || newServiceItem.quantity <= 0}
-                      className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg transition-all flex items-center justify-center py-2 px-3 col-span-2 sm:col-span-1"
+                      className={`rounded-lg transition-all flex items-center justify-center py-2 px-3 col-span-2 sm:col-span-1 ${
+                        isDarkMode
+                          ? 'bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white'
+                          : 'bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white'
+                      }`}
                     >
                       <Plus className="h-4 w-4 mr-1" />
                       <span className="text-sm">{editingServiceIndex !== null ? t('Saqlash', language) : t("Qo'shish", language)}</span>
@@ -810,7 +1002,11 @@ const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, ca
                     <button
                       type="button"
                       onClick={handleCancelEditServiceItem}
-                      className="w-full bg-gray-500 hover:bg-gray-600 text-white rounded-lg py-2 transition-all text-sm"
+                      className={`w-full rounded-lg py-2 transition-all text-sm ${
+                        isDarkMode
+                          ? 'bg-gray-700 hover:bg-gray-600 text-white'
+                          : 'bg-gray-500 hover:bg-gray-600 text-white'
+                      }`}
                     >
                       {t('Bekor qilish', language)}
                     </button>
@@ -820,27 +1016,51 @@ const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, ca
 
               {/* Xizmatlar ro'yxati */}
               <div className="space-y-2">
-                <h4 className="text-sm font-medium text-gray-700">{t("Xizmatlar ro'yxati", language)}</h4>
+                <h4 className={`text-sm font-medium ${
+                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                }`}>{t("Xizmatlar ro'yxati", language)}</h4>
                 {serviceItems.length === 0 ? (
-                  <p className="text-sm text-gray-500 text-center py-8">{t("Xizmatlar qo'shilmagan", language)}</p>
+                  <p className={`text-sm text-center py-8 ${
+                    isDarkMode ? 'text-gray-500' : 'text-gray-500'
+                  }`}>{t("Xizmatlar qo'shilmagan", language)}</p>
                 ) : (
                   serviceItems.map((item, index) => (
-                    <div key={index} className="flex flex-col sm:flex-row sm:items-center justify-between bg-white border border-gray-200 rounded-lg p-3 gap-3 sm:gap-0">
+                    <div key={index} className={`flex flex-col sm:flex-row sm:items-center justify-between rounded-lg p-3 gap-3 sm:gap-0 border ${
+                      isDarkMode
+                        ? 'bg-gray-800 border-red-900/30'
+                        : 'bg-white border-gray-200'
+                    }`}>
                       <div className="flex items-center space-x-3 flex-1 min-w-0">
-                        <div className="bg-purple-100 p-2 rounded-lg flex-shrink-0">
-                          <Edit className="h-4 w-4 text-purple-600" />
+                        <div className={`p-2 rounded-lg flex-shrink-0 ${
+                          isDarkMode
+                            ? 'bg-purple-900/40'
+                            : 'bg-purple-100'
+                        }`}>
+                          <Edit className={`h-4 w-4 ${
+                            isDarkMode ? 'text-purple-400' : 'text-purple-600'
+                          }`} />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                            <h5 className="text-sm font-medium text-gray-900 truncate">{item.name}</h5>
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium self-start sm:self-auto bg-purple-100 text-purple-800">
+                            <h5 className={`text-sm font-medium truncate ${
+                              isDarkMode ? 'text-white' : 'text-gray-900'
+                            }`}>{item.name}</h5>
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium self-start sm:self-auto ${
+                              isDarkMode
+                                ? 'bg-purple-900/40 text-purple-300'
+                                : 'bg-purple-100 text-purple-800'
+                            }`}>
                               {t('Ish haqi', language)}
                             </span>
                           </div>
-                          <div className="flex flex-wrap items-center gap-1 sm:gap-2 text-xs text-gray-500 mt-1">
+                          <div className={`flex flex-wrap items-center gap-1 sm:gap-2 text-xs mt-1 ${
+                            isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                          }`}>
                             <span>{item.quantity} {t('dona', language)}</span>
                             <span className="hidden sm:inline">×</span>
-                            <span className="text-purple-600 font-medium">{item.price.toLocaleString()} {t("so'm", language)}</span>
+                            <span className={`font-medium ${
+                              isDarkMode ? 'text-purple-400' : 'text-purple-600'
+                            }`}>{item.price.toLocaleString()} {t("so'm", language)}</span>
                             <span className="hidden sm:inline">=</span>
                             <span className="font-medium">{(item.quantity * item.price).toLocaleString()} {t("so'm", language)}</span>
                           </div>
@@ -850,14 +1070,22 @@ const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, ca
                         <button
                           type="button"
                           onClick={() => handleEditServiceItem(index)}
-                          className="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all"
+                          className={`p-1.5 rounded-lg transition-all ${
+                            isDarkMode
+                              ? 'text-gray-400 hover:text-purple-400 hover:bg-purple-900/40'
+                              : 'text-gray-400 hover:text-purple-600 hover:bg-purple-50'
+                          }`}
                         >
                           <Edit className="h-4 w-4" />
                         </button>
                         <button
                           type="button"
                           onClick={() => handleRemoveServiceItem(index)}
-                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                          className={`p-1.5 rounded-lg transition-all ${
+                            isDarkMode
+                              ? 'text-gray-400 hover:text-red-400 hover:bg-red-900/40'
+                              : 'text-gray-400 hover:text-red-600 hover:bg-red-50'
+                          }`}
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -869,10 +1097,18 @@ const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, ca
 
               {/* Jami */}
               {serviceItems.length > 0 && (
-                <div className="bg-purple-50 rounded-lg p-3 sm:p-4 border border-purple-100">
+                <div className={`rounded-lg p-3 sm:p-4 border ${
+                  isDarkMode
+                    ? 'bg-purple-900/40 border-purple-700'
+                    : 'bg-purple-50 border-purple-100'
+                }`}>
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
-                    <span className="text-sm font-medium text-gray-700">{t('Jami ish haqi:', language)}</span>
-                    <span className="text-lg font-bold text-purple-600">
+                    <span className={`text-sm font-medium ${
+                      isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                    }`}>{t('Jami ish haqi:', language)}</span>
+                    <span className={`text-lg font-bold ${
+                      isDarkMode ? 'text-purple-400' : 'text-purple-600'
+                    }`}>
                       {serviceItems.reduce((sum, item) => sum + (item.quantity * item.price), 0).toLocaleString()} {t("so'm", language)}
                     </span>
                   </div>
@@ -884,18 +1120,28 @@ const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, ca
           {currentStep === 4 && (
             <div className="space-y-4">
               {/* Ixtiyoriy xabar */}
-              <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded-lg">
+              <div className={`border-l-4 p-3 rounded-lg ${
+                isDarkMode
+                  ? 'bg-blue-900/40 border-blue-700'
+                  : 'bg-blue-50 border-blue-500'
+              }`}>
                 <div className="flex items-start">
                   <div className="flex-shrink-0">
-                    <svg className="h-5 w-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                    <svg className={`h-5 w-5 ${
+                      isDarkMode ? 'text-blue-400' : 'text-blue-500'
+                    }`} fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                     </svg>
                   </div>
                   <div className="ml-3">
-                    <p className="text-sm text-blue-700 font-medium">
+                    <p className={`text-sm font-medium ${
+                      isDarkMode ? 'text-blue-300' : 'text-blue-700'
+                    }`}>
                       {t('Bu qism ixtiyoriy', language)}
                     </p>
-                    <p className="text-xs text-blue-600 mt-1">
+                    <p className={`text-xs mt-1 ${
+                      isDarkMode ? 'text-blue-400' : 'text-blue-600'
+                    }`}>
                       {t('Vazifa qo\'shmasangiz ham o\'zgarishlarni saqlashingiz mumkin', language)}
                     </p>
                   </div>
@@ -903,28 +1149,52 @@ const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, ca
               </div>
 
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <ClipboardList className="h-5 w-5 mr-2 text-orange-600" />
+                <h3 className={`text-lg font-semibold flex items-center ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}>
+                  <ClipboardList className={`h-5 w-5 mr-2 ${
+                    isDarkMode ? 'text-red-400' : 'text-orange-600'
+                  }`} />
                   {t('Vazifalar (ixtiyoriy)', language)}
                 </h3>
               </div>
 
               {/* Mashina ma'lumotlari */}
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-3 border border-blue-100">
-                <h4 className="text-sm font-medium text-gray-900 mb-2">{t("Mashina ma'lumotlari", language)}</h4>
-                <p className="text-sm text-gray-600">{formData.make} {formData.carModel} ({formData.year})</p>
-                <p className="text-sm text-gray-600">{formData.licensePlate}</p>
-                <p className="text-sm text-gray-600">{formData.ownerName} - {formData.ownerPhone}</p>
+              <div className={`rounded-lg p-3 border ${
+                isDarkMode
+                  ? 'bg-gradient-to-r from-blue-900/40 to-indigo-900/40 border-blue-700'
+                  : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-100'
+              }`}>
+                <h4 className={`text-sm font-medium mb-2 ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}>{t("Mashina ma'lumotlari", language)}</h4>
+                <p className={`text-sm ${
+                  isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                }`}>{formData.make} {formData.carModel} ({formData.year})</p>
+                <p className={`text-sm ${
+                  isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                }`}>{formData.licensePlate}</p>
+                <p className={`text-sm ${
+                  isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                }`}>{formData.ownerName} - {formData.ownerPhone}</p>
               </div>
 
               {/* Vazifalar ro'yxati - faqat online rejimda */}
               {isOnline ? (
                 <TasksSection carId={car._id} language={language} />
               ) : (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div className={`border rounded-lg p-4 ${
+                  isDarkMode
+                    ? 'bg-yellow-900/40 border-yellow-700'
+                    : 'bg-yellow-50 border-yellow-200'
+                }`}>
                   <div className="flex items-center">
-                    <AlertCircle className="h-5 w-5 text-yellow-600 mr-2" />
-                    <p className="text-sm text-yellow-800">
+                    <AlertCircle className={`h-5 w-5 mr-2 ${
+                      isDarkMode ? 'text-yellow-400' : 'text-yellow-600'
+                    }`} />
+                    <p className={`text-sm ${
+                      isDarkMode ? 'text-yellow-300' : 'text-yellow-800'
+                    }`}>
                       {t('Vazifalar bo\'limi offline rejimda mavjud emas', language)}
                     </p>
                   </div>
@@ -934,19 +1204,33 @@ const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, ca
               {/* Qismlar va xizmatlar xulasasi */}
               <div className="space-y-3">
                 {parts.length > 0 && (
-                  <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-                    <h4 className="text-sm font-medium text-gray-900 mb-2">{t('Qismlar', language)} ({parts.length} {t('ta', language)})</h4>
+                  <div className={`rounded-lg p-3 border ${
+                    isDarkMode
+                      ? 'bg-gray-800 border-red-900/30'
+                      : 'bg-gray-50 border-gray-200'
+                  }`}>
+                    <h4 className={`text-sm font-medium mb-2 ${
+                      isDarkMode ? 'text-white' : 'text-gray-900'
+                    }`}>{t('Qismlar', language)} ({parts.length} {t('ta', language)})</h4>
                     {parts.slice(0, 3).map((part, index) => (
-                      <div key={index} className="flex justify-between text-xs text-gray-600 mb-1">
+                      <div key={index} className={`flex justify-between text-xs mb-1 ${
+                        isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                      }`}>
                         <span className="truncate">{part.name} ({part.quantity})</span>
                         <span className="ml-2 flex-shrink-0">{(part.quantity * part.price).toLocaleString()} {t("so'm", language)}</span>
                       </div>
                     ))}
                     {parts.length > 3 && (
-                      <p className="text-xs text-gray-500 mt-1">+ {parts.length - 3} {t('ta yana', language)}</p>
+                      <p className={`text-xs mt-1 ${
+                        isDarkMode ? 'text-gray-500' : 'text-gray-500'
+                      }`}>+ {parts.length - 3} {t('ta yana', language)}</p>
                     )}
-                    <div className="border-t border-gray-300 pt-2 mt-2">
-                      <div className="flex justify-between text-sm font-medium text-gray-900">
+                    <div className={`border-t pt-2 mt-2 ${
+                      isDarkMode ? 'border-red-900/30' : 'border-gray-300'
+                    }`}>
+                      <div className={`flex justify-between text-sm font-medium ${
+                        isDarkMode ? 'text-white' : 'text-gray-900'
+                      }`}>
                         <span>{t('Jami:', language)}</span>
                         <span>{parts.reduce((sum, part) => sum + (part.quantity * part.price), 0).toLocaleString()} {t("so'm", language)}</span>
                       </div>
@@ -955,19 +1239,33 @@ const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, ca
                 )}
                 
                 {serviceItems.length > 0 && (
-                  <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-                    <h4 className="text-sm font-medium text-gray-900 mb-2">{t('Xizmatlar', language)} ({serviceItems.length} {t('ta', language)})</h4>
+                  <div className={`rounded-lg p-3 border ${
+                    isDarkMode
+                      ? 'bg-gray-800 border-red-900/30'
+                      : 'bg-gray-50 border-gray-200'
+                  }`}>
+                    <h4 className={`text-sm font-medium mb-2 ${
+                      isDarkMode ? 'text-white' : 'text-gray-900'
+                    }`}>{t('Xizmatlar', language)} ({serviceItems.length} {t('ta', language)})</h4>
                     {serviceItems.slice(0, 3).map((item, index) => (
-                      <div key={index} className="flex justify-between text-xs text-gray-600 mb-1">
+                      <div key={index} className={`flex justify-between text-xs mb-1 ${
+                        isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                      }`}>
                         <span className="truncate">{item.name} ({item.quantity})</span>
                         <span className="ml-2 flex-shrink-0">{(item.quantity * item.price).toLocaleString()} {t("so'm", language)}</span>
                       </div>
                     ))}
                     {serviceItems.length > 3 && (
-                      <p className="text-xs text-gray-500 mt-1">+ {serviceItems.length - 3} {t('ta yana', language)}</p>
+                      <p className={`text-xs mt-1 ${
+                        isDarkMode ? 'text-gray-500' : 'text-gray-500'
+                      }`}>+ {serviceItems.length - 3} {t('ta yana', language)}</p>
                     )}
-                    <div className="border-t border-gray-300 pt-2 mt-2">
-                      <div className="flex justify-between text-sm font-medium text-gray-900">
+                    <div className={`border-t pt-2 mt-2 ${
+                      isDarkMode ? 'border-red-900/30' : 'border-gray-300'
+                    }`}>
+                      <div className={`flex justify-between text-sm font-medium ${
+                        isDarkMode ? 'text-white' : 'text-gray-900'
+                      }`}>
                         <span>{t('Jami:', language)}</span>
                         <span>{serviceItems.reduce((sum, item) => sum + (item.quantity * item.price), 0).toLocaleString()} {t("so'm", language)}</span>
                       </div>
@@ -977,8 +1275,14 @@ const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, ca
                 
                 {/* Umumiy jami */}
                 {(parts.length > 0 || serviceItems.length > 0) && (
-                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-3 border border-blue-200">
-                    <div className="flex justify-between text-base font-bold text-blue-900">
+                  <div className={`rounded-lg p-3 border ${
+                    isDarkMode
+                      ? 'bg-gradient-to-r from-blue-900/40 to-indigo-900/40 border-blue-700'
+                      : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200'
+                  }`}>
+                    <div className={`flex justify-between text-base font-bold ${
+                      isDarkMode ? 'text-blue-300' : 'text-blue-900'
+                    }`}>
                       <span>{t('Umumiy jami:', language)}</span>
                       <span>
                         {(
@@ -995,12 +1299,20 @@ const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, ca
         </div>
 
         {/* Footer */}
-        <div className="border-t border-gray-200 px-3 sm:px-6 py-3 sm:py-4 bg-gray-50 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0">
+        <div className={`border-t px-3 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0 ${
+          isDarkMode
+            ? 'border-red-900/30 bg-gray-800/50'
+            : 'border-gray-200 bg-gray-50'
+        }`}>
           <button
             type="button"
             onClick={prevStep}
             disabled={currentStep === 1}
-            className="flex items-center px-3 sm:px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed order-2 sm:order-1"
+            className={`flex items-center px-3 sm:px-4 py-2 text-sm font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed order-2 sm:order-1 ${
+              isDarkMode
+                ? 'text-gray-300 hover:bg-gray-700'
+                : 'text-gray-700 hover:bg-gray-100'
+            }`}
           >
             <ArrowLeft className="h-4 w-4 mr-1" />
             {t('Orqaga', language)}
@@ -1010,7 +1322,11 @@ const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, ca
             <button
               type="button"
               onClick={onClose}
-              className="px-3 sm:px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-all"
+              className={`px-3 sm:px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+                isDarkMode
+                  ? 'text-gray-300 hover:bg-gray-700'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
             >
               {t('Bekor qilish', language)}
             </button>
@@ -1019,7 +1335,11 @@ const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, ca
               <button
                 type="button"
                 onClick={nextStep}
-                className="flex items-center px-4 sm:px-5 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-all"
+                className={`flex items-center px-4 sm:px-5 py-2 text-sm font-medium text-white rounded-lg transition-all ${
+                  isDarkMode
+                    ? 'bg-red-600 hover:bg-red-700'
+                    : 'bg-blue-600 hover:bg-blue-700'
+                }`}
               >
                 {t('Keyingi', language)}
                 <ArrowRight className="h-4 w-4 ml-1" />
@@ -1029,7 +1349,11 @@ const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, ca
                 type="button"
                 onClick={handleSubmit}
                 disabled={isUpdating}
-                className="flex items-center px-4 sm:px-5 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`flex items-center px-4 sm:px-5 py-2 text-sm font-medium text-white rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                  isDarkMode
+                    ? 'bg-red-600 hover:bg-red-700'
+                    : 'bg-blue-600 hover:bg-blue-700'
+                }`}
               >
                 <Save className="h-4 w-4 mr-1" />
                 {isUpdating ? t('Saqlanmoqda...', language) : t('Saqlash', language)}

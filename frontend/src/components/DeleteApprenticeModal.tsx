@@ -3,6 +3,7 @@ import { X, AlertTriangle, Trash2 } from 'lucide-react';
 import { User as UserType } from '@/types';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { t } from '@/lib/transliteration';
+import { useTheme } from '@/contexts/ThemeContext';
 import api from '@/lib/api';
 
 interface DeleteApprenticeModalProps {
@@ -14,6 +15,7 @@ interface DeleteApprenticeModalProps {
 }
 
 const DeleteApprenticeModal: React.FC<DeleteApprenticeModalProps> = ({ isOpen, onClose, apprentice, onDelete, onDeleteOptimistic }) => {
+  const { isDarkMode } = useTheme();
   const [isLoading, setIsLoading] = useState(false);
 
   // localStorage'dan tilni o'qish
@@ -64,9 +66,17 @@ const DeleteApprenticeModal: React.FC<DeleteApprenticeModalProps> = ({ isOpen, o
       <div className="flex min-h-screen items-center justify-center p-4">
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
         
-        <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full">
+        <div className={`relative rounded-2xl shadow-2xl max-w-md w-full ${
+          isDarkMode 
+            ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' 
+            : 'bg-white'
+        }`}>
           {/* Header */}
-          <div className="bg-gradient-to-r from-red-600 to-rose-600 px-6 py-5 rounded-t-2xl">
+          <div className={`px-6 py-5 rounded-t-2xl ${
+            isDarkMode
+              ? 'bg-gradient-to-r from-red-600 via-red-700 to-gray-900'
+              : 'bg-gradient-to-r from-red-600 to-rose-600'
+          }`}>
             <button onClick={onClose} className="absolute top-4 right-4 text-white/80 hover:text-white hover:bg-white/20 rounded-lg p-1.5 transition-colors">
               <X className="h-5 w-5" />
             </button>
@@ -77,7 +87,9 @@ const DeleteApprenticeModal: React.FC<DeleteApprenticeModalProps> = ({ isOpen, o
               </div>
               <div>
                 <h2 className="text-xl font-bold text-white">{t("Shogirtni o'chirish", language)}</h2>
-                <p className="text-red-100 text-sm">{t("Bu amalni qaytarib bo'lmaydi", language)}</p>
+                <p className={`text-sm ${isDarkMode ? 'text-red-200' : 'text-red-100'}`}>
+                  {t("Bu amalni qaytarib bo'lmaydi", language)}
+                </p>
               </div>
             </div>
           </div>
@@ -85,12 +97,24 @@ const DeleteApprenticeModal: React.FC<DeleteApprenticeModalProps> = ({ isOpen, o
           {/* Content */}
           <div className="p-6">
             {/* Warning Box */}
-            <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 mb-6">
+            <div className={`border-2 rounded-xl p-4 mb-6 ${
+              isDarkMode
+                ? 'bg-red-900/20 border-red-800'
+                : 'bg-red-50 border-red-200'
+            }`}>
               <div className="flex items-start gap-3">
-                <AlertTriangle className="h-6 w-6 text-red-600 flex-shrink-0 mt-0.5" />
+                <AlertTriangle className={`h-6 w-6 flex-shrink-0 mt-0.5 ${
+                  isDarkMode ? 'text-red-400' : 'text-red-600'
+                }`} />
                 <div>
-                  <h3 className="font-semibold text-red-900 mb-1">{t('Diqqat!', language)}</h3>
-                  <p className="text-sm text-red-700">
+                  <h3 className={`font-semibold mb-1 ${
+                    isDarkMode ? 'text-red-300' : 'text-red-900'
+                  }`}>
+                    {t('Diqqat!', language)}
+                  </h3>
+                  <p className={`text-sm ${
+                    isDarkMode ? 'text-red-400' : 'text-red-700'
+                  }`}>
                     {t('Siz', language)} <span className="font-bold">{t(apprentice.name, language)}</span> {t("shogirtni o'chirmoqchisiz. Bu amal qaytarilmaydi va barcha ma'lumotlar yo'qoladi.", language)}
                   </p>
                 </div>
@@ -98,14 +122,28 @@ const DeleteApprenticeModal: React.FC<DeleteApprenticeModalProps> = ({ isOpen, o
             </div>
 
             {/* Apprentice Info */}
-            <div className="bg-gray-50 rounded-lg p-4 mb-6">
+            <div className={`rounded-lg p-4 mb-6 ${
+              isDarkMode ? 'bg-gray-800' : 'bg-gray-50'
+            }`}>
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-bold text-lg">
+                <div className={`flex h-12 w-12 items-center justify-center rounded-lg text-white font-bold text-lg ${
+                  isDarkMode
+                    ? 'bg-gradient-to-br from-red-600 to-red-800'
+                    : 'bg-gradient-to-br from-blue-500 to-indigo-600'
+                }`}>
                   {t(apprentice.name, language).charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <h4 className="font-semibold text-gray-900">{t(apprentice.name, language)}</h4>
-                  <p className="text-sm text-gray-600">@{apprentice.username}</p>
+                  <h4 className={`font-semibold ${
+                    isDarkMode ? 'text-gray-200' : 'text-gray-900'
+                  }`}>
+                    {t(apprentice.name, language)}
+                  </h4>
+                  <p className={`text-sm ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                  }`}>
+                    @{apprentice.username}
+                  </p>
                 </div>
               </div>
             </div>
@@ -115,14 +153,22 @@ const DeleteApprenticeModal: React.FC<DeleteApprenticeModalProps> = ({ isOpen, o
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                className={`flex-1 px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+                  isDarkMode
+                    ? 'text-gray-300 bg-gray-800 hover:bg-gray-700 border border-gray-700'
+                    : 'text-gray-700 bg-gray-100 hover:bg-gray-200'
+                }`}
               >
                 {t('Bekor qilish', language)}
               </button>
               <button
                 onClick={handleDelete}
                 disabled={isLoading}
-                className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-red-600 to-rose-600 rounded-lg hover:from-red-700 hover:to-rose-700 disabled:opacity-50 transition-all shadow-md hover:shadow-lg"
+                className={`flex-1 px-4 py-2.5 text-sm font-medium text-white rounded-lg disabled:opacity-50 transition-all shadow-md hover:shadow-lg ${
+                  isDarkMode
+                    ? 'bg-gradient-to-r from-red-600 via-red-700 to-gray-900 hover:from-red-700 hover:via-red-800 hover:to-gray-900'
+                    : 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700'
+                }`}
               >
                 {isLoading ? (
                   <span className="flex items-center justify-center gap-2">

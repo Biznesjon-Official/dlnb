@@ -5,6 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "nodemon src/index.ts",
+    "dev:6666": "set PORT=4000&& nodemon src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
     "start:prod": "NODE_ENV=production node dist/index.js",

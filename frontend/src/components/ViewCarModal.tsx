@@ -5,6 +5,7 @@ import { formatCurrency, safeFormatDate, safeFormatDateTime } from '@/lib/utils'
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { useTasks } from '@/hooks/useTasks';
 import { t } from '@/lib/transliteration';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface ViewCarModalProps {
   isOpen: boolean;
@@ -15,6 +16,8 @@ interface ViewCarModalProps {
 }
 
 const ViewCarModal: React.FC<ViewCarModalProps> = ({ isOpen, onClose, car, onEdit, onDelete }) => {
+  const { isDarkMode } = useTheme();
+  
   // localStorage'dan tilni o'qish
   const language = React.useMemo<'latin' | 'cyrillic'>(() => {
     const savedLanguage = localStorage.getItem('language'); 
@@ -44,16 +47,30 @@ const ViewCarModal: React.FC<ViewCarModalProps> = ({ isOpen, onClose, car, onEdi
   if (!isOpen) return null;
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'in-progress': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'completed': return 'bg-green-100 text-green-800 border-green-200';
-      case 'delivered': return 'bg-gray-100 text-gray-800 border-gray-200';
-      case 'needed': return 'bg-red-100 text-red-800 border-red-200';
-      case 'ordered': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'available': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'installed': return 'bg-green-100 text-green-800 border-green-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    if (isDarkMode) {
+      switch (status) {
+        case 'pending': return 'bg-yellow-900/40 text-yellow-300 border-yellow-700';
+        case 'in-progress': return 'bg-blue-900/40 text-blue-300 border-blue-700';
+        case 'completed': return 'bg-green-900/40 text-green-300 border-green-700';
+        case 'delivered': return 'bg-gray-800/40 text-gray-300 border-gray-700';
+        case 'needed': return 'bg-red-900/40 text-red-300 border-red-700';
+        case 'ordered': return 'bg-yellow-900/40 text-yellow-300 border-yellow-700';
+        case 'available': return 'bg-blue-900/40 text-blue-300 border-blue-700';
+        case 'installed': return 'bg-green-900/40 text-green-300 border-green-700';
+        default: return 'bg-gray-800/40 text-gray-300 border-gray-700';
+      }
+    } else {
+      switch (status) {
+        case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+        case 'in-progress': return 'bg-blue-100 text-blue-800 border-blue-200';
+        case 'completed': return 'bg-green-100 text-green-800 border-green-200';
+        case 'delivered': return 'bg-gray-100 text-gray-800 border-gray-200';
+        case 'needed': return 'bg-red-100 text-red-800 border-red-200';
+        case 'ordered': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+        case 'available': return 'bg-blue-100 text-blue-800 border-blue-200';
+        case 'installed': return 'bg-green-100 text-green-800 border-green-200';
+        default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      }
     }
   };
 
@@ -119,9 +136,17 @@ const ViewCarModal: React.FC<ViewCarModalProps> = ({ isOpen, onClose, car, onEdi
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-2 sm:p-4">
-      <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
+      <div className={`rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col ${
+        isDarkMode
+          ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800'
+          : 'bg-white'
+      }`}>
         {/* Header */}
-        <div className="relative bg-gradient-to-r from-blue-600 via-blue-600 to-indigo-600 px-3 sm:px-4 py-2.5 sm:py-3">
+        <div className={`relative px-3 sm:px-4 py-2.5 sm:py-3 ${
+          isDarkMode
+            ? 'bg-gradient-to-r from-red-600 via-red-700 to-gray-900'
+            : 'bg-gradient-to-r from-blue-600 via-blue-600 to-indigo-600'
+        }`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 min-w-0 flex-1">
               <div className="bg-white/20 backdrop-blur-sm p-1.5 rounded-lg">
@@ -148,45 +173,85 @@ const ViewCarModal: React.FC<ViewCarModalProps> = ({ isOpen, onClose, car, onEdi
           {/* Main Info Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-2.5 sm:gap-3 mb-3 sm:mb-4">
             {/* Mashina ma'lumotlari */}
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-2.5 sm:p-3 border border-blue-100">
-              <h3 className="text-xs font-semibold text-gray-900 mb-2 flex items-center">
-                <CarIcon className="h-3 w-3 mr-1.5 text-blue-600" />
+            <div className={`rounded-lg p-2.5 sm:p-3 border ${
+              isDarkMode
+                ? 'bg-gradient-to-br from-gray-800/50 to-gray-900/50 border-red-900/30'
+                : 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-100'
+            }`}>
+              <h3 className={`text-xs font-semibold mb-2 flex items-center ${
+                isDarkMode ? 'text-white' : 'text-gray-900'
+              }`}>
+                <CarIcon className={`h-3 w-3 mr-1.5 ${
+                  isDarkMode ? 'text-red-400' : 'text-blue-600'
+                }`} />
                 {t('Mashina', language)}
               </h3>
               <div className="space-y-1.5">
                 <div>
-                  <p className="text-xs text-gray-600">{t('Marka va model', language)}</p>
-                  <p className="text-xs font-medium text-gray-900 truncate">{car.make} {car.carModel}</p>
+                  <p className={`text-xs ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                  }`}>{t('Marka va model', language)}</p>
+                  <p className={`text-xs font-medium truncate ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>{car.make} {car.carModel}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-600">{t('Yili', language)}</p>
-                  <p className="text-xs font-medium text-gray-900">{car.year}</p>
+                  <p className={`text-xs ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                  }`}>{t('Yili', language)}</p>
+                  <p className={`text-xs font-medium ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>{car.year}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-600">{t('Davlat raqami', language)}</p>
-                  <p className="text-xs font-medium text-gray-900">{car.licensePlate}</p>
+                  <p className={`text-xs ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                  }`}>{t('Davlat raqami', language)}</p>
+                  <p className={`text-xs font-medium ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>{car.licensePlate}</p>
                 </div>
               </div>
             </div>
 
             {/* Egasi ma'lumotlari */}
-            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-2.5 sm:p-3 border border-green-100">
-              <h3 className="text-xs font-semibold text-gray-900 mb-2 flex items-center">
-                <User className="h-3 w-3 mr-1.5 text-green-600" />
+            <div className={`rounded-lg p-2.5 sm:p-3 border ${
+              isDarkMode
+                ? 'bg-gradient-to-br from-gray-800/50 to-gray-900/50 border-red-900/30'
+                : 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-100'
+            }`}>
+              <h3 className={`text-xs font-semibold mb-2 flex items-center ${
+                isDarkMode ? 'text-white' : 'text-gray-900'
+              }`}>
+                <User className={`h-3 w-3 mr-1.5 ${
+                  isDarkMode ? 'text-red-400' : 'text-green-600'
+                }`} />
                 {t('Egasi', language)}
               </h3>
               <div className="space-y-1.5">
                 <div>
-                  <p className="text-xs text-gray-600">{t('Ism', language)}</p>
-                  <p className="text-xs font-medium text-gray-900 truncate">{car.ownerName}</p>
+                  <p className={`text-xs ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                  }`}>{t('Ism', language)}</p>
+                  <p className={`text-xs font-medium truncate ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>{car.ownerName}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-600">{t('Telefon', language)}</p>
-                  <p className="text-xs font-medium text-gray-900">{car.ownerPhone}</p>
+                  <p className={`text-xs ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                  }`}>{t('Telefon', language)}</p>
+                  <p className={`text-xs font-medium ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>{car.ownerPhone}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-600">{t('Umumiy narx', language)}</p>
-                  <p className="text-sm font-bold text-green-600">{formatCurrency(car.totalEstimate)}</p>
+                  <p className={`text-xs ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                  }`}>{t('Umumiy narx', language)}</p>
+                  <p className={`text-sm font-bold ${
+                    isDarkMode ? 'text-red-400' : 'text-green-600'
+                  }`}>{formatCurrency(car.totalEstimate)}</p>
                 </div>
               </div>
             </div>
@@ -194,12 +259,28 @@ const ViewCarModal: React.FC<ViewCarModalProps> = ({ isOpen, onClose, car, onEdi
 
           {/* Ehtiyot qismlar */}
           {car.parts && car.parts.length > 0 && (
-            <div className="bg-white rounded-lg border border-gray-200 mb-3 sm:mb-4">
-              <div className="px-3 py-2 border-b border-gray-200 bg-gray-50 rounded-t-lg">
-                <h3 className="text-xs font-semibold text-gray-900 flex items-center">
-                  <Package className="h-3 w-3 mr-1.5 text-blue-600" />
+            <div className={`rounded-lg border mb-3 sm:mb-4 ${
+              isDarkMode
+                ? 'bg-gray-800/50 border-red-900/30'
+                : 'bg-white border-gray-200'
+            }`}>
+              <div className={`px-3 py-2 border-b rounded-t-lg ${
+                isDarkMode
+                  ? 'border-red-900/30 bg-gray-800/70'
+                  : 'border-gray-200 bg-gray-50'
+              }`}>
+                <h3 className={`text-xs font-semibold flex items-center ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}>
+                  <Package className={`h-3 w-3 mr-1.5 ${
+                    isDarkMode ? 'text-red-400' : 'text-blue-600'
+                  }`} />
                   {t('Ehtiyot qismlar', language)}
-                  <span className="ml-2 bg-blue-100 text-blue-600 text-xs font-semibold px-1.5 py-0.5 rounded-full">
+                  <span className={`ml-2 text-xs font-semibold px-1.5 py-0.5 rounded-full ${
+                    isDarkMode
+                      ? 'bg-red-900/40 text-red-300'
+                      : 'bg-blue-100 text-blue-600'
+                  }`}>
                     {car.parts.length}
                   </span>
                 </h3>
@@ -209,24 +290,40 @@ const ViewCarModal: React.FC<ViewCarModalProps> = ({ isOpen, onClose, car, onEdi
                   {car.parts.map((part, index) => (
                     <div 
                       key={part._id || index} 
-                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-2 bg-gray-50 rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-sm transition-all space-y-1.5 sm:space-y-0"
+                      className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-2 rounded-lg border transition-all space-y-1.5 sm:space-y-0 ${
+                        isDarkMode
+                          ? 'bg-gray-800/50 border-red-900/30 hover:border-red-700 hover:shadow-sm'
+                          : 'bg-gray-50 border-gray-200 hover:border-blue-300 hover:shadow-sm'
+                      }`}
                     >
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-gray-900 truncate">{part.name}</p>
+                        <p className={`text-xs font-medium truncate ${
+                          isDarkMode ? 'text-white' : 'text-gray-900'
+                        }`}>{part.name}</p>
                         <div className="flex items-center space-x-2 mt-0.5">
-                          <span className="text-xs text-gray-500">
+                          <span className={`text-xs ${
+                            isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                          }`}>
                             {part.quantity} {t('dona', language)}
                           </span>
-                          <span className="text-xs text-gray-400">•</span>
-                          <span className="text-xs text-gray-500">
+                          <span className={`text-xs ${
+                            isDarkMode ? 'text-gray-600' : 'text-gray-400'
+                          }`}>•</span>
+                          <span className={`text-xs ${
+                            isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                          }`}>
                             {formatCurrency(part.price)} / {t('dona', language)}
                           </span>
                         </div>
                       </div>
                       <div className="flex items-center justify-between sm:justify-end space-x-2 sm:ml-3">
                         <div className="text-left sm:text-right">
-                          <p className="text-xs text-gray-500">{t('Jami', language)}</p>
-                          <p className="text-xs font-bold text-gray-900">
+                          <p className={`text-xs ${
+                            isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                          }`}>{t('Jami', language)}</p>
+                          <p className={`text-xs font-bold ${
+                            isDarkMode ? 'text-white' : 'text-gray-900'
+                          }`}>
                             {formatCurrency(part.price * part.quantity)}
                           </p>
                         </div>
@@ -238,10 +335,18 @@ const ViewCarModal: React.FC<ViewCarModalProps> = ({ isOpen, onClose, car, onEdi
                   ))}
                   
                   {/* Total */}
-                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-2 mt-2 border border-blue-100">
+                  <div className={`rounded-lg p-2 mt-2 border ${
+                    isDarkMode
+                      ? 'bg-gradient-to-r from-gray-800/50 to-gray-900/50 border-red-900/30'
+                      : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-100'
+                  }`}>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-gray-700">{t('Jami narx:', language)}</span>
-                      <span className="text-sm font-bold text-blue-600">
+                      <span className={`text-xs font-medium ${
+                        isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                      }`}>{t('Jami narx:', language)}</span>
+                      <span className={`text-sm font-bold ${
+                        isDarkMode ? 'text-red-400' : 'text-blue-600'
+                      }`}>
                         {formatCurrency(car.parts.reduce((sum, part) => sum + (part.price * part.quantity), 0))}
                       </span>
                     </div>
@@ -417,17 +522,25 @@ const ViewCarModal: React.FC<ViewCarModalProps> = ({ isOpen, onClose, car, onEdi
           )}
 
           {/* Sana ma'lumotlari */}
-          <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-200">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-xs text-gray-600">
+          <div className={`mt-3 sm:mt-4 pt-3 sm:pt-4 border-t ${
+            isDarkMode ? 'border-red-900/30' : 'border-gray-200'
+          }`}>
+            <div className={`grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-xs ${
+              isDarkMode ? 'text-gray-400' : 'text-gray-600'
+            }`}>
               <div className="flex items-center">
-                <Calendar className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1.5 text-gray-400 flex-shrink-0" />
+                <Calendar className={`h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1.5 flex-shrink-0 ${
+                  isDarkMode ? 'text-gray-500' : 'text-gray-400'
+                }`} />
                 <span className="font-medium">{t("Qo'shilgan:", language)}</span>
                 <span className="ml-1 truncate">
                   {safeFormatDateTime(car.createdAt)}
                 </span>
               </div>
               <div className="flex items-center">
-                <Calendar className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1.5 text-gray-400 flex-shrink-0" />
+                <Calendar className={`h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1.5 flex-shrink-0 ${
+                  isDarkMode ? 'text-gray-500' : 'text-gray-400'
+                }`} />
                 <span className="font-medium">{t('Yangilangan:', language)}</span>
                 <span className="ml-1 truncate">
                   {safeFormatDateTime(car.updatedAt)}
@@ -438,11 +551,19 @@ const ViewCarModal: React.FC<ViewCarModalProps> = ({ isOpen, onClose, car, onEdi
         </div>
 
         {/* Footer */}
-        <div className="border-t border-gray-200 px-3 sm:px-4 py-2.5 bg-gray-50 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-0">
+        <div className={`border-t px-3 sm:px-4 py-2.5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-0 ${
+          isDarkMode
+            ? 'border-red-900/30 bg-gray-800/50'
+            : 'border-gray-200 bg-gray-50'
+        }`}>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
             <button
               onClick={onDelete}
-              className="px-3 py-1.5 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-all shadow-sm hover:shadow text-center"
+              className={`px-3 py-1.5 text-xs font-medium text-white rounded-lg transition-all shadow-sm hover:shadow text-center ${
+                isDarkMode
+                  ? 'bg-red-600 hover:bg-red-700'
+                  : 'bg-red-600 hover:bg-red-700'
+              }`}
             >
               {t("O'chirish", language)}
             </button>
@@ -450,13 +571,21 @@ const ViewCarModal: React.FC<ViewCarModalProps> = ({ isOpen, onClose, car, onEdi
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
             <button
               onClick={onClose}
-              className="px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-all text-center"
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all text-center ${
+                isDarkMode
+                  ? 'text-gray-300 hover:bg-gray-800 border border-red-900/30'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
             >
               {t('Yopish', language)}
             </button>
             <button
               onClick={onEdit}
-              className="px-4 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-all shadow-sm hover:shadow text-center"
+              className={`px-4 py-1.5 text-xs font-medium text-white rounded-lg transition-all shadow-sm hover:shadow text-center ${
+                isDarkMode
+                  ? 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800'
+                  : 'bg-blue-600 hover:bg-blue-700'
+              }`}
             >
               {t('Tahrirlash', language)}
             </button>

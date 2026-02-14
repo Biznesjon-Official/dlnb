@@ -22,8 +22,10 @@ import {
   DollarSign
 } from 'lucide-react';
 import { t } from '@/lib/transliteration';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const ApprenticeTasks: React.FC = () => {
+  const { isDarkMode } = useTheme();
   const { user } = useAuth();
   const { data: tasks, isLoading, error } = useTasks();
   const updateTaskStatus = useUpdateTaskStatus();
@@ -64,25 +66,46 @@ const ApprenticeTasks: React.FC = () => {
   }, [tasks?.tasks, user?.id]);
   // ⚡ OPTIMIZED: useCallback bilan funksiyalar - qayta yaratilmaslik uchun
   const getPriorityColor = React.useCallback((priority: string) => {
-    switch (priority) {
-      case 'urgent': return 'bg-red-100 text-red-800';
-      case 'high': return 'bg-orange-100 text-orange-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'low': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+    if (isDarkMode) {
+      switch (priority) {
+        case 'urgent': return 'bg-red-900/60 text-red-300';
+        case 'high': return 'bg-orange-900/60 text-orange-300';
+        case 'medium': return 'bg-yellow-900/60 text-yellow-300';
+        case 'low': return 'bg-green-900/60 text-green-300';
+        default: return 'bg-gray-800 text-gray-300';
+      }
+    } else {
+      switch (priority) {
+        case 'urgent': return 'bg-red-100 text-red-800';
+        case 'high': return 'bg-orange-100 text-orange-800';
+        case 'medium': return 'bg-yellow-100 text-yellow-800';
+        case 'low': return 'bg-green-100 text-green-800';
+        default: return 'bg-gray-100 text-gray-800';
+      }
     }
-  }, []);
+  }, [isDarkMode]);
   
   const getStatusColor = React.useCallback((status: string) => {
-    switch (status) {
-      case 'assigned': return 'bg-blue-100 text-blue-800';
-      case 'in-progress': return 'bg-yellow-100 text-yellow-800';
-      case 'completed': return 'bg-orange-100 text-orange-800';
-      case 'approved': return 'bg-green-100 text-green-800';
-      case 'rejected': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+    if (isDarkMode) {
+      switch (status) {
+        case 'assigned': return 'bg-blue-900/60 text-blue-300';
+        case 'in-progress': return 'bg-yellow-900/60 text-yellow-300';
+        case 'completed': return 'bg-orange-900/60 text-orange-300';
+        case 'approved': return 'bg-green-900/60 text-green-300';
+        case 'rejected': return 'bg-red-900/60 text-red-300';
+        default: return 'bg-gray-800 text-gray-300';
+      }
+    } else {
+      switch (status) {
+        case 'assigned': return 'bg-blue-100 text-blue-800';
+        case 'in-progress': return 'bg-yellow-100 text-yellow-800';
+        case 'completed': return 'bg-orange-100 text-orange-800';
+        case 'approved': return 'bg-green-100 text-green-800';
+        case 'rejected': return 'bg-red-100 text-red-800';
+        default: return 'bg-gray-100 text-gray-800';
+      }
     }
-  }, []);
+  }, [isDarkMode]);
   const handleStartTask = React.useCallback(async (taskId: string) => {
     setProcessingTaskId(taskId);
     try {
@@ -122,10 +145,18 @@ const ApprenticeTasks: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className={`flex items-center justify-center min-h-screen ${
+        isDarkMode
+          ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900'
+          : 'bg-gray-50'
+      }`}>
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">{t('Vazifalar yuklanmoqda...', language)}</p>
+          <div className={`animate-spin rounded-full h-12 w-12 border-b-2 mx-auto ${
+            isDarkMode ? 'border-red-600' : 'border-blue-600'
+          }`}></div>
+          <p className={`mt-4 ${
+            isDarkMode ? 'text-gray-400' : 'text-gray-600'
+          }`}>{t('Vazifalar yuklanmoqda...', language)}</p>
         </div>
       </div>
     );
@@ -133,14 +164,26 @@ const ApprenticeTasks: React.FC = () => {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className={`flex items-center justify-center min-h-screen ${
+        isDarkMode
+          ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900'
+          : 'bg-gray-50'
+      }`}>
         <div className="text-center">
           <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">{t('Xatolik yuz berdi', language)}</h2>
-          <p className="text-gray-600 mb-4">{t('Vazifalarni yuklashda muammo bo\'ldi', language)}</p>
+          <h2 className={`text-xl font-semibold mb-2 ${
+            isDarkMode ? 'text-white' : 'text-gray-900'
+          }`}>{t('Xatolik yuz berdi', language)}</h2>
+          <p className={`mb-4 ${
+            isDarkMode ? 'text-gray-400' : 'text-gray-600'
+          }`}>{t('Vazifalarni yuklashda muammo bo\'ldi', language)}</p>
           <button 
             onClick={() => window.location.reload()} 
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className={`px-4 py-2 rounded-lg ${
+              isDarkMode
+                ? 'bg-red-600 hover:bg-red-700'
+                : 'bg-blue-600 hover:bg-blue-700'
+            } text-white`}
           >
             {t('Qayta yuklash', language)}
           </button>
@@ -192,9 +235,17 @@ const ApprenticeTasks: React.FC = () => {
   }, [myTasks, activeTab, searchQuery, filterPriority, completedTasks, approvedTasks]);
 
   return (
-    <div className="space-y-4 sm:space-y-6 pb-8">
-      {/* Responsive Header with Blue Theme */}
-      <div className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-blue-700 p-4 sm:p-6 md:p-8 text-white shadow-2xl">
+    <div className={`space-y-4 sm:space-y-6 pb-8 min-h-screen ${
+      isDarkMode
+        ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900'
+        : 'bg-gray-50'
+    }`}>
+      {/* Responsive Header with Red/Black Theme */}
+      <div className={`relative overflow-hidden rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 text-white shadow-2xl ${
+        isDarkMode
+          ? 'bg-gradient-to-br from-red-600 via-red-700 to-gray-900'
+          : 'bg-gradient-to-br from-blue-600 via-indigo-600 to-blue-700'
+      }`}>
         <div className="absolute inset-0 bg-black opacity-10"></div>
         <div className="relative z-10">
           <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-3 mb-3">
@@ -203,7 +254,9 @@ const ApprenticeTasks: React.FC = () => {
             </div>
             <div className="flex-1 min-w-0">
               <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold truncate">{t('Mening vazifalarim', language)}</h1>
-              <p className="text-blue-100 mt-1 text-xs sm:text-sm md:text-base">
+              <p className={`mt-1 text-xs sm:text-sm md:text-base ${
+                isDarkMode ? 'text-red-100' : 'text-blue-100'
+              }`}>
                 {t('Sizga berilgan', language)} {myTasks.length} {t('ta vazifani boshqaring', language)}
               </p>
             </div>
@@ -255,7 +308,11 @@ const ApprenticeTasks: React.FC = () => {
           return (
             <div 
               key={stat.name}
-              className="group relative overflow-hidden rounded-lg sm:rounded-xl bg-white p-3 sm:p-4 md:p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border border-gray-100"
+              className={`group relative overflow-hidden rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border ${
+                isDarkMode
+                  ? 'bg-gradient-to-br from-gray-800 via-red-900/20 to-gray-800 border-red-900/30'
+                  : 'bg-white border-gray-100'
+              }`}
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}></div>
@@ -266,8 +323,12 @@ const ApprenticeTasks: React.FC = () => {
                   </div>
                 </div>
                 <div className="mt-2 sm:mt-3 md:mt-4">
-                  <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">{stat.name}</p>
-                  <p className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mt-0.5 sm:mt-1">{stat.value}</p>
+                  <p className={`text-xs sm:text-sm font-medium truncate ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                  }`}>{stat.name}</p>
+                  <p className={`text-xl sm:text-2xl md:text-3xl font-bold mt-0.5 sm:mt-1 ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>{stat.value}</p>
                 </div>
               </div>
             </div>
@@ -276,16 +337,26 @@ const ApprenticeTasks: React.FC = () => {
       </div>
 
       {/* Tabs and Filters */}
-      <div className="card p-4 sm:p-6">
+      <div className={`rounded-xl p-4 sm:p-6 shadow-lg border ${
+        isDarkMode
+          ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 border-red-900/30'
+          : 'bg-white border-gray-100'
+      }`}>
         <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0 gap-4">
           {/* Tabs */}
-          <div className="flex space-x-1 sm:space-x-2 bg-gray-100 p-1 rounded-lg overflow-x-auto">
+          <div className={`flex space-x-1 sm:space-x-2 p-1 rounded-lg overflow-x-auto ${
+            isDarkMode ? 'bg-gray-800' : 'bg-gray-100'
+          }`}>
             <button
               onClick={() => setActiveTab('active')}
               className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
                 activeTab === 'active'
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? isDarkMode
+                    ? 'bg-gradient-to-r from-red-600 via-red-700 to-gray-900 text-white shadow-lg'
+                    : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
+                  : isDarkMode
+                    ? 'text-gray-400 hover:text-white'
+                    : 'text-gray-600 hover:text-gray-900'
               }`}
             >
               {t('Faol', language)} ({myTasks.filter((t: any) => t.status !== 'approved').length})
@@ -294,8 +365,12 @@ const ApprenticeTasks: React.FC = () => {
               onClick={() => setActiveTab('all')}
               className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
                 activeTab === 'all'
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? isDarkMode
+                    ? 'bg-gradient-to-r from-red-600 via-red-700 to-gray-900 text-white shadow-lg'
+                    : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
+                  : isDarkMode
+                    ? 'text-gray-400 hover:text-white'
+                    : 'text-gray-600 hover:text-gray-900'
               }`}
             >
               {t('Hammasi', language)} ({myTasks.length})
@@ -304,8 +379,12 @@ const ApprenticeTasks: React.FC = () => {
               onClick={() => setActiveTab('completed')}
               className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
                 activeTab === 'completed'
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? isDarkMode
+                    ? 'bg-gradient-to-r from-red-600 via-red-700 to-gray-900 text-white shadow-lg'
+                    : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
+                  : isDarkMode
+                    ? 'text-gray-400 hover:text-white'
+                    : 'text-gray-600 hover:text-gray-900'
               }`}
             >
               {t('Bajarilgan', language)} ({completedTasks.length + approvedTasks.length})
@@ -316,23 +395,35 @@ const ApprenticeTasks: React.FC = () => {
           <div className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3">
             {/* Search */}
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${
+                isDarkMode ? 'text-gray-600' : 'text-gray-400'
+              }`} />
               <input
                 type="text"
                 placeholder={t('Qidirish...', language)}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full sm:w-48 md:w-64 text-sm"
+                className={`pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent w-full sm:w-48 md:w-64 text-sm ${
+                  isDarkMode
+                    ? 'bg-gray-800 border-red-900/30 text-white placeholder-gray-600 focus:ring-red-500'
+                    : 'border-gray-300 focus:ring-blue-500'
+                }`}
               />
             </div>
 
             {/* Priority Filter */}
             <div className="relative">
-              <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Filter className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${
+                isDarkMode ? 'text-gray-600' : 'text-gray-400'
+              }`} />
               <select
                 value={filterPriority}
                 onChange={(e) => setFilterPriority(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white w-full sm:w-40 md:w-48 text-sm"
+                className={`pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent appearance-none w-full sm:w-40 md:w-48 text-sm ${
+                  isDarkMode
+                    ? 'bg-gray-800 border-red-900/30 text-white focus:ring-red-500'
+                    : 'bg-white border-gray-300 focus:ring-blue-500'
+                }`}
               >
                 <option value="all">{t('Barcha muhimlik', language)}</option>
                 <option value="urgent">{t('Shoshilinch', language)}</option>
@@ -348,12 +439,26 @@ const ApprenticeTasks: React.FC = () => {
       {/* Tasks List */}
       <div className="space-y-4">
         {filteredTasks.length === 0 ? (
-          <div className="card p-8 sm:p-12 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 mb-4">
-              <Target className="h-8 w-8 sm:h-10 sm:w-10 text-gray-400" />
+          <div className={`rounded-xl p-8 sm:p-12 text-center shadow-lg border ${
+            isDarkMode
+              ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 border-red-900/30'
+              : 'bg-white border-gray-100'
+          }`}>
+            <div className={`inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full mb-4 ${
+              isDarkMode
+                ? 'bg-gradient-to-br from-gray-700 to-gray-800'
+                : 'bg-gradient-to-br from-gray-100 to-gray-200'
+            }`}>
+              <Target className={`h-8 w-8 sm:h-10 sm:w-10 ${
+                isDarkMode ? 'text-gray-600' : 'text-gray-400'
+              }`} />
             </div>
-            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">{t('Vazifalar topilmadi', language)}</h3>
-            <p className="text-sm sm:text-base text-gray-500">
+            <h3 className={`text-lg sm:text-xl font-semibold mb-2 ${
+              isDarkMode ? 'text-white' : 'text-gray-900'
+            }`}>{t('Vazifalar topilmadi', language)}</h3>
+            <p className={`text-sm sm:text-base ${
+              isDarkMode ? 'text-gray-400' : 'text-gray-500'
+            }`}>
               {searchQuery || filterPriority !== 'all' 
                 ? t('Qidiruv yoki filtr bo\'yicha vazifalar topilmadi', language)
                 : t('Hozirda sizga vazifa berilmagan', language)}
@@ -366,12 +471,18 @@ const ApprenticeTasks: React.FC = () => {
             return (
               <div 
                 key={task._id}
-                className={`group card p-4 sm:p-6 hover:shadow-xl transition-all duration-300 border-l-4 ${
-                  task.status === 'approved' ? 'border-l-blue-500 bg-gradient-to-r from-blue-50/50 to-transparent' :
-                  task.status === 'completed' ? 'border-l-indigo-500 bg-gradient-to-r from-indigo-50/50 to-transparent' :
-                  task.status === 'rejected' ? 'border-l-red-500 bg-gradient-to-r from-red-50/50 to-transparent' :
-                  task.status === 'in-progress' ? 'border-l-yellow-500 bg-gradient-to-r from-yellow-50/50 to-transparent' :
-                  'border-l-cyan-500 bg-gradient-to-r from-cyan-50/50 to-transparent'
+                className={`group rounded-xl p-4 sm:p-6 hover:shadow-xl transition-all duration-300 border-l-4 shadow-lg ${
+                  isDarkMode
+                    ? task.status === 'approved' ? 'border-l-green-500 bg-gradient-to-br from-gray-800 via-red-900/20 to-gray-800 border border-red-900/30' :
+                      task.status === 'completed' ? 'border-l-blue-500 bg-gradient-to-br from-gray-800 via-blue-900/20 to-gray-800 border border-red-900/30' :
+                      task.status === 'rejected' ? 'border-l-red-500 bg-gradient-to-br from-red-900/30 via-gray-800 to-gray-800 border border-red-700' :
+                      task.status === 'in-progress' ? 'border-l-yellow-500 bg-gradient-to-br from-gray-800 via-yellow-900/20 to-gray-800 border border-red-900/30' :
+                      'border-l-red-500 bg-gradient-to-br from-red-900/20 via-gray-800 to-gray-800 border border-red-900/30'
+                    : task.status === 'approved' ? 'border-l-blue-500 bg-gradient-to-r from-blue-50/50 to-transparent' :
+                      task.status === 'completed' ? 'border-l-indigo-500 bg-gradient-to-r from-indigo-50/50 to-transparent' :
+                      task.status === 'rejected' ? 'border-l-red-500 bg-gradient-to-r from-red-50/50 to-transparent' :
+                      task.status === 'in-progress' ? 'border-l-yellow-500 bg-gradient-to-r from-yellow-50/50 to-transparent' :
+                      'border-l-cyan-500 bg-gradient-to-r from-cyan-50/50 to-transparent'
                 }`}
                 style={{ animationDelay: `${index * 50}ms` }}
               >
@@ -381,10 +492,16 @@ const ApprenticeTasks: React.FC = () => {
                     {/* Title and Status */}
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-lg sm:text-xl font-semibold text-gray-900 group-hover:text-blue-600 transition-colors mb-2 truncate">
+                        <h4 className={`text-lg sm:text-xl font-semibold mb-2 truncate transition-colors ${
+                          isDarkMode
+                            ? 'text-white group-hover:text-red-400'
+                            : 'text-gray-900 group-hover:text-blue-600'
+                        }`}>
                           {task.title}
                         </h4>
-                        <p className="text-sm sm:text-base text-gray-600 leading-relaxed line-clamp-2">{task.description}</p>
+                        <p className={`text-sm sm:text-base leading-relaxed line-clamp-2 ${
+                          isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                        }`}>{task.description}</p>
                       </div>
                     </div>
 
@@ -496,38 +613,68 @@ const ApprenticeTasks: React.FC = () => {
 
                     {/* Car Info */}
                     {task.car && (
-                      <div className="flex items-center space-x-3 p-3 sm:p-4 bg-white/80 rounded-xl border border-gray-200">
-                        <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-sm sm:text-lg shadow-lg">
+                      <div className={`flex items-center space-x-3 p-3 sm:p-4 rounded-xl border ${
+                        isDarkMode
+                          ? 'bg-gray-800/80 border-red-900/30'
+                          : 'bg-white/80 border-gray-200'
+                      }`}>
+                        <div className={`flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center text-white font-bold text-sm sm:text-lg shadow-lg ${
+                          isDarkMode
+                            ? 'bg-gradient-to-br from-red-600 to-red-700'
+                            : 'bg-gradient-to-br from-blue-500 to-indigo-600'
+                        }`}>
                           {task.car.make?.charAt(0) || '?'}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                            <Car className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                          <p className={`text-sm font-semibold flex items-center gap-2 ${
+                            isDarkMode ? 'text-white' : 'text-gray-900'
+                          }`}>
+                            <Car className={`h-4 w-4 flex-shrink-0 ${
+                              isDarkMode ? 'text-gray-600' : 'text-gray-400'
+                            }`} />
                             <span className="truncate">{task.car.make || 'Noma\'lum'} {task.car.carModel || ''}</span>
                           </p>
-                          <p className="text-xs text-gray-500 truncate">{task.car.licensePlate || 'Raqam yo\'q'}</p>
+                          <p className={`text-xs truncate ${
+                            isDarkMode ? 'text-gray-500' : 'text-gray-500'
+                          }`}>{task.car.licensePlate || 'Raqam yo\'q'}</p>
                         </div>
                       </div>
                     )}
 
                     {/* Notes and Rejection Reason */}
                     {task.notes && (
-                      <div className="p-4 bg-blue-50 border-l-4 border-blue-500 rounded-lg">
-                        <p className="text-sm text-blue-900">
+                      <div className={`p-4 border-l-4 rounded-lg ${
+                        isDarkMode
+                          ? 'bg-blue-900/40 border-blue-500'
+                          : 'bg-blue-50 border-blue-500'
+                      }`}>
+                        <p className={`text-sm ${
+                          isDarkMode ? 'text-blue-300' : 'text-blue-900'
+                        }`}>
                           <strong className="font-semibold">Izoh:</strong> {task.notes}
                         </p>
                       </div>
                     )}
                     {task.rejectionReason && (
-                      <div className="p-4 bg-red-50 border-l-4 border-red-500 rounded-lg">
-                        <p className="text-sm text-red-900">
+                      <div className={`p-4 border-l-4 rounded-lg ${
+                        isDarkMode
+                          ? 'bg-red-900/40 border-red-500'
+                          : 'bg-red-50 border-red-500'
+                      }`}>
+                        <p className={`text-sm ${
+                          isDarkMode ? 'text-red-300' : 'text-red-900'
+                        }`}>
                           <strong className="font-semibold">Rad etish sababi:</strong> {task.rejectionReason}
                         </p>
                       </div>
                     )}
                     {isCompleted && task.completedAt && (
-                      <div className="flex items-center text-sm text-gray-500">
-                        <CheckCircle className="h-4 w-4 mr-2 text-blue-600" />
+                      <div className={`flex items-center text-sm ${
+                        isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                      }`}>
+                        <CheckCircle className={`h-4 w-4 mr-2 ${
+                          isDarkMode ? 'text-green-500' : 'text-blue-600'
+                        }`} />
                         Bajarildi: {new Date(task.completedAt).toLocaleDateString('uz-UZ', { 
                           year: 'numeric', 
                           month: 'long', 

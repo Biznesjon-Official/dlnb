@@ -482,47 +482,32 @@
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 }
 
-/* Custom Scrollbar Styles - Kichik va zamonaviy */
+/* Custom Scrollbar Styles - Butunlay yashirin */
 @layer utilities {
-  /* Webkit browsers (Chrome, Safari, Edge) */
+  /* Webkit browsers (Chrome, Safari, Edge) - Scrollbarni yashirish */
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    display: none;
+    width: 0;
+    height: 0;
   }
 
   ::-webkit-scrollbar-track {
-    background: transparent;
+    display: none;
   }
 
   ::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, #cbd5e1, #94a3b8);
-    border-radius: 10px;
-    transition: all 0.3s ease;
+    display: none;
   }
 
-  ::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(180deg, #94a3b8, #64748b);
-  }
-
-  /* Firefox */
+  /* Firefox - Scrollbarni yashirish */
   * {
-    scrollbar-width: thin;
-    scrollbar-color: #cbd5e1 transparent;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
 
-  /* Modal va card ichidagi scrollbarlar uchun */
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 4px;
-    height: 4px;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, #3b82f6, #6366f1);
-    border-radius: 10px;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(180deg, #2563eb, #4f46e5);
+  /* IE va Edge eski versiyalari */
+  body {
+    -ms-overflow-style: none;
   }
 
   /* Yashirin scrollbar (lekin scroll ishlaydi) */

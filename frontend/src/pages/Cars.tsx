@@ -15,8 +15,10 @@ import { formatCurrency } from '@/lib/utils';
 import { Car } from '@/types';
 import { t } from '@/lib/transliteration';
 import toast from 'react-hot-toast';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const Cars: React.FC = () => {
+  const { isDarkMode } = useTheme();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -327,13 +329,23 @@ const Cars: React.FC = () => {
   // };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/20 p-2 sm:p-6 pb-20">
+    <div className={`min-h-screen p-2 sm:p-6 pb-20 ${
+      isDarkMode
+        ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900'
+        : 'bg-gradient-to-br from-slate-50 via-orange-50/30 to-red-50/20'
+    }`}>
       <div className="max-w-7xl mx-auto space-y-3 sm:space-y-8">
         {/* Mobile-First Header */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 rounded-xl sm:rounded-3xl shadow-2xl p-3 sm:p-6 lg:p-8">
+        <div className={`relative overflow-hidden rounded-xl sm:rounded-3xl shadow-2xl p-3 sm:p-6 lg:p-8 ${
+          isDarkMode
+            ? 'bg-gradient-to-br from-red-600 via-red-700 to-gray-900'
+            : 'bg-gradient-to-br from-orange-600 via-orange-700 to-red-700'
+        }`}>
           <div className="absolute inset-0 bg-grid-white/10"></div>
           <div className="absolute -top-24 -right-24 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
-          <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl"></div>
+          <div className={`absolute -bottom-24 -left-24 w-96 h-96 rounded-full blur-3xl ${
+            isDarkMode ? 'bg-red-500/20' : 'bg-orange-500/20'
+          }`}></div>
           
           <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
             <div className="flex items-center space-x-3 sm:space-x-6">
@@ -349,7 +361,9 @@ const Cars: React.FC = () => {
                     </span>
                   )}
                 </h1>
-                <p className="text-blue-100 text-xs sm:text-base lg:text-lg">
+                <p className={`text-xs sm:text-base lg:text-lg ${
+                  isDarkMode ? 'text-red-100' : 'text-orange-100'
+                }`}>
                   {activeTab === 'active' ? activeCars.length : archivedCars.length} ta avtomobil
                   {!isOnline && (
                     <span className="ml-2 text-yellow-200">
@@ -361,7 +375,11 @@ const Cars: React.FC = () => {
             </div>
             <button
               onClick={() => setIsCreateModalOpen(true)}
-              className="group relative bg-white hover:bg-blue-50 text-blue-600 px-4 py-3 sm:px-6 sm:py-3.5 rounded-xl font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center justify-center space-x-2 hover:scale-105 w-full sm:w-auto"
+              className={`group relative px-4 py-3 sm:px-6 sm:py-3.5 rounded-xl font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center justify-center space-x-2 hover:scale-105 w-full sm:w-auto ${
+                isDarkMode
+                  ? 'bg-white hover:bg-gray-100 text-red-600'
+                  : 'bg-white hover:bg-orange-50 text-orange-600'
+              }`}
             >
               <Plus className="h-4 w-4 sm:h-5 sm:w-5 group-hover:rotate-90 transition-transform duration-300" />
               <span className="text-sm sm:text-base font-semibold">
@@ -372,24 +390,40 @@ const Cars: React.FC = () => {
         </div>
 
         {/* Mobile-First Filters */}
-        <div className="bg-white rounded-lg sm:rounded-2xl shadow-lg border border-gray-100 p-3 sm:p-6">
+        <div className={`rounded-lg sm:rounded-2xl shadow-lg border p-3 sm:p-6 ${
+          isDarkMode
+            ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 border-red-900/30'
+            : 'bg-white border-gray-100'
+        }`}>
           <div className="space-y-3 sm:space-y-0 sm:flex sm:items-center sm:gap-4">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 ${
+                isDarkMode ? 'text-gray-500' : 'text-gray-400'
+              }`} />
               <input
                 type="text"
                 placeholder={t("Qidirish...", language)}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm font-medium placeholder:text-gray-400"
+                className={`w-full pl-10 pr-4 py-3 rounded-xl focus:ring-2 transition-all text-sm font-medium ${
+                  isDarkMode
+                    ? 'bg-gray-800 border border-red-900/30 text-white placeholder:text-gray-500 focus:ring-red-500 focus:border-red-500'
+                    : 'bg-gray-50 border border-gray-200 text-gray-900 placeholder:text-gray-400 focus:ring-orange-500 focus:border-orange-500'
+                }`}
               />
             </div>
             <div className="relative">
-              <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+              <Filter className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 pointer-events-none ${
+                isDarkMode ? 'text-gray-500' : 'text-gray-400'
+              }`} />
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full sm:w-auto pl-10 pr-8 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm font-medium appearance-none cursor-pointer sm:min-w-[180px]"
+                className={`w-full sm:w-auto pl-10 pr-8 py-3 rounded-xl focus:ring-2 transition-all text-sm font-medium appearance-none cursor-pointer sm:min-w-[180px] ${
+                  isDarkMode
+                    ? 'bg-gray-800 border border-red-900/30 text-white focus:ring-red-500 focus:border-red-500'
+                    : 'bg-gray-50 border border-gray-200 text-gray-900 focus:ring-orange-500 focus:border-orange-500'
+                }`}
               >
                 <option value="">{t("Barcha holatlar", language)}</option>
                 <option value="pending">{t("Kutilmoqda", language)}</option>
@@ -399,7 +433,7 @@ const Cars: React.FC = () => {
               </select>
               {/* Custom dropdown arrow */}
               <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                <svg className="h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                <svg className={`h-4 w-4 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                 </svg>
               </div>
@@ -409,20 +443,32 @@ const Cars: React.FC = () => {
 
         {/* Tabs - Faol va Arxiv - Compact Right */}
         <div className="flex justify-end">
-            <div className="inline-flex bg-white/80 backdrop-blur-sm rounded-lg shadow-sm border border-gray-200/50 p-0.5">
+            <div className={`inline-flex backdrop-blur-sm rounded-lg shadow-sm border p-0.5 ${
+              isDarkMode
+                ? 'bg-gray-800/80 border-gray-700/50'
+                : 'bg-white/80 border-gray-200/50'
+            }`}>
               <button
                 onClick={() => setActiveTab('active')}
                 className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${
                   activeTab === 'active'
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'text-gray-600 hover:bg-gray-100'
+                    ? isDarkMode
+                      ? 'bg-red-600 text-white shadow-sm'
+                      : 'bg-orange-600 text-white shadow-sm'
+                    : isDarkMode
+                      ? 'text-gray-300 hover:bg-gray-700'
+                      : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
                 <div className="flex items-center gap-1.5">
                   <CarIcon className="h-3.5 w-3.5" />
                   <span>{t('Faol', language)}</span>
                   <span className={`px-1 py-0.5 rounded text-[10px] font-bold ${
-                    activeTab === 'active' ? 'bg-white/20' : 'bg-blue-50 text-blue-600'
+                    activeTab === 'active' 
+                      ? 'bg-white/20' 
+                      : isDarkMode
+                        ? 'bg-red-900/30 text-red-400'
+                        : 'bg-orange-50 text-orange-600'
                   }`}>
                     {activeCars.length}
                   </span>
@@ -433,14 +479,20 @@ const Cars: React.FC = () => {
                 className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${
                   activeTab === 'archive'
                     ? 'bg-green-600 text-white shadow-sm'
-                    : 'text-gray-600 hover:bg-gray-100'
+                    : isDarkMode
+                      ? 'text-gray-300 hover:bg-gray-700'
+                      : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
                 <div className="flex items-center gap-1.5">
                   <Package2 className="h-3.5 w-3.5" />
                   <span>{t('Arxiv', language)}</span>
                   <span className={`px-1 py-0.5 rounded text-[10px] font-bold ${
-                    activeTab === 'archive' ? 'bg-white/20' : 'bg-green-50 text-green-600'
+                    activeTab === 'archive' 
+                      ? 'bg-white/20' 
+                      : isDarkMode
+                        ? 'bg-green-900/30 text-green-400'
+                        : 'bg-green-50 text-green-600'
                   }`}>
                     {archivedCars.length}
                   </span>
@@ -454,29 +506,57 @@ const Cars: React.FC = () => {
           // ⚡ SKELETON LOADER - Ma'lumotlar yuklanayotganda
           <div className="space-y-4">
             {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="bg-white rounded-lg sm:rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6 animate-pulse">
+              <div key={i} className={`rounded-lg sm:rounded-2xl shadow-lg border p-4 sm:p-6 animate-pulse ${
+                isDarkMode
+                  ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 border-red-900/30'
+                  : 'bg-white border-gray-100'
+              }`}>
                 <div className="flex items-center gap-4">
-                  <div className="flex-shrink-0 h-12 w-12 bg-gray-200 rounded-xl"></div>
+                  <div className={`flex-shrink-0 h-12 w-12 rounded-xl ${
+                    isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
+                  }`}></div>
                   <div className="flex-1 space-y-2">
-                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                    <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                    <div className={`h-4 rounded w-3/4 ${
+                      isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
+                    }`}></div>
+                    <div className={`h-3 rounded w-1/2 ${
+                      isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
+                    }`}></div>
                   </div>
                   <div className="flex gap-2">
-                    <div className="h-8 w-8 bg-gray-200 rounded-lg"></div>
-                    <div className="h-8 w-8 bg-gray-200 rounded-lg"></div>
-                    <div className="h-8 w-8 bg-gray-200 rounded-lg"></div>
+                    <div className={`h-8 w-8 rounded-lg ${
+                      isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
+                    }`}></div>
+                    <div className={`h-8 w-8 rounded-lg ${
+                      isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
+                    }`}></div>
+                    <div className={`h-8 w-8 rounded-lg ${
+                      isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
+                    }`}></div>
                   </div>
                 </div>
               </div>
             ))}
           </div>
         ) : displayedCars.length === 0 ? (
-          <div className="bg-white rounded-lg sm:rounded-2xl shadow-lg border border-gray-100 p-6 sm:p-16 text-center">
+          <div className={`rounded-lg sm:rounded-2xl shadow-lg border p-6 sm:p-16 text-center ${
+            isDarkMode
+              ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 border-red-900/30'
+              : 'bg-white border-gray-100'
+          }`}>
             <div className="max-w-md mx-auto">
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-full w-16 h-16 sm:w-24 sm:h-24 flex items-center justify-center mx-auto mb-4 sm:mb-6">
-                <CarIcon className="h-8 w-8 sm:h-12 sm:w-12 text-blue-600" />
+              <div className={`rounded-full w-16 h-16 sm:w-24 sm:h-24 flex items-center justify-center mx-auto mb-4 sm:mb-6 ${
+                isDarkMode
+                  ? 'bg-gradient-to-br from-red-900/40 to-red-800/40'
+                  : 'bg-gradient-to-br from-orange-50 to-red-50'
+              }`}>
+                <CarIcon className={`h-8 w-8 sm:h-12 sm:w-12 ${
+                  isDarkMode ? 'text-red-400' : 'text-orange-600'
+                }`} />
               </div>
-              <h3 className="text-lg sm:text-2xl font-bold text-gray-900 mb-2 sm:mb-3">
+              <h3 className={`text-lg sm:text-2xl font-bold mb-2 sm:mb-3 ${
+                isDarkMode ? 'text-white' : 'text-gray-900'
+              }`}>
                 {!isOnline 
                   ? t("Offline holatda mashinalar topilmadi", language)
                   : activeTab === 'active' 
@@ -484,7 +564,9 @@ const Cars: React.FC = () => {
                     : t("Arxivda mashinalar yo'q", language)
                 }
               </h3>
-              <p className="text-gray-600 mb-4 sm:mb-8 text-sm sm:text-base px-4 sm:px-0">
+              <p className={`mb-4 sm:mb-8 text-sm sm:text-base px-4 sm:px-0 ${
+                isDarkMode ? 'text-gray-400' : 'text-gray-600'
+              }`}>
                 {!isOnline
                   ? t("Offline rejimda faqat IndexedDB dagi mashinalar ko'rinadi. Internet aloqasi tiklanganida barcha ma'lumotlar sinxronlanadi.", language)
                   : activeTab === 'active' 
@@ -495,7 +577,11 @@ const Cars: React.FC = () => {
               {(isOnline || activeTab === 'active') && (
                 <button
                   onClick={() => setIsCreateModalOpen(true)}
-                  className="inline-flex items-center px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all duration-300 text-sm sm:text-base"
+                  className={`inline-flex items-center px-4 sm:px-6 py-2.5 sm:py-3 font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 text-sm sm:text-base ${
+                    isDarkMode
+                      ? 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white'
+                      : 'bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white'
+                  }`}
                 >
                   <Plus className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                   {!isOnline 
@@ -508,45 +594,49 @@ const Cars: React.FC = () => {
           </div>
         ) : activeTab === 'archive' ? (
           // Arxiv - Optimized UX Desktop Table
-          <div className="bg-white rounded-lg sm:rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+          <div className={`rounded-lg sm:rounded-2xl shadow-xl border overflow-hidden ${
+            isDarkMode
+              ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 border-red-900/30'
+              : 'bg-white border-gray-200'
+          }`}>
             {/* Desktop Table - faqat katta ekranlarda */}
             <div className="hidden lg:block overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600">
+                <thead className={isDarkMode 
+                  ? 'bg-gradient-to-r from-red-600 via-red-700 to-gray-900'
+                  : 'bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600'
+                }>
                   <tr>
-                    <th className="px-4 py-4 text-left text-xs font-bold text-white uppercase tracking-wider w-[20%]">
+                    <th className="px-4 py-4 text-left text-xs font-bold text-white uppercase tracking-wider w-[25%]">
                       <div className="flex items-center gap-2">
                         <Users className="h-4 w-4" />
                         {t("Mijoz", language)}
                       </div>
                     </th>
-                    <th className="px-4 py-4 text-left text-xs font-bold text-white uppercase tracking-wider w-[18%]">
+                    <th className="px-4 py-4 text-left text-xs font-bold text-white uppercase tracking-wider w-[22%]">
                       <div className="flex items-center gap-2">
                         <CarIcon className="h-4 w-4" />
                         {t("Avtomobil", language)}
                       </div>
                     </th>
-                    <th className="px-4 py-4 text-center text-xs font-bold text-white uppercase tracking-wider w-[10%]">
-                      {t("Status", language)}
-                    </th>
-                    <th className="px-4 py-4 text-left text-xs font-bold text-white uppercase tracking-wider w-[15%]">
+                    <th className="px-4 py-4 text-left text-xs font-bold text-white uppercase tracking-wider w-[18%]">
                       <div className="flex items-center gap-2">
                         <DollarSign className="h-4 w-4" />
                         {t("Moliya", language)}
                       </div>
                     </th>
-                    <th className="px-4 py-4 text-center text-xs font-bold text-white uppercase tracking-wider w-[12%]">
+                    <th className="px-4 py-4 text-center text-xs font-bold text-white uppercase tracking-wider w-[15%]">
                       <div className="flex items-center justify-center gap-2">
                         <Phone className="h-4 w-4" />
                         {t("Aloqa", language)}
                       </div>
                     </th>
-                    <th className="px-4 py-4 text-center text-xs font-bold text-white uppercase tracking-wider w-[25%]">
+                    <th className="px-4 py-4 text-center text-xs font-bold text-white uppercase tracking-wider w-[20%]">
                       {t("Amallar", language)}
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className={isDarkMode ? 'divide-y divide-red-900/30' : 'divide-y divide-gray-100'}>
                   {displayedCars.map((car: Car, index: number) => {
                     const partsTotal = (car.parts || []).reduce((sum, part) => sum + (part.quantity * part.price), 0);
                     const serviceItemsTotal = ((car as any).serviceItems || []).reduce((sum: number, item: any) => sum + (item.quantity * item.price), 0);
@@ -560,40 +650,74 @@ const Cars: React.FC = () => {
                     const hasDebt = hasActiveDebt || hasCarDebt;
                     
                     return (
-                      <tr key={car._id} className={`hover:bg-gradient-to-r hover:from-gray-50 hover:to-green-50/30 transition-all duration-200 ${
-                        car.isDeleted ? 'bg-red-50/40' : 
-                        hasDebt ? 'bg-gradient-to-r from-red-50/40 to-orange-50/30 border-l-4 border-l-red-500' : 
-                        index % 2 === 0 ? 'bg-white' : 'bg-green-50/20'
-                      }`}>
+                      <tr key={car._id} className={`transition-all duration-200 ${
+                        isDarkMode
+                          ? car.isDeleted 
+                            ? 'bg-red-900/20 hover:bg-red-900/30' 
+                            : hasDebt 
+                              ? 'bg-gradient-to-r from-red-900/20 to-red-800/20 border-l-4 border-l-red-500 hover:bg-red-900/30' 
+                              : index % 2 === 0 
+                                ? 'bg-gray-800/50 hover:bg-gray-800/70' 
+                                : 'bg-gray-900/50 hover:bg-gray-900/70'
+                          : car.isDeleted 
+                            ? 'bg-red-50/40' 
+                            : hasDebt 
+                              ? 'bg-gradient-to-r from-red-50/40 to-orange-50/30 border-l-4 border-l-red-500' 
+                              : index % 2 === 0 
+                                ? 'bg-white' 
+                                : 'bg-green-50/20'
+                      } ${isDarkMode ? 'hover:bg-gradient-to-r hover:from-gray-800/70 hover:to-red-900/30' : 'hover:bg-gradient-to-r hover:from-gray-50 hover:to-green-50/30'}`}>
                         {/* Mijoz */}
                         <td className="px-4 py-4">
                           <div className="flex items-center gap-3">
-                            <div className={`flex-shrink-0 h-11 w-11 ${
-                              car.isDeleted ? 'bg-gradient-to-br from-red-400 to-pink-500' : 
-                              hasDebt ? 'bg-gradient-to-br from-red-400 to-orange-500' :
-                              'bg-gradient-to-br from-emerald-400 to-teal-500'
-                            } rounded-xl flex items-center justify-center shadow-md ring-2 ring-white`}>
+                            <div className={`flex-shrink-0 h-11 w-11 rounded-xl flex items-center justify-center shadow-md ring-2 ${
+                              isDarkMode
+                                ? car.isDeleted 
+                                  ? 'bg-gradient-to-br from-red-600 to-pink-700 ring-red-900/50' 
+                                  : hasDebt 
+                                    ? 'bg-gradient-to-br from-red-600 to-red-700 ring-red-900/50' 
+                                    : 'bg-gradient-to-br from-red-500 to-red-600 ring-red-900/50'
+                                : car.isDeleted 
+                                  ? 'bg-gradient-to-br from-red-400 to-pink-500 ring-white' 
+                                  : hasDebt 
+                                    ? 'bg-gradient-to-br from-red-400 to-orange-500 ring-white' 
+                                    : 'bg-gradient-to-br from-emerald-400 to-teal-500 ring-white'
+                            }`}>
                               <span className="text-white font-bold text-base">
                                 {car.ownerName.charAt(0).toUpperCase()}
                               </span>
                             </div>
                             <div className="min-w-0 flex-1">
-                              <p className="text-sm font-bold text-gray-900 truncate">{car.ownerName}</p>
+                              <p className={`text-sm font-bold truncate ${
+                                isDarkMode ? 'text-white' : 'text-gray-900'
+                              }`}>{car.ownerName}</p>
                               <div className="flex items-center gap-1.5 mt-1">
                                 {car.isDeleted && (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-red-100 text-red-800 border border-red-200">
+                                  <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold border ${
+                                    isDarkMode
+                                      ? 'bg-red-900/40 text-red-300 border-red-700'
+                                      : 'bg-red-100 text-red-800 border-red-200'
+                                  }`}>
                                     <XCircle className="h-2.5 w-2.5 mr-0.5" />
                                     {t("O'chirilgan", language)}
                                   </span>
                                 )}
                                 {hasDebt && !car.isDeleted && (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-red-100 text-red-800 border border-red-200">
+                                  <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold border ${
+                                    isDarkMode
+                                      ? 'bg-red-900/40 text-red-300 border-red-700'
+                                      : 'bg-red-100 text-red-800 border-red-200'
+                                  }`}>
                                     <DollarSign className="h-2.5 w-2.5 mr-0.5" />
                                     {t("Qarzi bor", language)}
                                   </span>
                                 )}
                                 {!hasDebt && !car.isDeleted && (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                  <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold border ${
+                                    isDarkMode
+                                      ? 'bg-green-900/40 text-green-300 border-green-700'
+                                      : 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                                  }`}>
                                     <CheckCircle className="h-2.5 w-2.5 mr-0.5" />
                                     {t("To'langan", language)}
                                   </span>
@@ -607,58 +731,71 @@ const Cars: React.FC = () => {
                         <td className="px-4 py-4">
                           <div className="space-y-1.5">
                             <div className="flex items-center gap-2">
-                              <div className="flex-shrink-0 h-8 w-8 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-lg flex items-center justify-center">
-                                <CarIcon className="h-4 w-4 text-blue-600" />
+                              <div className={`flex-shrink-0 h-8 w-8 rounded-lg flex items-center justify-center ${
+                                isDarkMode
+                                  ? 'bg-gradient-to-br from-blue-900/40 to-indigo-900/40'
+                                  : 'bg-gradient-to-br from-blue-100 to-indigo-100'
+                              }`}>
+                                <CarIcon className={`h-4 w-4 ${
+                                  isDarkMode ? 'text-blue-400' : 'text-blue-600'
+                                }`} />
                               </div>
                               <div className="min-w-0 flex-1">
-                                <p className="text-sm font-bold text-gray-900 truncate">
+                                <p className={`text-sm font-bold truncate ${
+                                  isDarkMode ? 'text-white' : 'text-gray-900'
+                                }`}>
                                   {car.make} {car.carModel}
                                 </p>
-                                <p className="text-xs text-gray-500 font-medium">{car.year}</p>
+                                <p className={`text-xs font-medium ${
+                                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                                }`}>{car.year}</p>
                               </div>
                             </div>
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-black bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-sm">
+                            <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-black shadow-sm ${
+                              isDarkMode
+                                ? 'bg-gradient-to-r from-blue-600 to-indigo-700 text-white'
+                                : 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white'
+                            }`}>
                               {car.licensePlate}
                             </span>
                           </div>
-                        </td>
-                        
-                        {/* Status */}
-                        <td className="px-4 py-4 text-center">
-                          <span className={`inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm ${
-                            car.status === 'pending' ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' :
-                            car.status === 'in-progress' ? 'bg-blue-100 text-blue-800 border border-blue-200' :
-                            car.status === 'completed' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' :
-                            'bg-gray-100 text-gray-800 border border-gray-200'
-                          }`}>
-                            {car.status === 'pending' && t('Kutilmoqda', language)}
-                            {car.status === 'in-progress' && t('Jarayonda', language)}
-                            {car.status === 'completed' && t('Tayyor', language)}
-                            {car.status === 'delivered' && t('Topshirilgan', language)}
-                          </span>
                         </td>
                         
                         {/* Moliya */}
                         <td className="px-4 py-4">
                           <div className="space-y-1">
                             <div className="flex items-center justify-between">
-                              <span className="text-xs text-gray-500 font-medium">{t("Jami", language)}:</span>
-                              <span className="text-sm font-black text-gray-900">
+                              <span className={`text-xs font-medium ${
+                                isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                              }`}>{t("Jami", language)}:</span>
+                              <span className={`text-sm font-black ${
+                                isDarkMode ? 'text-white' : 'text-gray-900'
+                              }`}>
                                 {formatCurrency(displayTotal, language)}
                               </span>
                             </div>
                             {paidAmount > 0 && (
                               <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500 font-medium">{t("To'langan", language)}:</span>
-                                <span className="text-xs font-bold text-emerald-600">
+                                <span className={`text-xs font-medium ${
+                                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                                }`}>{t("To'langan", language)}:</span>
+                                <span className={`text-xs font-bold ${
+                                  isDarkMode ? 'text-emerald-400' : 'text-emerald-600'
+                                }`}>
                                   {formatCurrency(paidAmount, language)}
                                 </span>
                               </div>
                             )}
                             {hasDebt && (
-                              <div className="flex items-center justify-between pt-1 border-t border-red-200">
-                                <span className="text-xs text-red-600 font-bold">{t("Qarz", language)}:</span>
-                                <span className="text-sm font-black text-red-600">
+                              <div className={`flex items-center justify-between pt-1 border-t ${
+                                isDarkMode ? 'border-red-800' : 'border-red-200'
+                              }`}>
+                                <span className={`text-xs font-bold ${
+                                  isDarkMode ? 'text-red-400' : 'text-red-600'
+                                }`}>{t("Qarz", language)}:</span>
+                                <span className={`text-sm font-black ${
+                                  isDarkMode ? 'text-red-400' : 'text-red-600'
+                                }`}>
                                   {formatCurrency(remainingAmount, language)}
                                 </span>
                               </div>
@@ -669,14 +806,24 @@ const Cars: React.FC = () => {
                         {/* Aloqa */}
                         <td className="px-4 py-4">
                           <div className="flex flex-col items-center gap-2">
-                            <div className="flex items-center gap-1.5 text-xs font-medium text-gray-700 bg-gray-50 px-2.5 py-1.5 rounded-lg">
-                              <Phone className="h-3.5 w-3.5 text-gray-500" />
+                            <div className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg ${
+                              isDarkMode
+                                ? 'text-gray-300 bg-gray-800/50 border border-red-900/30'
+                                : 'text-gray-700 bg-gray-50'
+                            }`}>
+                              <Phone className={`h-3.5 w-3.5 ${
+                                isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                              }`} />
                               <span className="truncate">{car.ownerPhone}</span>
                             </div>
                             {car.ownerPhone && (
                               <a
                                 href={`sms:${car.ownerPhone}?body=${encodeURIComponent(getSmsMessage(car))}`}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-500 to-pink-600 text-white hover:from-purple-600 hover:to-pink-700 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105 text-xs font-bold"
+                                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105 text-xs font-bold ${
+                                  isDarkMode
+                                    ? 'bg-gradient-to-r from-purple-600 to-pink-700 text-white hover:from-purple-700 hover:to-pink-800'
+                                    : 'bg-gradient-to-r from-purple-500 to-pink-600 text-white hover:from-purple-600 hover:to-pink-700'
+                                }`}
                                 title={t("SMS yuborish", language)}
                                 onClick={(e) => {
                                   if (!/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
@@ -697,39 +844,50 @@ const Cars: React.FC = () => {
                           <div className="flex items-center justify-center gap-2">
                             <button
                               onClick={() => handleViewCar(car)}
-                              className="inline-flex items-center justify-center p-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-110"
+                              className={`inline-flex items-center justify-center p-2.5 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-110 ${
+                                isDarkMode
+                                  ? 'bg-gradient-to-r from-blue-600 to-indigo-700 text-white hover:from-blue-700 hover:to-indigo-800'
+                                  : 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700'
+                              }`}
                               title={t("Ko'rish", language)}
                             >
                               <Eye className="h-4 w-4" />
                             </button>
                             
-                            {car.isDeleted && (
+                            {car.isDeleted ? (
                               <button
                                 onClick={() => handleRestoreCar(car)}
-                                className="inline-flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 text-xs font-bold"
+                                className={`inline-flex items-center justify-center p-2.5 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-110 ${
+                                  isDarkMode
+                                    ? 'bg-gradient-to-r from-emerald-600 to-teal-700 text-white hover:from-emerald-700 hover:to-teal-800'
+                                    : 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700'
+                                }`}
                                 title={t("Qaytarish", language)}
                               >
-                                <RotateCcw className="h-3.5 w-3.5" />
-                                {t("Qaytarish", language)}
+                                <RotateCcw className="h-4 w-4" />
                               </button>
-                            )}
-                            
-                            {!car.isDeleted && !hasDebt && (
-                              <span className="inline-flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-700 rounded-lg text-xs font-bold shadow-sm">
-                                <CheckCircle className="h-3.5 w-3.5" />
-                                {t("Tugallangan", language)}
-                              </span>
-                            )}
-                            
-                            {!car.isDeleted && (
+                            ) : (
                               <button
                                 onClick={() => handleDeleteCar(car)}
-                                className="inline-flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-red-500 to-pink-600 text-white hover:from-red-600 hover:to-pink-700 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 text-xs font-bold"
+                                className={`inline-flex items-center justify-center p-2.5 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-110 ${
+                                  isDarkMode
+                                    ? 'bg-gradient-to-r from-red-600 to-pink-700 text-white hover:from-red-700 hover:to-pink-800'
+                                    : 'bg-gradient-to-r from-red-500 to-pink-600 text-white hover:from-red-600 hover:to-pink-700'
+                                }`}
                                 title={t("O'chirish", language)}
                               >
-                                <Trash2 className="h-3.5 w-3.5" />
-                                {t("O'chirish", language)}
+                                <Trash2 className="h-4 w-4" />
                               </button>
+                            )}
+                            
+                            {!hasDebt && !car.isDeleted && (
+                              <div className={`inline-flex items-center justify-center p-2.5 rounded-lg ${
+                                isDarkMode
+                                  ? 'bg-emerald-900/40 text-emerald-300 border border-emerald-700'
+                                  : 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                              }`} title={t("Tugallangan", language)}>
+                                <CheckCircle className="h-4 w-4" />
+                              </div>
                             )}
                           </div>
                         </td>
@@ -741,7 +899,7 @@ const Cars: React.FC = () => {
             </div>
             
             {/* Mobile Cards - faqat kichik ekranlarda */}
-            <div className="lg:hidden divide-y divide-gray-200">
+            <div className={`lg:hidden ${isDarkMode ? 'divide-y divide-red-900/30' : 'divide-y divide-gray-200'}`}>
               {displayedCars.map((car: Car) => {
                 const partsTotal = (car.parts || []).reduce((sum, part) => sum + (part.quantity * part.price), 0);
                 const serviceItemsTotal = ((car as any).serviceItems || []).reduce((sum: number, item: any) => sum + (item.quantity * item.price), 0);
@@ -758,85 +916,138 @@ const Cars: React.FC = () => {
                   <div 
                     key={car._id} 
                     className={`p-4 ${
-                      car.isDeleted ? 'bg-red-50/50' : 
-                      hasDebt ? 'bg-red-50/30 border-l-4 border-l-red-500' : 'bg-green-50/30'
+                      isDarkMode
+                        ? car.isDeleted 
+                          ? 'bg-red-900/20' 
+                          : hasDebt 
+                            ? 'bg-red-900/20 border-l-4 border-l-red-500' 
+                            : 'bg-gray-800/30'
+                        : car.isDeleted 
+                          ? 'bg-red-50/50' 
+                          : hasDebt 
+                            ? 'bg-red-50/30 border-l-4 border-l-red-500' 
+                            : 'bg-green-50/30'
                     }`}
                   >
-                    {/* Header - Egasi va Status */}
+                    {/* Header - Egasi */}
                     <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <div className={`flex-shrink-0 h-12 w-12 ${
-                          car.isDeleted ? 'bg-gradient-to-br from-red-100 to-pink-100' : 
-                          hasDebt ? 'bg-gradient-to-br from-red-100 to-orange-100' :
-                          'bg-gradient-to-br from-green-100 to-emerald-100'
-                        } rounded-full flex items-center justify-center`}>
-                          <span className={`${
-                            car.isDeleted ? 'text-red-700' : 
-                            hasDebt ? 'text-red-700' : 'text-green-700'
-                          } font-bold text-lg`}>
+                      <div className="flex items-center gap-3 flex-1">
+                        <div className={`flex-shrink-0 h-12 w-12 rounded-full flex items-center justify-center ${
+                          isDarkMode
+                            ? car.isDeleted 
+                              ? 'bg-gradient-to-br from-red-900/40 to-pink-900/40' 
+                              : hasDebt 
+                                ? 'bg-gradient-to-br from-red-900/40 to-red-800/40' 
+                                : 'bg-gradient-to-br from-green-900/40 to-emerald-900/40'
+                            : car.isDeleted 
+                              ? 'bg-gradient-to-br from-red-100 to-pink-100' 
+                              : hasDebt 
+                                ? 'bg-gradient-to-br from-red-100 to-orange-100' 
+                                : 'bg-gradient-to-br from-green-100 to-emerald-100'
+                        }`}>
+                          <span className={`font-bold text-lg ${
+                            isDarkMode
+                              ? car.isDeleted 
+                                ? 'text-red-300' 
+                                : hasDebt 
+                                  ? 'text-red-300' 
+                                  : 'text-green-300'
+                              : car.isDeleted 
+                                ? 'text-red-700' 
+                                : hasDebt 
+                                  ? 'text-red-700' 
+                                  : 'text-green-700'
+                          }`}>
                             {car.ownerName.charAt(0).toUpperCase()}
                           </span>
                         </div>
-                        <div>
-                          <p className="text-base font-bold text-gray-900">{car.ownerName}</p>
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-base font-bold ${
+                            isDarkMode ? 'text-white' : 'text-gray-900'
+                          }`}>{car.ownerName}</p>
                           <div className="flex items-center gap-1.5 mt-1">
-                            <Phone className="h-3.5 w-3.5 text-gray-400" />
-                            <span className="text-sm text-gray-600">{car.ownerPhone}</span>
+                            <Phone className={`h-3.5 w-3.5 ${
+                              isDarkMode ? 'text-gray-500' : 'text-gray-400'
+                            }`} />
+                            <span className={`text-sm ${
+                              isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                            }`}>{car.ownerPhone}</span>
                           </div>
                         </div>
                       </div>
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
-                        car.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                        car.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
-                        car.status === 'completed' ? 'bg-green-100 text-green-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {car.status === 'pending' && t('Kutilmoqda', language)}
-                        {car.status === 'in-progress' && t('Jarayonda', language)}
-                        {car.status === 'completed' && t('Tayyor', language)}
-                        {car.status === 'delivered' && t('Topshirilgan', language)}
-                      </span>
                     </div>
                     
                     {/* Mashina ma'lumotlari */}
-                    <div className="bg-white rounded-lg p-3 mb-3 space-y-2">
+                    <div className={`rounded-lg p-3 mb-3 space-y-2 ${
+                      isDarkMode
+                        ? 'bg-gray-800/50 border border-red-900/30'
+                        : 'bg-white'
+                    }`}>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <CarIcon className="h-5 w-5 text-gray-400" />
-                          <span className="text-sm font-semibold text-gray-900">
+                          <CarIcon className={`h-5 w-5 ${
+                            isDarkMode ? 'text-gray-500' : 'text-gray-400'
+                          }`} />
+                          <span className={`text-sm font-semibold ${
+                            isDarkMode ? 'text-white' : 'text-gray-900'
+                          }`}>
                             {car.make} {car.carModel}
                           </span>
                         </div>
-                        <span className="text-xs text-gray-500">{car.year}</span>
+                        <span className={`text-xs ${
+                          isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                        }`}>{car.year}</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-500">{t("Raqam", language)}:</span>
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold bg-blue-100 text-blue-800 border border-blue-200">
+                        <span className={`text-xs ${
+                          isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                        }`}>{t("Raqam", language)}:</span>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold border ${
+                          isDarkMode
+                            ? 'bg-blue-900/40 text-blue-300 border-blue-700'
+                            : 'bg-blue-100 text-blue-800 border-blue-200'
+                        }`}>
                           {car.licensePlate}
                         </span>
                       </div>
                     </div>
                     
                     {/* Moliyaviy ma'lumotlar */}
-                    <div className="bg-white rounded-lg p-3 mb-3 space-y-2">
+                    <div className={`rounded-lg p-3 mb-3 space-y-2 ${
+                      isDarkMode
+                        ? 'bg-gray-800/50 border border-red-900/30'
+                        : 'bg-white'
+                    }`}>
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-500">{t("Jami", language)}:</span>
-                        <span className="text-sm font-bold text-gray-900">
+                        <span className={`text-xs ${
+                          isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                        }`}>{t("Jami", language)}:</span>
+                        <span className={`text-sm font-bold ${
+                          isDarkMode ? 'text-white' : 'text-gray-900'
+                        }`}>
                           {formatCurrency(displayTotal, language)}
                         </span>
                       </div>
                       {paidAmount > 0 && (
                         <div className="flex items-center justify-between">
-                          <span className="text-xs text-gray-500">{t("To'langan", language)}:</span>
-                          <span className="text-sm font-semibold text-green-600">
+                          <span className={`text-xs ${
+                            isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                          }`}>{t("To'langan", language)}:</span>
+                          <span className={`text-sm font-semibold ${
+                            isDarkMode ? 'text-green-400' : 'text-green-600'
+                          }`}>
                             {formatCurrency(paidAmount, language)}
                           </span>
                         </div>
                       )}
                       {hasDebt && (
                         <div className="flex items-center justify-between">
-                          <span className="text-xs text-gray-500">{t("Qarz", language)}:</span>
-                          <span className="text-sm font-bold text-red-600">
+                          <span className={`text-xs ${
+                            isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                          }`}>{t("Qarz", language)}:</span>
+                          <span className={`text-sm font-bold ${
+                            isDarkMode ? 'text-red-400' : 'text-red-600'
+                          }`}>
                             {formatCurrency(remainingAmount, language)}
                           </span>
                         </div>
@@ -846,18 +1057,30 @@ const Cars: React.FC = () => {
                     {/* Status badges */}
                     <div className="flex flex-wrap gap-2 mb-3">
                       {car.isDeleted && (
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-red-100 text-red-800">
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${
+                          isDarkMode
+                            ? 'bg-red-900/40 text-red-300 border border-red-700'
+                            : 'bg-red-100 text-red-800'
+                        }`}>
                           {t("O'chirilgan", language)}
                         </span>
                       )}
                       {hasDebt && !car.isDeleted && (
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-red-100 text-red-800">
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${
+                          isDarkMode
+                            ? 'bg-red-900/40 text-red-300 border border-red-700'
+                            : 'bg-red-100 text-red-800'
+                        }`}>
                           <DollarSign className="h-3 w-3 mr-1" />
                           {t("Qarzi bor", language)}
                         </span>
                       )}
                       {!hasDebt && !car.isDeleted && (
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-green-100 text-green-800">
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${
+                          isDarkMode
+                            ? 'bg-green-900/40 text-green-300 border border-green-700'
+                            : 'bg-green-100 text-green-800'
+                        }`}>
                           <CheckCircle className="h-3 w-3 mr-1" />
                           {t("To'liq to'langan", language)}
                         </span>
@@ -868,7 +1091,11 @@ const Cars: React.FC = () => {
                     <div className="flex flex-wrap gap-2">
                       <button
                         onClick={() => handleViewCar(car)}
-                        className="flex-1 min-w-[100px] inline-flex items-center justify-center px-3 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition-all duration-200 font-medium text-sm"
+                        className={`flex-1 min-w-[100px] inline-flex items-center justify-center px-3 py-2 rounded-lg transition-all duration-200 font-medium text-sm ${
+                          isDarkMode
+                            ? 'bg-blue-900/40 text-blue-300 hover:bg-blue-900/60 border border-blue-700'
+                            : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+                        }`}
                       >
                         <Eye className="h-4 w-4 mr-1.5" />
                         {t("Ko'rish", language)}
@@ -877,7 +1104,11 @@ const Cars: React.FC = () => {
                       {car.ownerPhone && (
                         <a
                           href={`sms:${car.ownerPhone}?body=${encodeURIComponent(getSmsMessage(car))}`}
-                          className="flex-1 min-w-[100px] inline-flex items-center justify-center px-3 py-2 bg-purple-50 text-purple-600 hover:bg-purple-100 rounded-lg transition-all duration-200 font-medium text-sm"
+                          className={`flex-1 min-w-[100px] inline-flex items-center justify-center px-3 py-2 rounded-lg transition-all duration-200 font-medium text-sm ${
+                            isDarkMode
+                              ? 'bg-purple-900/40 text-purple-300 hover:bg-purple-900/60 border border-purple-700'
+                              : 'bg-purple-50 text-purple-600 hover:bg-purple-100'
+                          }`}
                           onClick={(e) => {
                             if (!/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
                               e.preventDefault();
@@ -893,7 +1124,11 @@ const Cars: React.FC = () => {
                       {car.isDeleted && (
                         <button
                           onClick={() => handleRestoreCar(car)}
-                          className="flex-1 min-w-[100px] inline-flex items-center justify-center px-3 py-2 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg transition-all duration-200 font-medium text-sm"
+                          className={`flex-1 min-w-[100px] inline-flex items-center justify-center px-3 py-2 rounded-lg transition-all duration-200 font-medium text-sm ${
+                            isDarkMode
+                              ? 'bg-green-900/40 text-green-300 hover:bg-green-900/60 border border-green-700'
+                              : 'bg-green-50 text-green-600 hover:bg-green-100'
+                          }`}
                         >
                           <RotateCcw className="h-4 w-4 mr-1.5" />
                           {t("Qaytarish", language)}
@@ -903,7 +1138,11 @@ const Cars: React.FC = () => {
                       {!car.isDeleted && (
                         <button
                           onClick={() => handleDeleteCar(car)}
-                          className="flex-1 min-w-[100px] inline-flex items-center justify-center px-3 py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-all duration-200 font-medium text-sm"
+                          className={`flex-1 min-w-[100px] inline-flex items-center justify-center px-3 py-2 rounded-lg transition-all duration-200 font-medium text-sm ${
+                            isDarkMode
+                              ? 'bg-red-900/40 text-red-300 hover:bg-red-900/60 border border-red-700'
+                              : 'bg-red-50 text-red-600 hover:bg-red-100'
+                          }`}
                         >
                           <Trash2 className="h-4 w-4 mr-1.5" />
                           {t("O'chirish", language)}
@@ -916,26 +1155,42 @@ const Cars: React.FC = () => {
             </div>
             
             {/* Arxiv statistikasi */}
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-4 sm:px-6 py-4 border-t border-green-200">
+            <div className={`px-4 sm:px-6 py-4 border-t ${
+              isDarkMode
+                ? 'bg-gradient-to-r from-gray-800/50 to-gray-900/50 border-red-900/30'
+                : 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200'
+            }`}>
               <div className="flex flex-col gap-3">
                 {/* Birinchi qator - Mobile: vertikal, Desktop: gorizontal */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                     <div className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
-                      <span className="text-xs sm:text-sm font-semibold text-green-700">
+                      <CheckCircle className={`h-4 w-4 sm:h-5 sm:w-5 ${
+                        isDarkMode ? 'text-green-400' : 'text-green-600'
+                      }`} />
+                      <span className={`text-xs sm:text-sm font-semibold ${
+                        isDarkMode ? 'text-green-300' : 'text-green-700'
+                      }`}>
                         {t("Jami arxivlangan", language)}: {displayedCars.length} ta
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Trash2 className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
-                      <span className="text-xs sm:text-sm font-semibold text-gray-700">
+                      <Trash2 className={`h-4 w-4 sm:h-5 sm:w-5 ${
+                        isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                      }`} />
+                      <span className={`text-xs sm:text-sm font-semibold ${
+                        isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                      }`}>
                         {t("O'chirilgan", language)}: {displayedCars.filter((car: Car) => car.isDeleted === true).length} ta
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
-                      <span className="text-xs sm:text-sm font-semibold text-blue-700">
+                      <CheckCircle className={`h-4 w-4 sm:h-5 sm:w-5 ${
+                        isDarkMode ? 'text-blue-400' : 'text-blue-600'
+                      }`} />
+                      <span className={`text-xs sm:text-sm font-semibold ${
+                        isDarkMode ? 'text-blue-300' : 'text-blue-700'
+                      }`}>
                         {t("Tugallangan", language)}: {displayedCars.filter((car: Car) => car.status === 'completed' || car.status === 'delivered').length} ta
                       </span>
                     </div>
@@ -945,8 +1200,12 @@ const Cars: React.FC = () => {
                 {/* Ikkinchi qator - To'lov statistikasi - Mobile: vertikal, Desktop: gorizontal */}
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                   <div className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600" />
-                    <span className="text-xs sm:text-sm font-semibold text-emerald-700">
+                    <CheckCircle className={`h-4 w-4 sm:h-5 sm:w-5 ${
+                      isDarkMode ? 'text-emerald-400' : 'text-emerald-600'
+                    }`} />
+                    <span className={`text-xs sm:text-sm font-semibold ${
+                      isDarkMode ? 'text-emerald-300' : 'text-emerald-700'
+                    }`}>
                       {t("To'liq to'langan", language)}: {displayedCars.filter((car: Car) => {
                         const total = car.totalEstimate || 0;
                         const paid = car.paidAmount || 0;
@@ -955,8 +1214,12 @@ const Cars: React.FC = () => {
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />
-                    <span className="text-xs sm:text-sm font-semibold text-amber-700">
+                    <DollarSign className={`h-4 w-4 sm:h-5 sm:w-5 ${
+                      isDarkMode ? 'text-amber-400' : 'text-amber-600'
+                    }`} />
+                    <span className={`text-xs sm:text-sm font-semibold ${
+                      isDarkMode ? 'text-amber-300' : 'text-amber-700'
+                    }`}>
                       {t("Qisman to'langan", language)}: {displayedCars.filter((car: Car) => {
                         const total = car.totalEstimate || 0;
                         const paid = car.paidAmount || 0;
@@ -965,8 +1228,12 @@ const Cars: React.FC = () => {
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <XCircle className="h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
-                    <span className="text-xs sm:text-sm font-semibold text-red-700">
+                    <XCircle className={`h-4 w-4 sm:h-5 sm:w-5 ${
+                      isDarkMode ? 'text-red-400' : 'text-red-600'
+                    }`} />
+                    <span className={`text-xs sm:text-sm font-semibold ${
+                      isDarkMode ? 'text-red-300' : 'text-red-700'
+                    }`}>
                       {t("To'lanmagan", language)}: {displayedCars.filter((car: Car) => {
                         const total = car.totalEstimate || 0;
                         const paid = car.paidAmount || 0;
@@ -990,7 +1257,7 @@ const Cars: React.FC = () => {
               // Backend dan kelgan totalEstimate ni ishlatish, agar mavjud bo'lsa
               const displayTotal = car.totalEstimate || calculatedTotal;
               
-              return <CarCard key={car._id} car={car} displayTotal={displayTotal} language={language} onView={handleViewCar} onEdit={handleEditCar} onDelete={handleDeleteCar} onApproveTask={handleApproveTask} onPayment={handlePaymentCar} getSmsMessage={getSmsMessage} />;
+              return <CarCard key={car._id} car={car} displayTotal={displayTotal} language={language} isDarkMode={isDarkMode} onView={handleViewCar} onEdit={handleEditCar} onDelete={handleDeleteCar} onApproveTask={handleApproveTask} onPayment={handlePaymentCar} getSmsMessage={getSmsMessage} />;
             })}
           </div>
         )}
@@ -1167,13 +1434,14 @@ const CarCard: React.FC<{
   car: Car;
   displayTotal: number;
   language: 'latin' | 'cyrillic';
+  isDarkMode: boolean;
   onView: (car: Car) => void;
   onEdit: (car: Car) => void;
   onDelete: (car: Car) => void;
   onApproveTask: (task: any) => void;
   onPayment: (car: Car) => void;
   getSmsMessage: (car: Car) => string;
-}> = ({ car, displayTotal, language, onView, onEdit, onDelete, onApproveTask, onPayment, getSmsMessage }) => {
+}> = ({ car, displayTotal, language, isDarkMode, onView, onEdit, onDelete, onApproveTask, onPayment, getSmsMessage }) => {
   // Fetch tasks for this car ONLY
   const { data: tasksData } = useTasks({ car: car._id });
   const tasks = tasksData?.tasks || [];
@@ -1192,9 +1460,17 @@ const CarCard: React.FC<{
   }, [tasks]);
 
   return (
-    <div className="group relative bg-white rounded-lg sm:rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-blue-200 hover:-translate-y-1">
+    <div className={`group relative rounded-lg sm:rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border hover:-translate-y-1 ${
+      isDarkMode
+        ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 border-red-900/30 hover:border-red-700'
+        : 'bg-white border-gray-100 hover:border-orange-200'
+    }`}>
       {/* Card Header */}
-      <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 p-3 sm:p-6 pb-4 sm:pb-8">
+      <div className={`p-3 sm:p-6 pb-4 sm:pb-8 ${
+        isDarkMode
+          ? 'bg-gradient-to-br from-red-600 via-red-700 to-gray-900'
+          : 'bg-gradient-to-br from-orange-600 via-orange-700 to-red-700'
+      }`}>
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-start space-x-2 sm:space-x-4 flex-1 min-w-0">
             <div className="bg-white/20 backdrop-blur-xl p-2 sm:p-3 rounded-lg sm:rounded-xl shadow-lg flex-shrink-0">
@@ -1205,11 +1481,13 @@ const CarCard: React.FC<{
                 {car.make} {car.carModel} {car.year}
               </h3>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs sm:text-sm font-bold tracking-wider text-blue-100">{car.licensePlate}</span>
+                <span className={`text-xs sm:text-sm font-bold tracking-wider ${
+                  isDarkMode ? 'text-red-100' : 'text-orange-100'
+                }`}>{car.licensePlate}</span>
                 {/* Status Badge */}
                 <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
                   car.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                  car.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
+                  car.status === 'in-progress' ? isDarkMode ? 'bg-red-100 text-red-800' : 'bg-orange-100 text-orange-800' :
                   car.status === 'completed' ? 'bg-green-100 text-green-800' :
                   'bg-gray-100 text-gray-800'
                 }`}>
@@ -1227,12 +1505,22 @@ const CarCard: React.FC<{
       {/* Card Body */}
       <div className="p-3 sm:p-6 space-y-2 sm:space-y-4">
         {/* Owner Info */}
-        <div className="bg-gradient-to-r from-gray-50 to-blue-50/50 rounded-lg sm:rounded-xl p-2.5 sm:p-4 border border-gray-100">
+        <div className={`rounded-lg sm:rounded-xl p-2.5 sm:p-4 border ${
+          isDarkMode
+            ? 'bg-gradient-to-r from-gray-800 to-gray-900 border-gray-700'
+            : 'bg-gradient-to-r from-gray-50 to-orange-50/50 border-gray-100'
+        }`}>
           <div className="flex items-center justify-between mb-1 sm:mb-2">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{t("Egasi", language)}</span>
+            <span className={`text-xs font-semibold uppercase tracking-wide ${
+              isDarkMode ? 'text-gray-400' : 'text-gray-500'
+            }`}>{t("Egasi", language)}</span>
           </div>
-          <p className="text-sm sm:text-base font-bold text-gray-900 mb-1 sm:mb-2">{car.ownerName}</p>
-          <div className="flex items-center space-x-2 text-gray-600">
+          <p className={`text-sm sm:text-base font-bold mb-1 sm:mb-2 ${
+            isDarkMode ? 'text-gray-200' : 'text-gray-900'
+          }`}>{car.ownerName}</p>
+          <div className={`flex items-center space-x-2 ${
+            isDarkMode ? 'text-gray-400' : 'text-gray-600'
+          }`}>
             <Phone className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
             <span className="text-xs sm:text-sm font-medium">{car.ownerPhone}</span>
           </div>
@@ -1240,20 +1528,42 @@ const CarCard: React.FC<{
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 gap-2 sm:gap-3">
-          <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg sm:rounded-xl p-2.5 sm:p-4 border border-purple-100">
+          <div className={`rounded-lg sm:rounded-xl p-2.5 sm:p-4 border ${
+            isDarkMode
+              ? 'bg-gradient-to-br from-purple-900/30 to-pink-900/30 border-purple-900/30'
+              : 'bg-gradient-to-br from-purple-50 to-pink-50 border-purple-100'
+          }`}>
             <div className="flex items-center space-x-1 sm:space-x-2 mb-1">
-              <Package2 className="h-3 w-3 sm:h-4 sm:w-4 text-purple-600" />
-              <span className="text-xs font-semibold text-purple-600 uppercase hidden sm:inline">{t("Qismlar", language)}</span>
+              <Package2 className={`h-3 w-3 sm:h-4 sm:w-4 ${
+                isDarkMode ? 'text-purple-400' : 'text-purple-600'
+              }`} />
+              <span className={`text-xs font-semibold uppercase hidden sm:inline ${
+                isDarkMode ? 'text-purple-400' : 'text-purple-600'
+              }`}>{t("Qismlar", language)}</span>
             </div>
-            <p className="text-base sm:text-2xl font-bold text-purple-900">{car.parts?.length || 0}</p>
-            <p className="text-xs text-gray-500 sm:hidden">{t("qism", language)}</p>
+            <p className={`text-base sm:text-2xl font-bold ${
+              isDarkMode ? 'text-gray-200' : 'text-purple-900'
+            }`}>{car.parts?.length || 0}</p>
+            <p className={`text-xs sm:hidden ${
+              isDarkMode ? 'text-gray-400' : 'text-gray-500'
+            }`}>{t("qism", language)}</p>
           </div>
-          <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg sm:rounded-xl p-2.5 sm:p-4 border border-green-100">
+          <div className={`rounded-lg sm:rounded-xl p-2.5 sm:p-4 border ${
+            isDarkMode
+              ? 'bg-gradient-to-br from-green-900/30 to-emerald-900/30 border-green-900/30'
+              : 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-100'
+          }`}>
             <div className="flex items-center space-x-1 sm:space-x-2 mb-1">
-              <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
-              <span className="text-xs font-semibold text-green-600 uppercase hidden sm:inline">{t("Narx", language)}</span>
+              <DollarSign className={`h-3 w-3 sm:h-4 sm:w-4 ${
+                isDarkMode ? 'text-green-400' : 'text-green-600'
+              }`} />
+              <span className={`text-xs font-semibold uppercase hidden sm:inline ${
+                isDarkMode ? 'text-green-400' : 'text-green-600'
+              }`}>{t("Narx", language)}</span>
             </div>
-            <p className="text-sm sm:text-lg font-bold text-green-900 truncate">
+            <p className={`text-sm sm:text-lg font-bold truncate ${
+              isDarkMode ? 'text-gray-200' : 'text-green-900'
+            }`}>
               {displayTotal > 0 ? formatCurrency(displayTotal, language) : t("0 so'm", language)}
             </p>
           </div>
@@ -1269,7 +1579,11 @@ const CarCard: React.FC<{
                 onApproveTask(completedTask);
               }
             }}
-            className={`bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg sm:rounded-xl p-2.5 sm:p-4 border border-orange-100 ${
+            className={`rounded-lg sm:rounded-xl p-2.5 sm:p-4 border ${
+              isDarkMode
+                ? 'bg-gradient-to-r from-yellow-900/30 to-amber-900/30 border-yellow-900/30'
+                : 'bg-gradient-to-r from-orange-50 to-amber-50 border-orange-100'
+            } ${
               tasks.some((t: any) => t.status === 'completed') ? 'cursor-pointer hover:border-green-300 hover:shadow-md transition-all' : ''
             }`}
           >

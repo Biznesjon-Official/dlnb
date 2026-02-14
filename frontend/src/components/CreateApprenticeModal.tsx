@@ -3,6 +3,7 @@ import { X, User, UserPlus, Phone, Percent, DollarSign, Calendar } from 'lucide-
 import { useCreateApprentice } from '@/hooks/useUsers';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { formatPhoneNumber, validatePhoneNumber, getPhoneDigits } from '@/lib/phoneUtils';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface CreateApprenticeModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface CreateApprenticeModalProps {
 }
 
 const CreateApprenticeModal: React.FC<CreateApprenticeModalProps> = ({ isOpen, onClose, onCreate }) => {
+  const { isDarkMode } = useTheme();
   const [formData, setFormData] = useState({
     name: '',
     username: '',
@@ -133,8 +135,17 @@ const CreateApprenticeModal: React.FC<CreateApprenticeModalProps> = ({ isOpen, o
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-[9999] p-2 sm:p-4 animate-fadeIn">
-      <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden mx-2 sm:mx-0 transform transition-all animate-slideUp">
-        <div className="relative overflow-hidden rounded-t-xl sm:rounded-t-2xl bg-gradient-to-r from-blue-600 to-purple-600 px-4 sm:px-6 py-3 sm:py-4">
+      <div className={`rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden mx-2 sm:mx-0 transform transition-all animate-slideUp ${
+        isDarkMode 
+          ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' 
+          : 'bg-white'
+      }`}>
+        {/* Header */}
+        <div className={`relative overflow-hidden rounded-t-xl sm:rounded-t-2xl px-4 sm:px-6 py-3 sm:py-4 ${
+          isDarkMode
+            ? 'bg-gradient-to-r from-red-600 via-red-700 to-gray-900'
+            : 'bg-gradient-to-r from-orange-600 to-orange-500'
+        }`}>
           <div className="absolute inset-0 bg-black opacity-10"></div>
           <div className="relative z-10 flex items-center justify-between">
             <div className="flex items-center">
@@ -143,7 +154,11 @@ const CreateApprenticeModal: React.FC<CreateApprenticeModalProps> = ({ isOpen, o
               </div>
               <div>
                 <h2 className="text-base sm:text-xl font-bold text-white">Yangi shogird</h2>
-                <p className="text-blue-100 text-xs hidden sm:block">Shogird malumotlarini kiriting</p>
+                <p className={`text-xs hidden sm:block ${
+                  isDarkMode ? 'text-red-100' : 'text-orange-100'
+                }`}>
+                  Shogird malumotlarini kiriting
+                </p>
               </div>
             </div>
             <button
@@ -156,13 +171,16 @@ const CreateApprenticeModal: React.FC<CreateApprenticeModalProps> = ({ isOpen, o
         </div>
 
         <form onSubmit={handleSubmit} className="p-4 sm:p-5 space-y-2.5 sm:space-y-3">
+          {/* Toliq ism */}
           <div>
-            <label htmlFor="name" className="block text-xs font-semibold text-gray-700 mb-1">
+            <label htmlFor="name" className={`block text-xs font-semibold mb-1 ${
+              isDarkMode ? 'text-gray-200' : 'text-gray-700'
+            }`}>
               Toliq ism *
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <User className="h-4 w-4 text-gray-400" />
+                <User className={`h-4 w-4 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
               </div>
               <input
                 type="text"
@@ -172,7 +190,11 @@ const CreateApprenticeModal: React.FC<CreateApprenticeModalProps> = ({ isOpen, o
                 onChange={handleChange}
                 required
                 className={`w-full pl-9 pr-3 py-2 border-2 rounded-lg focus:outline-none transition-all text-sm ${
-                  errors.name ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-blue-500'
+                  errors.name 
+                    ? 'border-red-300 focus:border-red-500' 
+                    : isDarkMode
+                      ? 'bg-gray-800 border-gray-700 text-white focus:border-red-500 placeholder-gray-500'
+                      : 'bg-white border-gray-200 text-gray-900 focus:border-blue-500 placeholder-gray-400'
                 }`}
                 placeholder="Alisher Navoiy"
               />
@@ -180,13 +202,16 @@ const CreateApprenticeModal: React.FC<CreateApprenticeModalProps> = ({ isOpen, o
             {errors.name && <p className="mt-0.5 text-xs text-red-600">{errors.name}</p>}
           </div>
 
+          {/* Username */}
           <div>
-            <label htmlFor="username" className="block text-xs font-semibold text-gray-700 mb-1">
+            <label htmlFor="username" className={`block text-xs font-semibold mb-1 ${
+              isDarkMode ? 'text-gray-200' : 'text-gray-700'
+            }`}>
               Foydalanuvchi nomi *
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <span className="text-gray-400 font-medium text-sm">@</span>
+                <span className={`font-medium text-sm ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>@</span>
               </div>
               <input
                 type="text"
@@ -196,7 +221,11 @@ const CreateApprenticeModal: React.FC<CreateApprenticeModalProps> = ({ isOpen, o
                 onChange={handleChange}
                 required
                 className={`w-full pl-9 pr-3 py-2 border-2 rounded-lg focus:outline-none transition-all text-sm ${
-                  errors.username ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-blue-500'
+                  errors.username 
+                    ? 'border-red-300 focus:border-red-500' 
+                    : isDarkMode
+                      ? 'bg-gray-800 border-gray-700 text-white focus:border-red-500 placeholder-gray-500'
+                      : 'bg-white border-gray-200 text-gray-900 focus:border-blue-500 placeholder-gray-400'
                 }`}
                 placeholder="username"
               />
@@ -204,13 +233,16 @@ const CreateApprenticeModal: React.FC<CreateApprenticeModalProps> = ({ isOpen, o
             {errors.username && <p className="mt-0.5 text-xs text-red-600">{errors.username}</p>}
           </div>
 
+          {/* Telefon */}
           <div>
-            <label htmlFor="phone" className="block text-xs font-semibold text-gray-700 mb-1">
+            <label htmlFor="phone" className={`block text-xs font-semibold mb-1 ${
+              isDarkMode ? 'text-gray-200' : 'text-gray-700'
+            }`}>
               Telefon raqam *
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Phone className="h-4 w-4 text-gray-400" />
+                <Phone className={`h-4 w-4 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
               </div>
               <input
                 type="tel"
@@ -220,7 +252,11 @@ const CreateApprenticeModal: React.FC<CreateApprenticeModalProps> = ({ isOpen, o
                 onChange={handleChange}
                 required
                 className={`w-full pl-9 pr-3 py-2 border-2 rounded-lg focus:outline-none transition-all text-sm ${
-                  errors.phone ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-blue-500'
+                  errors.phone 
+                    ? 'border-red-300 focus:border-red-500' 
+                    : isDarkMode
+                      ? 'bg-gray-800 border-gray-700 text-white focus:border-red-500 placeholder-gray-500'
+                      : 'bg-white border-gray-200 text-gray-900 focus:border-blue-500 placeholder-gray-400'
                 }`}
                 placeholder="+998 90 123 45 67"
               />
@@ -230,7 +266,9 @@ const CreateApprenticeModal: React.FC<CreateApprenticeModalProps> = ({ isOpen, o
 
           {/* To'lov turi tanlash */}
           <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+            <label className={`block text-xs font-semibold mb-1.5 ${
+              isDarkMode ? 'text-gray-200' : 'text-gray-700'
+            }`}>
               To'lov turi *
             </label>
             <div className="grid grid-cols-2 gap-2">
@@ -239,8 +277,12 @@ const CreateApprenticeModal: React.FC<CreateApprenticeModalProps> = ({ isOpen, o
                 onClick={() => setFormData(prev => ({ ...prev, paymentType: 'percentage' }))}
                 className={`px-3 py-2 rounded-lg border-2 transition-all text-xs font-medium ${
                   formData.paymentType === 'percentage'
-                    ? 'border-blue-500 bg-blue-50 text-blue-700'
-                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                    ? isDarkMode
+                      ? 'border-red-500 bg-red-900/30 text-red-400'
+                      : 'border-orange-500 bg-orange-50 text-orange-700'
+                    : isDarkMode
+                      ? 'border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600'
+                      : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
                 }`}
               >
                 <Percent className="h-4 w-4 mx-auto mb-0.5" />
@@ -251,8 +293,12 @@ const CreateApprenticeModal: React.FC<CreateApprenticeModalProps> = ({ isOpen, o
                 onClick={() => setFormData(prev => ({ ...prev, paymentType: 'daily' }))}
                 className={`px-3 py-2 rounded-lg border-2 transition-all text-xs font-medium ${
                   formData.paymentType === 'daily'
-                    ? 'border-green-500 bg-green-50 text-green-700'
-                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                    ? isDarkMode
+                      ? 'border-green-500 bg-green-900/30 text-green-400'
+                      : 'border-green-500 bg-green-50 text-green-700'
+                    : isDarkMode
+                      ? 'border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600'
+                      : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
                 }`}
               >
                 <Calendar className="h-4 w-4 mx-auto mb-0.5" />
@@ -264,12 +310,14 @@ const CreateApprenticeModal: React.FC<CreateApprenticeModalProps> = ({ isOpen, o
           {/* Foizli ishchi uchun */}
           {formData.paymentType === 'percentage' && (
             <div>
-              <label htmlFor="percentage" className="block text-xs font-semibold text-gray-700 mb-1">
+              <label htmlFor="percentage" className={`block text-xs font-semibold mb-1 ${
+                isDarkMode ? 'text-gray-200' : 'text-gray-700'
+              }`}>
                 Foiz (%)
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Percent className="h-4 w-4 text-gray-400" />
+                  <Percent className={`h-4 w-4 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
                 </div>
                 <input
                   type="number"
@@ -279,11 +327,15 @@ const CreateApprenticeModal: React.FC<CreateApprenticeModalProps> = ({ isOpen, o
                   onChange={handleChange}
                   min="0"
                   max="100"
-                  className="w-full pl-9 pr-10 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 transition-all text-sm"
+                  className={`w-full pl-9 pr-10 py-2 border-2 rounded-lg focus:outline-none transition-all text-sm ${
+                    isDarkMode
+                      ? 'bg-gray-800 border-gray-700 text-white focus:border-red-500 placeholder-gray-500'
+                      : 'bg-white border-gray-200 text-gray-900 focus:border-blue-500 placeholder-gray-400'
+                  }`}
                   placeholder="50"
                 />
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                  <span className="text-gray-500 font-medium text-sm">%</span>
+                  <span className={`font-medium text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>%</span>
                 </div>
               </div>
             </div>
@@ -292,12 +344,14 @@ const CreateApprenticeModal: React.FC<CreateApprenticeModalProps> = ({ isOpen, o
           {/* Kunlik ishchi uchun */}
           {formData.paymentType === 'daily' && (
             <div>
-              <label htmlFor="dailyRate" className="block text-xs font-semibold text-gray-700 mb-1">
+              <label htmlFor="dailyRate" className={`block text-xs font-semibold mb-1 ${
+                isDarkMode ? 'text-gray-200' : 'text-gray-700'
+              }`}>
                 Kunlik ish haqi (so'm) *
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <DollarSign className="h-4 w-4 text-gray-400" />
+                  <DollarSign className={`h-4 w-4 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
                 </div>
                 <input
                   type="number"
@@ -313,7 +367,11 @@ const CreateApprenticeModal: React.FC<CreateApprenticeModalProps> = ({ isOpen, o
                   step="1000"
                   required
                   className={`w-full pl-9 pr-3 py-2 border-2 rounded-lg focus:outline-none transition-all text-sm ${
-                    errors.dailyRate ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-green-500'
+                    errors.dailyRate 
+                      ? 'border-red-300 focus:border-red-500' 
+                      : isDarkMode
+                        ? 'bg-gray-800 border-gray-700 text-white focus:border-green-500 placeholder-gray-500'
+                        : 'bg-white border-gray-200 text-gray-900 focus:border-green-500 placeholder-gray-400'
                   }`}
                   placeholder="100000"
                 />
@@ -325,18 +383,27 @@ const CreateApprenticeModal: React.FC<CreateApprenticeModalProps> = ({ isOpen, o
             </div>
           )}
 
+          {/* Tugmalar */}
           <div className="flex items-center gap-2 pt-1">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-all"
+              className={`flex-1 px-4 py-2 text-sm font-semibold rounded-lg transition-all ${
+                isDarkMode
+                  ? 'text-gray-300 bg-gray-800 hover:bg-gray-700 border border-gray-700'
+                  : 'text-gray-700 bg-gray-100 hover:bg-gray-200'
+              }`}
             >
               Bekor qilish
             </button>
             <button
               type="submit"
               disabled={createApprenticeMutation.isPending}
-              className="flex-1 px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 transition-all shadow-lg"
+              className={`flex-1 px-4 py-2 text-sm font-semibold text-white rounded-lg disabled:opacity-50 transition-all shadow-lg ${
+                isDarkMode
+                  ? 'bg-gradient-to-r from-red-600 via-red-700 to-gray-900 hover:from-red-700 hover:via-red-800 hover:to-gray-900'
+                  : 'bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600'
+              }`}
             >
               {createApprenticeMutation.isPending ? 'Yuklanmoqda...' : 'Yaratish'}
             </button>

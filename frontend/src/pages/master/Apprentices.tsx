@@ -7,12 +7,14 @@ import DeleteApprenticeModal from '@/components/DeleteApprenticeModal';
 import { Plus, Search, Users, Calendar, TrendingUp, Award, Eye, Edit, Trash2, CheckCircle, Target, Mail, Wallet } from 'lucide-react';
 import { User } from '@/types';
 import { t } from '@/lib/transliteration';
+import { useTheme } from '@/contexts/ThemeContext';
 
 // Apprentice Card komponentini alohida ajratish va memo qilish
 const ApprenticeCard = React.memo(({ 
   apprentice, 
   index, 
   language,
+  isDarkMode,
   onView,
   onEdit,
   onDelete 
@@ -20,27 +22,35 @@ const ApprenticeCard = React.memo(({
   apprentice: User; 
   index: number; 
   language: 'latin' | 'cyrillic';
+  isDarkMode: boolean;
   onView: (apprentice: User) => void;
   onEdit: (apprentice: User) => void;
   onDelete: (apprentice: User) => void;
 }) => {
   const getAvatarGradient = (idx: number) => {
     const gradients = [
-      'from-blue-500 to-indigo-600',
-      'from-purple-500 to-pink-600',
-      'from-green-500 to-teal-600',
       'from-orange-500 to-red-600',
-      'from-cyan-500 to-blue-600',
-      'from-violet-500 to-purple-600',
+      'from-red-500 to-pink-600',
+      'from-amber-500 to-orange-600',
+      'from-orange-500 to-red-600',
+      'from-red-500 to-orange-600',
+      'from-orange-500 to-amber-600',
     ];
     return gradients[idx % gradients.length];
   };
 
   const getPerformanceColor = (percentage: number) => {
-    if (percentage >= 80) return 'text-green-600 bg-green-100';
-    if (percentage >= 60) return 'text-blue-600 bg-blue-100';
-    if (percentage >= 40) return 'text-yellow-600 bg-yellow-100';
-    return 'text-red-600 bg-red-100';
+    if (isDarkMode) {
+      if (percentage >= 80) return 'text-green-400 bg-green-900/30';
+      if (percentage >= 60) return 'text-red-400 bg-red-900/30';
+      if (percentage >= 40) return 'text-yellow-400 bg-yellow-900/30';
+      return 'text-red-400 bg-red-900/30';
+    } else {
+      if (percentage >= 80) return 'text-green-600 bg-green-100';
+      if (percentage >= 60) return 'text-orange-600 bg-orange-100';
+      if (percentage >= 40) return 'text-yellow-600 bg-yellow-100';
+      return 'text-red-600 bg-red-100';
+    }
   };
 
   const stats = apprentice.stats || {
@@ -52,7 +62,11 @@ const ApprenticeCard = React.memo(({
   };
 
   return (
-    <div className="group relative bg-white rounded-xl border-2 border-gray-100 hover:border-blue-300 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+    <div className={`group relative rounded-xl border-2 transition-all duration-300 transform hover:-translate-y-1 ${
+      isDarkMode
+        ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 border-red-900/30 hover:border-red-700 hover:shadow-2xl'
+        : 'bg-white border-gray-100 hover:border-orange-300 hover:shadow-xl'
+    }`}>
       {/* Card Header with Gradient */}
       <div className={`h-16 sm:h-20 bg-gradient-to-r ${getAvatarGradient(index)} relative rounded-t-xl`}>
         <div className="absolute inset-0 bg-black opacity-10 rounded-t-xl"></div>
@@ -83,15 +97,21 @@ const ApprenticeCard = React.memo(({
       <div className="pt-8 sm:pt-10 px-4 sm:px-5 pb-4 sm:pb-5">
         {/* Name and Username */}
         <div className="mb-3">
-          <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors truncate">
+          <h3 className={`text-base sm:text-lg font-bold mb-1 transition-colors truncate ${
+            isDarkMode 
+              ? 'text-gray-200 group-hover:text-red-400' 
+              : 'text-gray-900 group-hover:text-orange-600'
+          }`}>
             {apprentice.name}
           </h3>
-          <p className="text-xs sm:text-sm text-gray-500 flex items-center">
+          <p className={`text-xs sm:text-sm flex items-center ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
             <span className="inline-block w-1.5 h-1.5 bg-green-500 rounded-full mr-2"></span>
             <span className="truncate">@{apprentice.username}</span>
           </p>
           {apprentice.profession && (
-            <p className="text-xs text-blue-600 font-medium mt-1 truncate">
+            <p className={`text-xs font-medium mt-1 truncate ${
+              isDarkMode ? 'text-red-400' : 'text-orange-600'
+            }`}>
               {apprentice.profession}
             </p>
           )}
@@ -103,13 +123,13 @@ const ApprenticeCard = React.memo(({
         </div>
 
         {/* Contact Info */}
-        <div className="space-y-2 mb-3 pb-3 border-b border-gray-100">
-          <div className="flex items-center text-xs sm:text-sm text-gray-600">
-            <Mail className="h-3 w-3 sm:h-4 sm:w-4 mr-2 text-gray-400 flex-shrink-0" />
+        <div className={`space-y-2 mb-3 pb-3 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-100'}`}>
+          <div className={`flex items-center text-xs sm:text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+            <Mail className={`h-3 w-3 sm:h-4 sm:w-4 mr-2 flex-shrink-0 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
             <span className="truncate">{apprentice.email}</span>
           </div>
-          <div className="flex items-center text-xs sm:text-sm text-gray-600">
-            <Calendar className="h-3 w-3 sm:h-4 sm:w-4 mr-2 text-gray-400 flex-shrink-0" />
+          <div className={`flex items-center text-xs sm:text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+            <Calendar className={`h-3 w-3 sm:h-4 sm:w-4 mr-2 flex-shrink-0 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
             <span>{new Date(apprentice.createdAt).toLocaleDateString('uz-UZ')}</span>
           </div>
         </div>
@@ -117,14 +137,18 @@ const ApprenticeCard = React.memo(({
         {/* Performance Stats */}
         <div className="mb-3">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs sm:text-sm font-medium text-gray-700">Samaradorlik</span>
+            <span className={`text-xs sm:text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Samaradorlik</span>
             <span className={`text-xs sm:text-sm font-bold px-2 py-1 rounded-lg ${getPerformanceColor(stats.performance)}`}>
               {stats.performance}%
             </span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+          <div className={`w-full rounded-full h-2 overflow-hidden ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}>
             <div 
-              className="h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full transition-all duration-500"
+              className={`h-full rounded-full transition-all duration-500 ${
+                isDarkMode 
+                  ? 'bg-gradient-to-r from-red-600 to-red-800' 
+                  : 'bg-gradient-to-r from-orange-500 to-red-600'
+              }`}
               style={{ width: `${stats.performance}%` }}
             ></div>
           </div>
@@ -132,36 +156,76 @@ const ApprenticeCard = React.memo(({
 
         {/* Task Stats Grid */}
         <div className="grid grid-cols-3 gap-1.5 sm:gap-2 mb-3">
-          <div className="text-center p-2 sm:p-2.5 bg-blue-50 rounded-lg border border-blue-100">
-            <Target className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 mx-auto mb-1" />
-            <p className="text-sm sm:text-base font-bold text-blue-900">{stats.totalTasks}</p>
-            <p className="text-xs text-blue-600 font-medium">{t("Vazifalar", language)}</p>
+          <div className={`text-center p-2 sm:p-2.5 rounded-lg border ${
+            isDarkMode 
+              ? 'bg-red-900/30 border-red-900/30' 
+              : 'bg-orange-50 border-orange-100'
+          }`}>
+            <Target className={`h-4 w-4 sm:h-5 sm:w-5 mx-auto mb-1 ${
+              isDarkMode ? 'text-red-400' : 'text-orange-600'
+            }`} />
+            <p className={`text-sm sm:text-base font-bold ${
+              isDarkMode ? 'text-gray-200' : 'text-orange-900'
+            }`}>{stats.totalTasks}</p>
+            <p className={`text-xs font-medium ${
+              isDarkMode ? 'text-red-400' : 'text-orange-600'
+            }`}>{t("Vazifalar", language)}</p>
           </div>
-          <div className="text-center p-2 sm:p-2.5 bg-green-50 rounded-lg border border-green-100">
-            <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 mx-auto mb-1" />
-            <p className="text-sm sm:text-base font-bold text-green-900">{stats.completedTasks}</p>
-            <p className="text-xs text-green-600 font-medium">{t("Bajarilgan", language)}</p>
+          <div className={`text-center p-2 sm:p-2.5 rounded-lg border ${
+            isDarkMode 
+              ? 'bg-green-900/30 border-green-900/30' 
+              : 'bg-green-50 border-green-100'
+          }`}>
+            <CheckCircle className={`h-4 w-4 sm:h-5 sm:w-5 mx-auto mb-1 ${
+              isDarkMode ? 'text-green-400' : 'text-green-600'
+            }`} />
+            <p className={`text-sm sm:text-base font-bold ${
+              isDarkMode ? 'text-gray-200' : 'text-green-900'
+            }`}>{stats.completedTasks}</p>
+            <p className={`text-xs font-medium ${
+              isDarkMode ? 'text-green-400' : 'text-green-600'
+            }`}>{t("Bajarilgan", language)}</p>
           </div>
-          <div className="text-center p-2 sm:p-2.5 bg-purple-50 rounded-lg border border-purple-100">
-            <Award className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600 mx-auto mb-1" />
-            <p className="text-sm sm:text-base font-bold text-purple-900">{stats.awards}</p>
-            <p className="text-xs text-purple-600 font-medium">{t("Mukofot", language)}</p>
+          <div className={`text-center p-2 sm:p-2.5 rounded-lg border ${
+            isDarkMode 
+              ? 'bg-yellow-900/30 border-yellow-900/30' 
+              : 'bg-amber-50 border-amber-100'
+          }`}>
+            <Award className={`h-4 w-4 sm:h-5 sm:w-5 mx-auto mb-1 ${
+              isDarkMode ? 'text-yellow-400' : 'text-amber-600'
+            }`} />
+            <p className={`text-sm sm:text-base font-bold ${
+              isDarkMode ? 'text-gray-200' : 'text-amber-900'
+            }`}>{stats.awards}</p>
+            <p className={`text-xs font-medium ${
+              isDarkMode ? 'text-yellow-400' : 'text-amber-600'
+            }`}>{t("Mukofot", language)}</p>
           </div>
         </div>
 
         {/* Earnings Display */}
-        <div className="mb-4 p-2.5 bg-gradient-to-r from-emerald-50 to-green-50 rounded-lg border border-emerald-200">
+        <div className={`mb-4 p-2.5 rounded-lg border ${
+          isDarkMode 
+            ? 'bg-gradient-to-r from-emerald-900/30 to-green-900/30 border-emerald-900/30' 
+            : 'bg-gradient-to-r from-emerald-50 to-green-50 border-emerald-200'
+        }`}>
           <div className="flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500 shadow-sm">
               <Wallet className="h-4 w-4 text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-emerald-600 font-medium">{t("Joriy oylik", language)}</p>
-              <p className="text-sm sm:text-base font-bold text-emerald-900 truncate">
+              <p className={`text-xs font-medium ${
+                isDarkMode ? 'text-emerald-400' : 'text-emerald-600'
+              }`}>{t("Joriy oylik", language)}</p>
+              <p className={`text-sm sm:text-base font-bold truncate ${
+                isDarkMode ? 'text-gray-200' : 'text-emerald-900'
+              }`}>
                 {(apprentice.earnings || 0).toLocaleString()} {t("so'm", language)}
               </p>
               {apprentice.paymentType === 'daily' && apprentice.dailyRate && (
-                <p className="text-xs text-emerald-600 mt-0.5">
+                <p className={`text-xs mt-0.5 ${
+                  isDarkMode ? 'text-emerald-400' : 'text-emerald-600'
+                }`}>
                   {t("Kunlik:", language)} {apprentice.dailyRate.toLocaleString()} {t("so'm", language)}
                 </p>
               )}
@@ -173,7 +237,11 @@ const ApprenticeCard = React.memo(({
         <div className="flex items-center gap-2">
           <button 
             onClick={() => onView(apprentice)}
-            className="flex-1 flex items-center justify-center px-3 sm:px-4 py-2 bg-blue-600 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-md hover:shadow-lg"
+            className={`flex-1 flex items-center justify-center px-3 sm:px-4 py-2 text-white text-xs sm:text-sm font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg ${
+              isDarkMode 
+                ? 'bg-red-900/30 hover:bg-red-900/50 text-red-400' 
+                : 'bg-orange-600 hover:bg-orange-700'
+            }`}
             title={t("Ko'rish", language)}
           >
             <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
@@ -182,14 +250,22 @@ const ApprenticeCard = React.memo(({
           </button>
           <button 
             onClick={() => onEdit(apprentice)}
-            className="flex items-center justify-center p-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-all duration-200"
+            className={`flex items-center justify-center p-2 rounded-lg transition-all duration-200 ${
+              isDarkMode 
+                ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
             title={t("Tahrirlash", language)}
           >
             <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
           </button>
           <button 
             onClick={() => onDelete(apprentice)}
-            className="flex items-center justify-center p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-all duration-200"
+            className={`flex items-center justify-center p-2 rounded-lg transition-all duration-200 ${
+              isDarkMode 
+                ? 'bg-red-900/30 text-red-400 hover:bg-red-900/50' 
+                : 'bg-red-50 text-red-600 hover:bg-red-100'
+            }`}
             title={t("O'chirish", language)}
           >
             <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -218,6 +294,7 @@ const ApprenticeCard = React.memo(({
 
 
 const Apprentices: React.FC = () => {
+  const { isDarkMode } = useTheme();
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -291,19 +368,19 @@ const Apprentices: React.FC = () => {
   return (
     <div className="space-y-6 sm:space-y-8 pb-6 sm:pb-8 px-4 sm:px-0">
       {/* Header with Gradient Background */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 p-4 sm:p-6 lg:p-8 shadow-xl">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-orange-600 via-red-600 to-red-700 p-4 sm:p-6 lg:p-8 shadow-xl">
         <div className="absolute inset-0 bg-black opacity-10"></div>
         <div className="relative z-10">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="text-center sm:text-left">
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2">{t("Shogirdlar", language)}</h1>
-              <p className="text-blue-100 text-sm sm:text-base lg:text-lg">
+              <p className="text-orange-100 text-sm sm:text-base lg:text-lg">
                 {t("Shogirdlarni boshqaring va ularning rivojlanishini kuzating", language)}
               </p>
             </div>
             <button
               onClick={() => setIsCreateModalOpen(true)}
-              className="inline-flex items-center justify-center px-4 sm:px-6 py-2.5 sm:py-3 bg-white text-blue-600 font-semibold rounded-xl hover:bg-blue-50 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-sm sm:text-base w-full sm:w-auto"
+              className="inline-flex items-center justify-center px-4 sm:px-6 py-2.5 sm:py-3 bg-white text-orange-600 font-semibold rounded-xl hover:bg-orange-50 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-sm sm:text-base w-full sm:w-auto"
             >
               <Plus className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
               <span className="hidden sm:inline">{t("Yangi shogird", language)}</span>
@@ -321,25 +398,43 @@ const Apprentices: React.FC = () => {
           placeholder={t("Ism, username yoki email bo'yicha qidirish...", language)}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 sm:pl-12 pr-4 py-3 sm:py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400 text-sm sm:text-base"
+          className={`w-full pl-10 sm:pl-12 pr-4 py-3 sm:py-4 border-2 rounded-xl focus:outline-none focus:ring-2 transition-all duration-200 placeholder-gray-400 text-sm sm:text-base ${
+            isDarkMode
+              ? 'bg-gray-800 border-gray-700 text-white focus:ring-red-500 focus:border-red-500'
+              : 'bg-white border-gray-200 text-gray-900 focus:ring-orange-500 focus:border-transparent'
+          }`}
         />
       </div>
 
       {/* Enhanced Stats Cards */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 p-4 sm:p-6 border border-blue-200 hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1">
+        <div className={`relative overflow-hidden rounded-xl p-4 sm:p-6 border hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1 ${
+          isDarkMode
+            ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 border-red-900/30'
+            : 'bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200'
+        }`}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs sm:text-sm font-medium text-blue-600 mb-1">{t("Jami shogirdlar", language)}</p>
-              <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-blue-900">{stats.total}</p>
+              <p className={`text-xs sm:text-sm font-medium mb-1 ${
+                isDarkMode ? 'text-red-400' : 'text-orange-600'
+              }`}>{t("Jami shogirdlar", language)}</p>
+              <p className={`text-xl sm:text-2xl lg:text-3xl font-bold ${
+                isDarkMode ? 'text-gray-200' : 'text-orange-900'
+              }`}>{stats.total}</p>
             </div>
-            <div className="flex h-10 w-10 sm:h-12 sm:w-12 lg:h-14 lg:w-14 items-center justify-center rounded-xl bg-blue-500 shadow-lg">
+            <div className={`flex h-10 w-10 sm:h-12 sm:w-12 lg:h-14 lg:w-14 items-center justify-center rounded-xl shadow-lg ${
+              isDarkMode ? 'bg-red-600' : 'bg-orange-500'
+            }`}>
               <Users className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7 text-white" />
             </div>
           </div>
         </div>
 
-        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-green-50 to-green-100 p-4 sm:p-6 border border-green-200 hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1">
+        <div className={`relative overflow-hidden rounded-xl p-4 sm:p-6 border hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1 ${
+          isDarkMode
+            ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 border-green-900/30'
+            : 'bg-gradient-to-br from-green-50 to-green-100 border-green-200'
+        }`}>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs sm:text-sm font-medium text-green-600 mb-1">{t("Faol shogirdlar", language)}</p>
@@ -380,8 +475,8 @@ const Apprentices: React.FC = () => {
       {isFirstLoad ? (
         <div className="flex flex-col items-center justify-center py-16 sm:py-20">
           <div className="relative mb-6">
-            <div className="animate-spin rounded-full h-16 w-16 sm:h-20 sm:w-20 border-4 border-blue-200"></div>
-            <div className="animate-spin rounded-full h-16 w-16 sm:h-20 sm:w-20 border-4 border-blue-600 border-t-transparent absolute top-0 left-0"></div>
+            <div className="animate-spin rounded-full h-16 w-16 sm:h-20 sm:w-20 border-4 border-orange-200"></div>
+            <div className="animate-spin rounded-full h-16 w-16 sm:h-20 sm:w-20 border-4 border-orange-600 border-t-transparent absolute top-0 left-0"></div>
           </div>
           <div className="text-center">
             <p className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">
@@ -428,7 +523,7 @@ const Apprentices: React.FC = () => {
           {!searchTerm && (
             <button
               onClick={() => setIsCreateModalOpen(true)}
-              className="inline-flex items-center px-4 sm:px-6 py-2.5 sm:py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl text-sm sm:text-base"
+              className="inline-flex items-center px-4 sm:px-6 py-2.5 sm:py-3 bg-orange-600 text-white font-semibold rounded-xl hover:bg-orange-700 transition-all duration-200 shadow-lg hover:shadow-xl text-sm sm:text-base"
             >
               <Plus className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
               Birinchi shogirdni qo'shish
@@ -443,6 +538,7 @@ const Apprentices: React.FC = () => {
               apprentice={apprentice}
               index={index}
               language={language}
+              isDarkMode={isDarkMode}
               onView={handleViewApprentice}
               onEdit={handleEditApprentice}
               onDelete={handleDeleteApprentice}

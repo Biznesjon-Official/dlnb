@@ -164,7 +164,7 @@ export const getCars = async (req: AuthRequest, res: Response) => {
     const startTime = Date.now();
     const { status, search } = req.query;
     
-    // ⚡ OPTIMIZATSIYA: Faqat kerakli fieldlar (parts va serviceItems ham kerak!)
+    // ⚡ ULTRA OPTIMIZATSIYA: Minimal fieldlar (faqat kerakli ma'lumotlar)
     const projection = {
       make: 1,
       carModel: 1,
@@ -176,35 +176,27 @@ export const getCars = async (req: AuthRequest, res: Response) => {
       paymentStatus: 1,
       totalEstimate: 1,
       paidAmount: 1,
-      parts: 1,        // ✅ Kerak - frontend'da ishlatiladi
-      serviceItems: 1, // ✅ Kerak - frontend'da ishlatiladi
+      'parts.name': 1,
+      'parts.price': 1,
+      'parts.quantity': 1,
+      'parts.status': 1,
+      'serviceItems.name': 1,
+      'serviceItems.price': 1,
+      'serviceItems.quantity': 1,
       createdAt: 1,
       updatedAt: 1
     };
     
-    // ⚡ OPTIMIZATSIYA: Faqat faol mashinalar (index ishlatadi)
+    // ⚡ SIMPLIFIED FILTER: Sodda va tez (index ishlatadi)
     const filter: any = { 
-      isDeleted: { $ne: true },
-      $and: [
-        { 
-          $or: [
-            { status: { $exists: false } },
-            { status: { $nin: ['completed', 'delivered'] } }
-          ]
-        },
-        {
-          $or: [
-            { paymentStatus: { $exists: false } },
-            { paymentStatus: { $nin: ['paid'] } }
-          ]
-        }
-      ]
+      isDeleted: false,
+      status: { $in: ['pending', 'in-progress'] },
+      paymentStatus: { $in: ['pending', 'partial'] }
     };
     
     if (status) filter.status = status;
     
     if (search) {
-      // ⚡ OPTIMIZATSIYA: Text index ishlatish (10x tezroq)
       const searchRegex = new RegExp(search as string, 'i');
       filter.$or = [
         { licensePlate: searchRegex },
@@ -214,17 +206,21 @@ export const getCars = async (req: AuthRequest, res: Response) => {
       ];
     }
     
-    // ⚡ SUPER OPTIMIZATSIYA: 
-    // 1. lean() - Plain JS object (Mongoose overhead yo'q)
-    // 2. maxTimeMS() - Timeout (2 soniyadan ko'p kutmaslik)
+    // ⚡ ULTRA FAST QUERY:
+    // 1. hint() - Index'ni majburiy ishlatish
+    // 2. lean() - Plain JS object (5x tezroq)
+    // 3. limit() - Max 100 ta mashina
+    // 4. maxTimeMS() - Max 1 soniya
     const cars = await Car.find(filter, projection)
+      .hint('active_cars_index') // Index'ni majburiy ishlatish
       .sort({ createdAt: -1 })
-      .lean() // 10x tezroq!
-      .maxTimeMS(2000) // Max 2 soniya
+      .limit(100) // Max 100 ta
+      .lean() // 5x tezroq!
+      .maxTimeMS(1000) // Max 1 soniya
       .exec();
     
     const duration = Date.now() - startTime;
-    console.log(`✅ getCars: ${cars.length} mashinalar ${duration}ms da yuklandi`);
+    console.log(`⚡ getCars: ${cars.length} mashinalar ${duration}ms da yuklandi`);
     
     res.json({ cars });
   } catch (error: any) {

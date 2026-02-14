@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Calendar, Phone, Car, User } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { t } from '@/lib/transliteration';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface CreateBookingModalProps {
   isOpen: boolean;
@@ -10,6 +11,7 @@ interface CreateBookingModalProps {
 }
 
 const CreateBookingModal: React.FC<CreateBookingModalProps> = ({ isOpen, onClose, onCreate }) => {
+  const { isDarkMode } = useTheme();
   const [language] = useState<'latin' | 'cyrillic'>(() => {
     const savedLanguage = localStorage.getItem('language');
     return (savedLanguage as 'latin' | 'cyrillic') || 'latin';
@@ -124,11 +126,19 @@ const CreateBookingModal: React.FC<CreateBookingModalProps> = ({ isOpen, onClose
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <div className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" onClick={onClose}></div>
+        <div className="fixed inset-0 transition-opacity bg-black bg-opacity-60 backdrop-blur-sm" onClick={onClose}></div>
 
-        <div className="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+        <div className={`inline-block align-bottom rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full ${
+          isDarkMode
+            ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800'
+            : 'bg-white'
+        }`}>
           {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
+          <div className={`px-6 py-4 ${
+            isDarkMode
+              ? 'bg-gradient-to-r from-red-600 via-red-700 to-gray-900'
+              : 'bg-gradient-to-r from-blue-600 to-indigo-600'
+          }`}>
             <div className="flex items-center justify-between">
               <h3 className="text-xl font-bold text-white flex items-center gap-2">
                 <Calendar className="h-6 w-6" />
@@ -147,7 +157,9 @@ const CreateBookingModal: React.FC<CreateBookingModalProps> = ({ isOpen, onClose
           <form onSubmit={handleSubmit} className="px-6 py-6 space-y-4">
             {/* Customer Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className={`block text-sm font-medium mb-2 ${
+                isDarkMode ? 'text-gray-300' : 'text-gray-700'
+              }`}>
                 <User className="h-4 w-4 inline mr-1" />
                 {t('Mijoz ismi', language)} <span className="text-red-500">*</span>
               </label>
@@ -156,7 +168,11 @@ const CreateBookingModal: React.FC<CreateBookingModalProps> = ({ isOpen, onClose
                 name="customerName"
                 value={formData.customerName}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 transition-colors ${
+                  isDarkMode
+                    ? 'bg-gray-800 border-red-900/30 text-white placeholder:text-gray-500 focus:ring-red-500 focus:border-red-500'
+                    : 'border-gray-300 focus:ring-blue-500 focus:border-transparent'
+                }`}
                 placeholder={t('Mijoz ismini kiriting', language)}
                 required
               />
@@ -164,7 +180,9 @@ const CreateBookingModal: React.FC<CreateBookingModalProps> = ({ isOpen, onClose
 
             {/* Phone Number */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className={`block text-sm font-medium mb-2 ${
+                isDarkMode ? 'text-gray-300' : 'text-gray-700'
+              }`}>
                 <Phone className="h-4 w-4 inline mr-1" />
                 {t('Telefon raqam', language)} <span className="text-red-500">*</span>
               </label>
@@ -173,7 +191,11 @@ const CreateBookingModal: React.FC<CreateBookingModalProps> = ({ isOpen, onClose
                 name="phoneNumber"
                 value={formData.phoneNumber}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 transition-colors ${
+                  isDarkMode
+                    ? 'bg-gray-800 border-red-900/30 text-white placeholder:text-gray-500 focus:ring-red-500 focus:border-red-500'
+                    : 'border-gray-300 focus:ring-blue-500 focus:border-transparent'
+                }`}
                 placeholder="+998 90 123 45 67"
                 required
               />
@@ -181,7 +203,9 @@ const CreateBookingModal: React.FC<CreateBookingModalProps> = ({ isOpen, onClose
 
             {/* License Plate */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className={`block text-sm font-medium mb-2 ${
+                isDarkMode ? 'text-gray-300' : 'text-gray-700'
+              }`}>
                 <Car className="h-4 w-4 inline mr-1" />
                 {t('Davlat raqami', language)} <span className="text-red-500">*</span>
               </label>
@@ -190,7 +214,11 @@ const CreateBookingModal: React.FC<CreateBookingModalProps> = ({ isOpen, onClose
                 name="licensePlate"
                 value={formData.licensePlate}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase"
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 transition-colors uppercase ${
+                  isDarkMode
+                    ? 'bg-gray-800 border-red-900/30 text-white placeholder:text-gray-500 focus:ring-red-500 focus:border-red-500'
+                    : 'border-gray-300 focus:ring-blue-500 focus:border-transparent'
+                }`}
                 placeholder="01 A 123 BC"
                 required
               />
@@ -198,7 +226,9 @@ const CreateBookingModal: React.FC<CreateBookingModalProps> = ({ isOpen, onClose
 
             {/* Booking Date */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className={`block text-sm font-medium mb-2 ${
+                isDarkMode ? 'text-gray-300' : 'text-gray-700'
+              }`}>
                 <Calendar className="h-4 w-4 inline mr-1" />
                 {t('Bron sanasi', language)}
               </label>
@@ -208,13 +238,19 @@ const CreateBookingModal: React.FC<CreateBookingModalProps> = ({ isOpen, onClose
                 value={formData.bookingDate}
                 onChange={handleChange}
                 min={new Date().toISOString().split('T')[0]}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 transition-colors ${
+                  isDarkMode
+                    ? 'bg-gray-800 border-red-900/30 text-white focus:ring-red-500 focus:border-red-500 [color-scheme:dark]'
+                    : 'border-gray-300 focus:ring-blue-500 focus:border-transparent'
+                }`}
               />
             </div>
 
             {/* Birth Date */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className={`block text-sm font-medium mb-2 ${
+                isDarkMode ? 'text-gray-300' : 'text-gray-700'
+              }`}>
                 <Calendar className="h-4 w-4 inline mr-1" />
                 {t('Tug\'ilgan kun', language)}
               </label>
@@ -223,7 +259,11 @@ const CreateBookingModal: React.FC<CreateBookingModalProps> = ({ isOpen, onClose
                 name="birthDate"
                 value={formData.birthDate}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 transition-colors ${
+                  isDarkMode
+                    ? 'bg-gray-800 border-red-900/30 text-white focus:ring-red-500 focus:border-red-500 [color-scheme:dark]'
+                    : 'border-gray-300 focus:ring-blue-500 focus:border-transparent'
+                }`}
               />
             </div>
 
@@ -232,14 +272,22 @@ const CreateBookingModal: React.FC<CreateBookingModalProps> = ({ isOpen, onClose
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                className={`flex-1 px-4 py-2 border rounded-lg transition-colors font-medium ${
+                  isDarkMode
+                    ? 'border-gray-600 text-gray-300 hover:bg-gray-700'
+                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
               >
                 {t('Bekor qilish', language)}
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all font-medium disabled:opacity-50"
+                className={`flex-1 px-4 py-2 text-white rounded-lg transition-all font-medium disabled:opacity-50 ${
+                  isDarkMode
+                    ? 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800'
+                    : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700'
+                }`}
               >
                 {isSubmitting ? t('Saqlanmoqda...', language) : t('Saqlash', language)}
               </button>

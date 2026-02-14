@@ -2,9 +2,10 @@ import { Routes, Route, Navigate, BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 import Layout from '@/components/Layout';
 import Login from '@/pages/Login';
-import ApprenticeDashboard from '@/pages/apprentice/Dashboard';
+import ApprenticeDashboard from '@/pages/apprentice/Dashboard.tsx';
 import Tasks from '@/pages/Tasks';
 import Cars from '@/pages/Cars';
 import Debts from '@/pages/Debts';
@@ -308,12 +309,14 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <AuthProvider>
-          <AppRoutes />
-          <AIChatWidget />
-          <OfflineTransitionModal />
-          <InstallPWA />
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <AppRoutes />
+            <AIChatWidget />
+            <OfflineTransitionModal />
+            <InstallPWA />
+          </AuthProvider>
+        </ThemeProvider>
         <Toaster 
           position="top-right"
           toastOptions={{

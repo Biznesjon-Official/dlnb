@@ -7,6 +7,7 @@ import EditBookingModal from '../../components/EditBookingModal';
 import DeleteBookingModal from '../../components/DeleteBookingModal';
 import BirthdaySmsModal from '../../components/BirthdaySmsModal';
 import { useBookingsNew } from '@/hooks/useBookingsNew';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface Booking {
   _id: string;
@@ -26,6 +27,7 @@ interface Booking {
 }
 
 const Bookings: React.FC = () => {
+  const { isDarkMode } = useTheme();
   const [language] = useState<'latin' | 'cyrillic'>(() => {
     const savedLanguage = localStorage.getItem('language');
     return (savedLanguage as 'latin' | 'cyrillic') || 'latin';
@@ -134,58 +136,89 @@ const Bookings: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header with Search */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">{t('Mijozlar bronlari', language)}</h1>
-          <p className="text-gray-600 mt-1">{t('Mijozlar bronlarini boshqaring', language)}</p>
-        </div>
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          {/* Search Input */}
-          <div className="relative flex-1 sm:flex-initial sm:w-80">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t('Mijoz, telefon yoki raqam...', language)}
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
-            />
-            <svg
-              className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
+    <div className={`min-h-screen p-4 sm:p-6 lg:p-8 ${
+      isDarkMode 
+        ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' 
+        : 'bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50'
+    }`}>
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header with Search */}
+        <div className={`rounded-2xl shadow-xl p-6 ${
+          isDarkMode
+            ? 'bg-gradient-to-r from-red-600 via-red-700 to-gray-900'
+            : 'bg-gradient-to-r from-blue-600 to-indigo-600'
+        }`}>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-white">{t('Mijozlar bronlari', language)}</h1>
+              <p className="text-white/80 mt-1">{t('Mijozlar bronlarini boshqaring', language)}</p>
+            </div>
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              {/* Search Input */}
+              <div className="relative flex-1 sm:flex-initial sm:w-80">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={t('Mijoz, telefon yoki raqam...', language)}
+                  className={`w-full pl-10 pr-4 py-2.5 border rounded-xl focus:ring-2 shadow-sm ${
+                    isDarkMode
+                      ? 'bg-gray-800 border-red-900/30 text-white placeholder:text-gray-500 focus:ring-red-500 focus:border-red-500'
+                      : 'border-gray-300 focus:ring-blue-500 focus:border-transparent'
+                  }`}
+                />
+                <svg
+                  className={`absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 ${
+                    isDarkMode ? 'text-gray-500' : 'text-gray-400'
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+              </div>
+              
+              {/* Add Button */}
+              <button
+                onClick={() => setIsCreateModalOpen(true)}
+                className={`flex items-center gap-2 px-4 py-2.5 text-white rounded-xl transition-all shadow-lg hover:shadow-xl whitespace-nowrap ${
+                  isDarkMode
+                    ? 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800'
+                    : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700'
+                }`}
+              >
+                <Plus className="h-5 w-5" />
+                {t('Yangi bron', language)}
+              </button>
+            </div>
           </div>
-          
-          {/* Add Button */}
-          <button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl whitespace-nowrap"
-          >
-            <Plus className="h-5 w-5" />
-            {t('Yangi bron', language)}
-          </button>
         </div>
-      </div>
 
       {/* Bookings List - Compact Card View */}
       {sortedBookings.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center">
-          <Calendar className="h-16 w-16 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500 text-base font-medium">
+        <div className={`rounded-xl shadow-sm border p-8 text-center ${
+          isDarkMode
+            ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 border-red-900/30'
+            : 'bg-white border-gray-200'
+        }`}>
+          <Calendar className={`h-16 w-16 mx-auto mb-3 ${
+            isDarkMode ? 'text-gray-600' : 'text-gray-300'
+          }`} />
+          <p className={`text-base font-medium ${
+            isDarkMode ? 'text-gray-400' : 'text-gray-500'
+          }`}>
             {searchQuery ? t('Qidiruv natijasi topilmadi', language) : t('Bronlar topilmadi', language)}
           </p>
           {searchQuery && (
-            <p className="text-gray-400 text-sm mt-2">
+            <p className={`text-sm mt-2 ${
+              isDarkMode ? 'text-gray-500' : 'text-gray-400'
+            }`}>
               "{searchQuery}" bo'yicha natija yo'q
             </p>
           )}
@@ -199,10 +232,14 @@ const Bookings: React.FC = () => {
             return (
               <div
                 key={booking._id}
-                className={`group relative bg-white rounded-xl shadow-sm border-2 transition-all duration-200 hover:shadow-lg hover:-translate-y-1 flex flex-col ${
+                className={`group relative rounded-xl shadow-sm border-2 transition-all duration-200 hover:shadow-lg hover:-translate-y-1 flex flex-col ${
                   isBirthdaySoon 
-                    ? 'border-yellow-400 bg-gradient-to-br from-yellow-50 to-white' 
-                    : 'border-gray-200 hover:border-blue-300'
+                    ? isDarkMode
+                      ? 'border-yellow-600 bg-gradient-to-br from-yellow-900/40 via-gray-800 to-gray-900'
+                      : 'border-yellow-400 bg-gradient-to-br from-yellow-50 to-white'
+                    : isDarkMode
+                      ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 border-red-900/30 hover:border-red-700'
+                      : 'bg-white border-gray-200 hover:border-blue-300'
                 }`}
               >
                 {/* Birthday Badge */}
@@ -252,7 +289,9 @@ const Bookings: React.FC = () => {
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="text-base font-bold text-gray-900 truncate">
+                          <h3 className={`text-base font-bold truncate ${
+                            isDarkMode ? 'text-white' : 'text-gray-900'
+                          }`}>
                             {booking.customerName}
                           </h3>
                           {isBirthdaySoon && (
@@ -265,7 +304,9 @@ const Bookings: React.FC = () => {
                             </div>
                           )}
                         </div>
-                        <div className="flex items-center gap-1.5 text-xs text-gray-600">
+                        <div className={`flex items-center gap-1.5 text-xs ${
+                          isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                        }`}>
                           <Phone className="h-3 w-3" />
                           <span className="font-medium truncate">{booking.phoneNumber}</span>
                         </div>
@@ -274,22 +315,38 @@ const Bookings: React.FC = () => {
 
                     {/* Info Grid */}
                     <div className="space-y-2 mt-3">{/* License Plate */}
-                    <div className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg border border-blue-100">
-                      <Car className="h-4 w-4 text-blue-600 flex-shrink-0" />
-                      <span className="text-xs font-bold text-gray-900 truncate">{booking.licensePlate}</span>
+                    <div className={`flex items-center gap-2 p-2 rounded-lg border ${
+                      isDarkMode
+                        ? 'bg-blue-900/40 border-blue-800'
+                        : 'bg-blue-50 border-blue-100'
+                    }`}>
+                      <Car className={`h-4 w-4 flex-shrink-0 ${
+                        isDarkMode ? 'text-blue-400' : 'text-blue-600'
+                      }`} />
+                      <span className={`text-xs font-bold truncate ${
+                        isDarkMode ? 'text-white' : 'text-gray-900'
+                      }`}>{booking.licensePlate}</span>
                     </div>
 
                     {/* Booking Date */}
                     <div className={`flex items-center gap-2 p-2 rounded-lg border ${
                       booking.bookingDate 
-                        ? 'bg-purple-50 border-purple-100' 
-                        : 'bg-gray-50 border-gray-200'
+                        ? isDarkMode
+                          ? 'bg-purple-900/40 border-purple-800'
+                          : 'bg-purple-50 border-purple-100'
+                        : isDarkMode
+                          ? 'bg-gray-800 border-gray-700'
+                          : 'bg-gray-50 border-gray-200'
                     }`}>
                       <Calendar className={`h-4 w-4 flex-shrink-0 ${
-                        booking.bookingDate ? 'text-purple-600' : 'text-gray-400'
+                        booking.bookingDate 
+                          ? isDarkMode ? 'text-purple-400' : 'text-purple-600'
+                          : 'text-gray-400'
                       }`} />
                       <span className={`text-xs font-medium truncate ${
-                        booking.bookingDate ? 'text-gray-900' : 'text-gray-400'
+                        booking.bookingDate 
+                          ? isDarkMode ? 'text-white' : 'text-gray-900'
+                          : 'text-gray-400'
                       }`}>
                         {booking.bookingDate ? formatDate(booking.bookingDate) : 'XX/XX/XXXX'}
                       </span>
@@ -300,8 +357,12 @@ const Bookings: React.FC = () => {
                       booking.birthDate
                         ? isBirthdaySoon 
                           ? 'bg-gradient-to-r from-yellow-100 via-orange-100 to-pink-100 border-yellow-300' 
-                          : 'bg-green-50 border-green-100'
-                        : 'bg-gray-50 border-gray-200'
+                          : isDarkMode
+                            ? 'bg-green-900/40 border-green-800'
+                            : 'bg-green-50 border-green-100'
+                        : isDarkMode
+                          ? 'bg-gray-800 border-gray-700'
+                          : 'bg-gray-50 border-gray-200'
                     }`}>
                       {/* Animated background for birthday soon */}
                       {booking.birthDate && isBirthdaySoon && (
@@ -312,8 +373,12 @@ const Bookings: React.FC = () => {
                         booking.birthDate
                           ? isBirthdaySoon 
                             ? 'bg-gradient-to-br from-orange-400 to-pink-500' 
-                            : 'bg-green-500'
-                          : 'bg-gray-400'
+                            : isDarkMode
+                              ? 'bg-green-600'
+                              : 'bg-green-500'
+                          : isDarkMode
+                            ? 'bg-gray-700'
+                            : 'bg-gray-400'
                       }`}>
                         {booking.birthDate ? (
                           isBirthdaySoon ? (
@@ -332,7 +397,9 @@ const Bookings: React.FC = () => {
                       
                       <div className="flex-1 min-w-0 relative z-10">
                         <span className={`text-xs font-medium truncate block ${
-                          booking.birthDate ? 'text-gray-900' : 'text-gray-400'
+                          booking.birthDate 
+                            ? isDarkMode ? 'text-white' : 'text-gray-900'
+                            : 'text-gray-400'
                         }`}>
                           {booking.birthDate ? formatDate(booking.birthDate) : 'XX/XX/XXXX'}
                         </span>
@@ -357,7 +424,9 @@ const Bookings: React.FC = () => {
                   </div>
 
                   {/* Actions - Always at bottom */}
-                  <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">{isBirthdaySoon && (
+                  <div className={`flex items-center gap-2 mt-3 pt-3 border-t ${
+                    isDarkMode ? 'border-red-900/30' : 'border-gray-100'
+                  }`}>{isBirthdaySoon && (
                       <button
                         onClick={() => handleSendBirthdaySms(booking)}
                         className="flex-1 relative overflow-hidden flex items-center justify-center gap-1.5 px-3 py-2 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white rounded-lg text-xs font-bold shadow-lg hover:shadow-xl transition-all group"
@@ -374,14 +443,22 @@ const Bookings: React.FC = () => {
                     )}
                     <button
                       onClick={() => handleEdit(booking)}
-                      className={`${isBirthdaySoon ? '' : 'flex-1'} flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-xs font-semibold transition-all`}
+                      className={`${isBirthdaySoon ? '' : 'flex-1'} flex items-center justify-center gap-1.5 px-3 py-2 text-white rounded-lg text-xs font-semibold transition-all ${
+                        isDarkMode
+                          ? 'bg-blue-600 hover:bg-blue-700'
+                          : 'bg-blue-500 hover:bg-blue-600'
+                      }`}
                     >
                       <Edit2 className="h-3.5 w-3.5" />
                       {!isBirthdaySoon && t('Tahrirlash', language)}
                     </button>
                     <button
                       onClick={() => handleDelete(booking)}
-                      className={`${isBirthdaySoon ? '' : 'flex-1'} flex items-center justify-center gap-1.5 px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-xs font-semibold transition-all`}
+                      className={`${isBirthdaySoon ? '' : 'flex-1'} flex items-center justify-center gap-1.5 px-3 py-2 text-white rounded-lg text-xs font-semibold transition-all ${
+                        isDarkMode
+                          ? 'bg-red-600 hover:bg-red-700'
+                          : 'bg-red-500 hover:bg-red-600'
+                      }`}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                       {!isBirthdaySoon && t('O\'chirish', language)}
@@ -438,6 +515,7 @@ const Bookings: React.FC = () => {
           phoneNumber={selectedBooking.phoneNumber}
         />
       )}
+      </div>
     </div>
   );
 };

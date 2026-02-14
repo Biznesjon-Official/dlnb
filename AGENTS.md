@@ -677,6 +677,57 @@ updateCar(id, data); // Returns immediately
 
 ## 🎨 KOD YOZISH QOIDALARI
 
+### Dizayn va Ranglar
+**Asosiy Rang Sxemasi**: Qizil va Qora (Red & Black Theme)
+
+**Dark Mode (Qorong'i rejim):**
+- **Asosiy fon**: `from-gray-900 via-gray-800 to-gray-900` (gradient)
+- **Kartalar**: `from-gray-800 via-gray-900 to-gray-800` (gradient)
+- **Aktsent ranglar**: Qizil gradientlar (`from-red-600 via-red-700 to-gray-900`)
+- **Matn**: Oq va och kulrang (`text-white`, `text-gray-200`, `text-gray-400`)
+- **Chegaralar**: Qizil va kulrang (`border-red-900/30`, `border-gray-700`)
+- **Hover effektlar**: Qizil va qora gradientlar
+- **Aktiv holatlar**: Qizil gradient bilan (`bg-gradient-to-r from-red-600 via-red-700 to-gray-900`)
+
+**Light Mode (Yorug' rejim):**
+- **Asosiy fon**: Oq va och kulrang (`bg-white`, `from-slate-50 via-blue-50 to-indigo-50`)
+- **Kartalar**: Oq (`bg-white`)
+- **Aktsent ranglar**: Ko'k va indigo gradientlar (`from-blue-500 to-indigo-600`)
+- **Matn**: Qora va to'q kulrang (`text-gray-900`, `text-gray-700`)
+- **Chegaralar**: Och kulrang (`border-gray-200`, `border-gray-100`)
+- **Hover effektlar**: Ko'k va indigo gradientlar
+- **Aktiv holatlar**: Ko'k gradient bilan (`bg-gradient-to-r from-blue-500 to-indigo-600`)
+
+**Logo va Branding:**
+- Logo fayli: `public/dlnb.png`
+- Logo ranglari: Qizil va qora gradient
+- Logo shakli: Aylana (circular) border bilan
+- Sidebar'da logo: Gradient background bilan
+
+**Rang Ishlatish Qoidalari:**
+- Har doim dark/light mode uchun conditional styling ishlatish
+- Qizil rangni asosiy aktsent rang sifatida ishlatish (dark mode)
+- Ko'k rangni asosiy aktsent rang sifatida ishlatish (light mode)
+- Gradient'larni professional ko'rinish uchun ishlatish
+- Hover va active holatlar uchun ranglarni to'g'ri tanlash
+- Accessibility uchun yetarli contrast ta'minlash
+
+**Tailwind CSS Classes:**
+```typescript
+// Dark mode example
+className={`${
+  isDarkMode 
+    ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white border-red-900/30' 
+    : 'bg-white text-gray-900 border-gray-200'
+}`}
+
+// Gradient buttons (dark mode)
+className="bg-gradient-to-r from-red-600 via-red-700 to-gray-900"
+
+// Gradient buttons (light mode)
+className="bg-gradient-to-r from-blue-500 to-indigo-600"
+```
+
 ### TypeScript
 - Har doim type'lar bilan ishlash
 - `any` ishlatmaslik
@@ -794,9 +845,10 @@ npm run pm2:start
 
 ---
 
-**Oxirgi yangilanish**: 2026-02-08  
-**Versiya**: 2.0.0  
+**Oxirgi yangilanish**: 2026-02-13  
+**Versiya**: 2.0.1  
 **Status**: ✅ Production Ready
+**Dizayn**: Qizil va Qora (Red & Black Theme) - Dark/Light Mode
 
 ---
 

@@ -4,6 +4,7 @@ import { User as UserType } from '@/types';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { formatPhoneNumber, validatePhoneNumber, getPhoneDigits } from '@/lib/phoneUtils';
 import { t } from '@/lib/transliteration';
+import { useTheme } from '@/contexts/ThemeContext';
 import api from '@/lib/api';
 
 
@@ -16,6 +17,7 @@ interface EditApprenticeModalProps {
 }
 
 const EditApprenticeModal: React.FC<EditApprenticeModalProps> = ({ isOpen, onClose, apprentice, onUpdate, onUpdateOptimistic }) => {
+  const { isDarkMode } = useTheme();
   const [formData, setFormData] = useState({
     name: '',
     username: '',
@@ -227,9 +229,17 @@ const EditApprenticeModal: React.FC<EditApprenticeModalProps> = ({ isOpen, onClo
       <div className="flex min-h-screen items-center justify-center p-2 sm:p-4">
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
         
-        <div className="relative bg-white rounded-xl shadow-2xl max-w-md w-full mx-2">
+        <div className={`relative rounded-xl shadow-2xl max-w-md w-full mx-2 ${
+          isDarkMode 
+            ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' 
+            : 'bg-white'
+        }`}>
           {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 rounded-t-xl">
+          <div className={`px-4 py-3 rounded-t-xl ${
+            isDarkMode
+              ? 'bg-gradient-to-r from-red-600 via-red-700 to-gray-900'
+              : 'bg-gradient-to-r from-orange-600 to-orange-500'
+          }`}>
             <button onClick={onClose} className="absolute top-3 right-3 text-white/80 hover:text-white hover:bg-white/20 rounded-lg p-1 transition-colors">
               <X className="h-4 w-4" />
             </button>
@@ -248,11 +258,15 @@ const EditApprenticeModal: React.FC<EditApprenticeModalProps> = ({ isOpen, onClo
           <form onSubmit={handleSubmit} className="p-4 space-y-3 max-h-[calc(100vh-120px)] overflow-y-auto scrollbar-hide">
             {/* Name */}
             <div>
-              <label htmlFor="name" className="block text-xs font-medium text-gray-700 mb-1">
+              <label htmlFor="name" className={`block text-xs font-medium mb-1 ${
+                isDarkMode ? 'text-gray-200' : 'text-gray-700'
+              }`}>
                 {t("To'liq ism", language)}
               </label>
               <div className="relative">
-                <User className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <User className={`absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 ${
+                  isDarkMode ? 'text-gray-500' : 'text-gray-400'
+                }`} />
                 <input
                   type="text"
                   id="name"
@@ -263,7 +277,9 @@ const EditApprenticeModal: React.FC<EditApprenticeModalProps> = ({ isOpen, onClo
                   className={`w-full pl-8 pr-3 py-2 text-sm border-2 rounded-lg focus:outline-none transition-all ${
                     errors.name 
                       ? 'border-red-300 focus:border-red-500' 
-                      : 'border-gray-200 focus:border-blue-500'
+                      : isDarkMode
+                        ? 'bg-gray-800 border-gray-700 text-white focus:border-red-500 placeholder-gray-500'
+                        : 'bg-white border-gray-200 text-gray-900 focus:border-blue-500 placeholder-gray-400'
                   }`}
                   placeholder={t("To'liq ism", language)}
                 />
@@ -278,11 +294,15 @@ const EditApprenticeModal: React.FC<EditApprenticeModalProps> = ({ isOpen, onClo
 
             {/* Username */}
             <div>
-              <label htmlFor="username" className="block text-xs font-medium text-gray-700 mb-1">
+              <label htmlFor="username" className={`block text-xs font-medium mb-1 ${
+                isDarkMode ? 'text-gray-200' : 'text-gray-700'
+              }`}>
                 Username
               </label>
               <div className="relative">
-                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">@</span>
+                <span className={`absolute left-2 top-1/2 -translate-y-1/2 text-sm font-medium ${
+                  isDarkMode ? 'text-gray-500' : 'text-gray-400'
+                }`}>@</span>
                 <input
                   type="text"
                   id="username"
@@ -293,7 +313,9 @@ const EditApprenticeModal: React.FC<EditApprenticeModalProps> = ({ isOpen, onClo
                   className={`w-full pl-8 pr-3 py-2 text-sm border-2 rounded-lg focus:outline-none transition-all ${
                     errors.username 
                       ? 'border-red-300 focus:border-red-500' 
-                      : 'border-gray-200 focus:border-blue-500'
+                      : isDarkMode
+                        ? 'bg-gray-800 border-gray-700 text-white focus:border-red-500 placeholder-gray-500'
+                        : 'bg-white border-gray-200 text-gray-900 focus:border-blue-500 placeholder-gray-400'
                   }`}
                   placeholder="username"
                 />
@@ -308,7 +330,9 @@ const EditApprenticeModal: React.FC<EditApprenticeModalProps> = ({ isOpen, onClo
 
             {/* Profile Image Upload */}
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
+              <label className={`block text-xs font-medium mb-1 ${
+                isDarkMode ? 'text-gray-200' : 'text-gray-700'
+              }`}>
                 {t('Profil rasmi', language)}
               </label>
               <div className="flex items-center gap-3">
@@ -317,7 +341,9 @@ const EditApprenticeModal: React.FC<EditApprenticeModalProps> = ({ isOpen, onClo
                     <img 
                       src={imagePreview.startsWith('data:') ? imagePreview : `${import.meta.env.VITE_API_URL || 'http://localhost:4000'}${imagePreview}`}
                       alt="Preview" 
-                      className="w-14 h-14 rounded-lg object-cover border-2 border-blue-200"
+                      className={`w-14 h-14 rounded-lg object-cover border-2 ${
+                        isDarkMode ? 'border-red-500' : 'border-orange-300'
+                      }`}
                     />
                     <button
                       type="button"
@@ -332,13 +358,21 @@ const EditApprenticeModal: React.FC<EditApprenticeModalProps> = ({ isOpen, onClo
                     </button>
                   </div>
                 ) : (
-                  <div className="w-14 h-14 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50">
-                    <ImageIcon className="h-6 w-6 text-gray-400" />
+                  <div className={`w-14 h-14 rounded-lg border-2 border-dashed flex items-center justify-center ${
+                    isDarkMode
+                      ? 'border-gray-600 bg-gray-800'
+                      : 'border-gray-300 bg-gray-50'
+                  }`}>
+                    <ImageIcon className={`h-6 w-6 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
                   </div>
                 )}
                 
                 <label className="flex-1 cursor-pointer">
-                  <div className="flex items-center justify-center gap-2 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg border border-blue-200 hover:bg-blue-100 transition-all">
+                  <div className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg border transition-all ${
+                    isDarkMode
+                      ? 'bg-red-900/30 text-red-400 border-red-800 hover:bg-red-900/50'
+                      : 'bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100'
+                  }`}>
                     <Upload className="h-3 w-3" />
                     <span className="text-xs font-medium">{t('Rasm yuklash', language)}</span>
                   </div>
@@ -355,7 +389,9 @@ const EditApprenticeModal: React.FC<EditApprenticeModalProps> = ({ isOpen, onClo
             {/* Profession & Experience */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label htmlFor="profession" className="block text-xs font-medium text-gray-700 mb-1">
+                <label htmlFor="profession" className={`block text-xs font-medium mb-1 ${
+                  isDarkMode ? 'text-gray-200' : 'text-gray-700'
+                }`}>
                   {t('Kasbi', language)}
                 </label>
                 <input
@@ -364,13 +400,19 @@ const EditApprenticeModal: React.FC<EditApprenticeModalProps> = ({ isOpen, onClo
                   name="profession"
                   value={formData.profession}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 transition-all"
+                  className={`w-full px-3 py-2 text-sm border-2 rounded-lg focus:outline-none transition-all ${
+                    isDarkMode
+                      ? 'bg-gray-800 border-gray-700 text-white focus:border-red-500 placeholder-gray-500'
+                      : 'bg-white border-gray-200 text-gray-900 focus:border-blue-500 placeholder-gray-400'
+                  }`}
                   placeholder={t("Avtomexanik", language)}
                 />
               </div>
 
               <div>
-                <label htmlFor="experience" className="block text-xs font-medium text-gray-700 mb-1">
+                <label htmlFor="experience" className={`block text-xs font-medium mb-1 ${
+                  isDarkMode ? 'text-gray-200' : 'text-gray-700'
+                }`}>
                   {t('Tajriba (yil)', language)}
                 </label>
                 <input
@@ -380,7 +422,11 @@ const EditApprenticeModal: React.FC<EditApprenticeModalProps> = ({ isOpen, onClo
                   value={formData.experience}
                   onChange={handleChange}
                   min="0"
-                  className="w-full px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 transition-all"
+                  className={`w-full px-3 py-2 text-sm border-2 rounded-lg focus:outline-none transition-all ${
+                    isDarkMode
+                      ? 'bg-gray-800 border-gray-700 text-white focus:border-red-500 placeholder-gray-500'
+                      : 'bg-white border-gray-200 text-gray-900 focus:border-blue-500 placeholder-gray-400'
+                  }`}
                   placeholder="0"
                 />
               </div>
@@ -388,11 +434,15 @@ const EditApprenticeModal: React.FC<EditApprenticeModalProps> = ({ isOpen, onClo
 
             {/* Phone Number */}
             <div>
-              <label htmlFor="phone" className="block text-xs font-medium text-gray-700 mb-1">
+              <label htmlFor="phone" className={`block text-xs font-medium mb-1 ${
+                isDarkMode ? 'text-gray-200' : 'text-gray-700'
+              }`}>
                 {t('Telefon raqam', language)}
               </label>
               <div className="relative">
-                <Phone className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Phone className={`absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 ${
+                  isDarkMode ? 'text-gray-500' : 'text-gray-400'
+                }`} />
                 <input
                   type="tel"
                   id="phone"
@@ -403,7 +453,9 @@ const EditApprenticeModal: React.FC<EditApprenticeModalProps> = ({ isOpen, onClo
                   className={`w-full pl-8 pr-3 py-2 text-sm border-2 rounded-lg focus:outline-none transition-all ${
                     errors.phone 
                       ? 'border-red-300 focus:border-red-500' 
-                      : 'border-gray-200 focus:border-blue-500'
+                      : isDarkMode
+                        ? 'bg-gray-800 border-gray-700 text-white focus:border-red-500 placeholder-gray-500'
+                        : 'bg-white border-gray-200 text-gray-900 focus:border-blue-500 placeholder-gray-400'
                   }`}
                   placeholder="+998901234567"
                 />
@@ -419,11 +471,15 @@ const EditApprenticeModal: React.FC<EditApprenticeModalProps> = ({ isOpen, onClo
             {/* Percentage - faqat foizli ishchi uchun */}
             {formData.paymentType === 'percentage' && (
               <div>
-                <label htmlFor="percentage" className="block text-xs font-medium text-gray-700 mb-1">
+                <label htmlFor="percentage" className={`block text-xs font-medium mb-1 ${
+                  isDarkMode ? 'text-gray-200' : 'text-gray-700'
+                }`}>
                   {t('Foiz ulushi', language)} (%)
                 </label>
                 <div className="relative">
-                  <Percent className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Percent className={`absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 ${
+                    isDarkMode ? 'text-gray-500' : 'text-gray-400'
+                  }`} />
                   <input
                     type="number"
                     id="percentage"
@@ -436,7 +492,9 @@ const EditApprenticeModal: React.FC<EditApprenticeModalProps> = ({ isOpen, onClo
                     className={`w-full pl-8 pr-3 py-2 text-sm border-2 rounded-lg focus:outline-none transition-all ${
                       errors.percentage 
                         ? 'border-red-300 focus:border-red-500' 
-                        : 'border-gray-200 focus:border-blue-500'
+                        : isDarkMode
+                          ? 'bg-gray-800 border-gray-700 text-white focus:border-red-500 placeholder-gray-500'
+                          : 'bg-white border-gray-200 text-gray-900 focus:border-blue-500 placeholder-gray-400'
                     }`}
                     placeholder="50"
                   />
@@ -453,11 +511,15 @@ const EditApprenticeModal: React.FC<EditApprenticeModalProps> = ({ isOpen, onClo
             {/* Daily Rate - faqat kunlik ishchi uchun */}
             {formData.paymentType === 'daily' && (
               <div>
-                <label htmlFor="dailyRate" className="block text-xs font-medium text-gray-700 mb-1">
+                <label htmlFor="dailyRate" className={`block text-xs font-medium mb-1 ${
+                  isDarkMode ? 'text-gray-200' : 'text-gray-700'
+                }`}>
                   {t('Kunlik ish haqi', language)} ({t("so'm", language)})
                 </label>
                 <div className="relative">
-                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-sm">₸</span>
+                  <span className={`absolute left-2 top-1/2 -translate-y-1/2 text-sm ${
+                    isDarkMode ? 'text-gray-500' : 'text-gray-400'
+                  }`}>₸</span>
                   <input
                     type="number"
                     id="dailyRate"
@@ -470,7 +532,9 @@ const EditApprenticeModal: React.FC<EditApprenticeModalProps> = ({ isOpen, onClo
                     className={`w-full pl-8 pr-3 py-2 text-sm border-2 rounded-lg focus:outline-none transition-all ${
                       errors.dailyRate 
                         ? 'border-red-300 focus:border-red-500' 
-                        : 'border-gray-200 focus:border-green-500'
+                        : isDarkMode
+                          ? 'bg-gray-800 border-gray-700 text-white focus:border-green-500 placeholder-gray-500'
+                          : 'bg-white border-gray-200 text-gray-900 focus:border-green-500 placeholder-gray-400'
                     }`}
                     placeholder="100000"
                   />
@@ -492,14 +556,22 @@ const EditApprenticeModal: React.FC<EditApprenticeModalProps> = ({ isOpen, onClo
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-3 py-2 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                className={`flex-1 px-3 py-2 text-xs font-medium rounded-lg transition-colors ${
+                  isDarkMode
+                    ? 'text-gray-300 bg-gray-800 hover:bg-gray-700 border border-gray-700'
+                    : 'text-gray-700 bg-gray-100 hover:bg-gray-200'
+                }`}
               >
                 {t('Bekor qilish', language)}
               </button>
               <button
                 type="submit"
                 disabled={isLoading || isUploadingImage}
-                className="flex-1 px-3 py-2 text-xs font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 transition-all"
+                className={`flex-1 px-3 py-2 text-xs font-medium text-white rounded-lg disabled:opacity-50 transition-all ${
+                  isDarkMode
+                    ? 'bg-gradient-to-r from-red-600 via-red-700 to-gray-900 hover:from-red-700 hover:via-red-800 hover:to-gray-900'
+                    : 'bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600'
+                }`}
               >
                 {isLoading || isUploadingImage ? t('Saqlanmoqda...', language) : t('Saqlash', language)}
               </button>

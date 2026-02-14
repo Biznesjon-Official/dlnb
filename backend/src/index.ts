@@ -216,9 +216,9 @@ const startServer = async () => {
   try {
     await connectDatabase();
     
-    // Bind to 0.0.0.0 for production (accepts connections from all interfaces)
-    // This is required for VPS/Docker environments and avoids Windows permission issues
-    const HOST = process.env.HOST || '0.0.0.0';
+    // Bind to 127.0.0.1 for development (Windows compatible)
+    // Use 0.0.0.0 only in production (Docker/VPS)
+    const HOST = process.env.HOST || '127.0.0.1';
     
     server = app.listen(PORT, HOST, () => {
       console.log('🚀 Server ishga tushdi!');

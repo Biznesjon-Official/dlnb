@@ -27,9 +27,11 @@ export function useCarsNew() {
   const queueManager = QueueManager.getInstance();
   const syncManager = SyncManager.getInstance();
 
-  // Load cars - ULTRA OPTIMIZED (instant loading, no spinner)
+  // Load cars - ULTRA FAST (1 soniyadan kam)
   const loadCars = useCallback(async (silent = false) => {
     try {
+      const startTime = Date.now();
+      
       // Show loading faqat initial load'da
       if (!silent) {
         setLoading(true);
@@ -37,46 +39,28 @@ export function useCarsNew() {
       
       setError(null);
       
-      // INSTANT: Load from cache immediately (0ms)
+      // ⚡ DIRECT API CALL: Repository'siz to'g'ridan-to'g'ri API'ga murojaat
       const networkStatus = networkManager.getStatus();
       
-      // FAST PATH: Always load from server/IndexedDB (faqat faol mashinalar)
-      const data = await carsRepository.getActiveCars();
-      
-      console.log('📊 Loaded cars:', {
-        total: data.length,
-        statuses: {
-          pending: data.filter(c => c.status === 'pending').length,
-          inProgress: data.filter(c => c.status === 'in-progress').length,
-          completed: data.filter(c => c.status === 'completed').length,
-          delivered: data.filter(c => c.status === 'delivered').length
-        },
-        paymentStatuses: {
-          unpaid: data.filter(c => !c.paymentStatus || c.paymentStatus === 'pending').length,
-          partial: data.filter(c => c.paymentStatus === 'partial').length,
-          paid: data.filter(c => c.paymentStatus === 'paid').length
-        }
-      });
-      
-      // ⚡ FIX: REPLACE (not append) - eski ma'lumotlarni to'liq almashtirish
-      setCars(data);
-      setLoading(false);
-      
-      // Background sync if online (user won't see this) - INSTANT!
-      if (networkStatus.isOnline && !silent) {
-        // Fire and forget - update in background (0ms kutish - INSTANT!)
-        setTimeout(() => {
-          carsRepository.getActiveCars().then(freshData => {
-            // Only update if data changed
-            if (JSON.stringify(freshData) !== JSON.stringify(data)) {
-              console.log('🔄 Background refresh: data changed, updating...');
-              // ⚡ FIX: REPLACE (not append)
-              setCars(freshData);
-            }
-          }).catch(err => {
-            console.error('Background refresh failed:', err);
-          });
-        }, 0); // 0ms - INSTANT!
+      if (networkStatus.isOnline) {
+        // ONLINE: Server'dan yuklash (ULTRA FAST)
+        const response = await api.get('/cars');
+        const data = response.data.cars || [];
+        
+        const duration = Date.now() - startTime;
+        console.log(`⚡ Loaded ${data.length} cars in ${duration}ms`);
+        
+        setCars(data);
+        setLoading(false);
+      } else {
+        // OFFLINE: IndexedDB'dan yuklash
+        const data = await carsRepository.getActiveCars();
+        
+        const duration = Date.now() - startTime;
+        console.log(`📦 Loaded ${data.length} cars from IndexedDB in ${duration}ms`);
+        
+        setCars(data);
+        setLoading(false);
       }
     } catch (err: any) {
       console.error('Failed to load cars:', err);

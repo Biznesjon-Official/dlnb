@@ -22,6 +22,7 @@ import EditSparePartModal from '@/components/EditSparePartModal';
 import DeleteSparePartModal from '@/components/DeleteSparePartModal';
 import ViewSparePartModal from '@/components/ViewSparePartModal';
 import SellSparePartModal from '@/components/SellSparePartModal';
+import { useTheme } from '@/contexts/ThemeContext';
 
 // Debounce hook
 const useDebounce = (value: string, delay: number) => {
@@ -41,6 +42,7 @@ const useDebounce = (value: string, delay: number) => {
 };
 
 const MasterWarehouse: React.FC = memo(() => {
+  const { isDarkMode } = useTheme();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearch = useDebounce(searchQuery, 50);
@@ -172,43 +174,73 @@ const MasterWarehouse: React.FC = memo(() => {
     // 3 tagacha - QIZIL
     if (quantity <= 3) {
       return {
-        card: 'border-red-500 bg-gradient-to-br from-red-100 to-pink-100 hover:border-red-600',
+        card: isDarkMode
+          ? 'border-red-700 bg-gradient-to-br from-red-900/40 to-pink-900/40 hover:border-red-600'
+          : 'border-red-500 bg-gradient-to-br from-red-100 to-pink-100 hover:border-red-600',
         badge: 'bg-gradient-to-br from-red-500 to-pink-600',
         buttons: {
-          sell: 'bg-white border-2 border-emerald-600 text-emerald-600 hover:bg-emerald-50 hover:border-emerald-700',
-          view: 'bg-white border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50 hover:border-indigo-700',
-          edit: 'bg-white border-2 border-purple-600 text-purple-600 hover:bg-purple-50 hover:border-purple-700',
-          delete: 'bg-white border-2 border-gray-700 text-gray-700 hover:bg-gray-50 hover:border-gray-800'
+          sell: isDarkMode
+            ? 'bg-gray-800 border-2 border-emerald-600 text-emerald-400 hover:bg-gray-750 hover:border-emerald-500'
+            : 'bg-white border-2 border-emerald-600 text-emerald-600 hover:bg-emerald-50 hover:border-emerald-700',
+          view: isDarkMode
+            ? 'bg-gray-800 border-2 border-indigo-600 text-indigo-400 hover:bg-gray-750 hover:border-indigo-500'
+            : 'bg-white border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50 hover:border-indigo-700',
+          edit: isDarkMode
+            ? 'bg-gray-800 border-2 border-purple-600 text-purple-400 hover:bg-gray-750 hover:border-purple-500'
+            : 'bg-white border-2 border-purple-600 text-purple-600 hover:bg-purple-50 hover:border-purple-700',
+          delete: isDarkMode
+            ? 'bg-gray-800 border-2 border-gray-600 text-gray-400 hover:bg-gray-750 hover:border-gray-500'
+            : 'bg-white border-2 border-gray-700 text-gray-700 hover:bg-gray-50 hover:border-gray-800'
         }
       };
     } 
     // 10 tagacha - SARIQ
     else if (quantity <= 10) {
       return {
-        card: 'border-yellow-500 bg-gradient-to-br from-yellow-100 to-amber-100 hover:border-yellow-600',
+        card: isDarkMode
+          ? 'border-yellow-700 bg-gradient-to-br from-yellow-900/40 to-amber-900/40 hover:border-yellow-600'
+          : 'border-yellow-500 bg-gradient-to-br from-yellow-100 to-amber-100 hover:border-yellow-600',
         badge: 'bg-gradient-to-br from-yellow-500 to-amber-600',
         buttons: {
-          sell: 'bg-white border-2 border-green-600 text-green-600 hover:bg-green-50 hover:border-green-700',
-          view: 'bg-white border-2 border-blue-600 text-blue-600 hover:bg-blue-50 hover:border-blue-700',
-          edit: 'bg-white border-2 border-purple-600 text-purple-600 hover:bg-purple-50 hover:border-purple-700',
-          delete: 'bg-white border-2 border-red-600 text-red-600 hover:bg-red-50 hover:border-red-700'
+          sell: isDarkMode
+            ? 'bg-gray-800 border-2 border-green-600 text-green-400 hover:bg-gray-750 hover:border-green-500'
+            : 'bg-white border-2 border-green-600 text-green-600 hover:bg-green-50 hover:border-green-700',
+          view: isDarkMode
+            ? 'bg-gray-800 border-2 border-blue-600 text-blue-400 hover:bg-gray-750 hover:border-blue-500'
+            : 'bg-white border-2 border-blue-600 text-blue-600 hover:bg-blue-50 hover:border-blue-700',
+          edit: isDarkMode
+            ? 'bg-gray-800 border-2 border-purple-600 text-purple-400 hover:bg-gray-750 hover:border-purple-500'
+            : 'bg-white border-2 border-purple-600 text-purple-600 hover:bg-purple-50 hover:border-purple-700',
+          delete: isDarkMode
+            ? 'bg-gray-800 border-2 border-red-600 text-red-400 hover:bg-gray-750 hover:border-red-500'
+            : 'bg-white border-2 border-red-600 text-red-600 hover:bg-red-50 hover:border-red-700'
         }
       };
     } 
     // 10 dan ko'p - YASHIL
     else {
       return {
-        card: 'border-green-500 bg-gradient-to-br from-green-100 to-emerald-100 hover:border-green-600',
+        card: isDarkMode
+          ? 'border-green-700 bg-gradient-to-br from-green-900/40 to-emerald-900/40 hover:border-green-600'
+          : 'border-green-500 bg-gradient-to-br from-green-100 to-emerald-100 hover:border-green-600',
         badge: 'bg-gradient-to-br from-green-500 to-emerald-600',
         buttons: {
-          sell: 'bg-white border-2 border-emerald-700 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-800',
-          view: 'bg-white border-2 border-blue-600 text-blue-600 hover:bg-blue-50 hover:border-blue-700',
-          edit: 'bg-white border-2 border-orange-600 text-orange-600 hover:bg-orange-50 hover:border-orange-700',
-          delete: 'bg-white border-2 border-red-600 text-red-600 hover:bg-red-50 hover:border-red-700'
+          sell: isDarkMode
+            ? 'bg-gray-800 border-2 border-emerald-600 text-emerald-400 hover:bg-gray-750 hover:border-emerald-500'
+            : 'bg-white border-2 border-emerald-700 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-800',
+          view: isDarkMode
+            ? 'bg-gray-800 border-2 border-blue-600 text-blue-400 hover:bg-gray-750 hover:border-blue-500'
+            : 'bg-white border-2 border-blue-600 text-blue-600 hover:bg-blue-50 hover:border-blue-700',
+          edit: isDarkMode
+            ? 'bg-gray-800 border-2 border-orange-600 text-orange-400 hover:bg-gray-750 hover:border-orange-500'
+            : 'bg-white border-2 border-orange-600 text-orange-600 hover:bg-orange-50 hover:border-orange-700',
+          delete: isDarkMode
+            ? 'bg-gray-800 border-2 border-red-600 text-red-400 hover:bg-gray-750 hover:border-red-500'
+            : 'bg-white border-2 border-red-600 text-red-600 hover:bg-red-50 hover:border-red-700'
         }
       };
     }
-  }, []);
+  }, [isDarkMode]);
 
   const fetchSalesStats = useCallback(async () => {
     setIsLoadingStats(true);
@@ -241,43 +273,81 @@ const MasterWarehouse: React.FC = memo(() => {
   }, [fetchSalesStats]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50/30 to-indigo-50/40">
+    <div className={`min-h-screen ${
+      isDarkMode
+        ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900'
+        : 'bg-gradient-to-br from-slate-50 via-purple-50/30 to-indigo-50/40'
+    }`}>
       <div className="max-w-[1400px] mx-auto space-y-6 sm:space-y-7 lg:space-y-8 p-3 sm:p-5 lg:p-7 animate-fade-in">
         {/* Back Button */}
         <button
           onClick={() => navigate('/app/master/cashier')}
-          className="group flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-gray-50 text-gray-700 rounded-xl border-2 border-gray-200 hover:border-purple-400 transition-all shadow-md hover:shadow-lg text-sm font-semibold"
+          className={`group flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 transition-all shadow-md hover:shadow-lg text-sm font-semibold ${
+            isDarkMode
+              ? 'bg-gray-800 hover:bg-gray-750 text-gray-300 border-red-900/30 hover:border-red-700'
+              : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200 hover:border-purple-400'
+          }`}
         >
           <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
           <span>{t('Kassaga qaytish', language)}</span>
         </button>
 
         {/* Main Container - Bitta katta container */}
-        <div className="relative overflow-hidden bg-white rounded-2xl shadow-xl border border-gray-100/50">
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-indigo-500/5 to-blue-500/5"></div>
-          <div className="absolute -top-32 -right-32 w-96 h-96 bg-gradient-to-br from-purple-400/20 to-indigo-400/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className={`relative overflow-hidden rounded-2xl shadow-xl border ${
+          isDarkMode
+            ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 border-red-900/30'
+            : 'bg-white border-gray-100/50'
+        }`}>
+          <div className={`absolute inset-0 ${
+            isDarkMode
+              ? 'bg-gradient-to-br from-red-500/5 via-red-600/5 to-gray-900/5'
+              : 'bg-gradient-to-br from-purple-500/5 via-indigo-500/5 to-blue-500/5'
+          }`}></div>
+          <div className={`absolute -top-32 -right-32 w-96 h-96 rounded-full blur-3xl animate-pulse ${
+            isDarkMode
+              ? 'bg-gradient-to-br from-red-400/20 to-red-600/20'
+              : 'bg-gradient-to-br from-purple-400/20 to-indigo-400/20'
+          }`}></div>
           
           <div className="relative z-10 p-5 sm:p-6 lg:p-8">
             {/* Header */}
             <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-6">
               <div className="flex items-center gap-4">
                 <div className="relative group">
-                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl blur-xl opacity-60 group-hover:opacity-80 transition-opacity"></div>
-                  <div className="relative p-3 bg-gradient-to-br from-purple-500 via-purple-600 to-indigo-600 rounded-xl shadow-lg transform group-hover:scale-105 transition-transform">
+                  <div className={`absolute inset-0 rounded-xl blur-xl opacity-60 group-hover:opacity-80 transition-opacity ${
+                    isDarkMode
+                      ? 'bg-gradient-to-br from-red-600 to-red-700'
+                      : 'bg-gradient-to-br from-purple-500 to-indigo-600'
+                  }`}></div>
+                  <div className={`relative p-3 rounded-xl shadow-lg transform group-hover:scale-105 transition-transform ${
+                    isDarkMode
+                      ? 'bg-gradient-to-br from-red-600 via-red-700 to-gray-900'
+                      : 'bg-gradient-to-br from-purple-500 via-purple-600 to-indigo-600'
+                  }`}>
                     <Package className="h-7 w-7 sm:h-8 sm:w-8 text-white" />
                   </div>
                 </div>
                 <div>
-                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black bg-gradient-to-r from-gray-900 via-purple-900 to-indigo-900 bg-clip-text text-transparent">
+                  <h1 className={`text-2xl sm:text-3xl lg:text-4xl font-black ${
+                    isDarkMode
+                      ? 'bg-gradient-to-r from-white via-red-200 to-red-300 bg-clip-text text-transparent'
+                      : 'bg-gradient-to-r from-gray-900 via-purple-900 to-indigo-900 bg-clip-text text-transparent'
+                  }`}>
                     {t("Ombor", language)}
                   </h1>
-                  <p className="text-sm sm:text-base text-gray-600 font-medium">{t("Tovarlarni boshqarish", language)}</p>
+                  <p className={`text-sm sm:text-base font-medium ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                  }`}>{t("Tovarlarni boshqarish", language)}</p>
                 </div>
               </div>
               
               <button
                 onClick={() => setIsCreateModalOpen(true)}
-                className="group relative overflow-hidden px-5 py-3 bg-gradient-to-r from-purple-500 via-purple-600 to-indigo-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex items-center gap-2 text-sm"
+                className={`group relative overflow-hidden px-5 py-3 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex items-center gap-2 text-sm ${
+                  isDarkMode
+                    ? 'bg-gradient-to-r from-red-600 via-red-700 to-pink-700'
+                    : 'bg-gradient-to-r from-purple-500 via-purple-600 to-indigo-600'
+                }`}
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
                 <Plus className="h-5 w-5 relative z-10" />
@@ -286,13 +356,19 @@ const MasterWarehouse: React.FC = memo(() => {
             </div>
 
             {/* Stats Tabs - 50% width on desktop, 100% on mobile */}
-            <div className="w-full lg:w-1/2 flex gap-2 mb-4 p-1 bg-gray-100 rounded-xl">
+            <div className={`w-full lg:w-1/2 flex gap-2 mb-4 p-1 rounded-xl ${
+              isDarkMode ? 'bg-gray-800' : 'bg-gray-100'
+            }`}>
               <button
                 onClick={() => setActiveStatsTab('warehouse')}
                 className={`flex-1 px-6 py-2.5 rounded-lg font-semibold text-sm transition-all duration-300 ${
                   activeStatsTab === 'warehouse'
-                    ? 'bg-white text-purple-600 shadow-md scale-105'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? isDarkMode
+                      ? 'bg-gradient-to-r from-red-600 via-red-700 to-gray-900 text-white shadow-md scale-105'
+                      : 'bg-white text-purple-600 shadow-md scale-105'
+                    : isDarkMode
+                      ? 'text-gray-400 hover:text-white'
+                      : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
                 <div className="flex items-center justify-center gap-2">
@@ -304,8 +380,12 @@ const MasterWarehouse: React.FC = memo(() => {
                 onClick={() => setActiveStatsTab('sales')}
                 className={`flex-1 px-6 py-2.5 rounded-lg font-semibold text-sm transition-all duration-300 ${
                   activeStatsTab === 'sales'
-                    ? 'bg-white text-green-600 shadow-md scale-105'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? isDarkMode
+                      ? 'bg-gradient-to-r from-green-600 to-emerald-700 text-white shadow-md scale-105'
+                      : 'bg-white text-green-600 shadow-md scale-105'
+                    : isDarkMode
+                      ? 'text-gray-400 hover:text-white'
+                      : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
                 <div className="flex items-center justify-center gap-2">
@@ -321,91 +401,175 @@ const MasterWarehouse: React.FC = memo(() => {
                 {isAllStatsLoading ? (
                   // Loading state
                   <>
-                    <div className="flex-1 min-w-[200px] relative overflow-hidden bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-4 border-2 border-purple-200">
+                    <div className={`flex-1 min-w-[200px] relative overflow-hidden rounded-xl p-4 border-2 ${
+                      isDarkMode
+                        ? 'bg-gradient-to-br from-red-900/40 to-pink-900/40 border-red-700'
+                        : 'bg-gradient-to-br from-purple-50 to-indigo-50 border-purple-200'
+                    }`}>
                       <div className="flex items-center justify-between mb-2">
-                        <div className="p-2 bg-purple-500 rounded-lg">
+                        <div className={`p-2 rounded-lg ${
+                          isDarkMode ? 'bg-red-600' : 'bg-purple-500'
+                        }`}>
                           <Box className="h-5 w-5 text-white" />
                         </div>
-                        <span className="text-xs font-semibold text-purple-700 bg-purple-100 px-2 py-1 rounded-full">
+                        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                          isDarkMode
+                            ? 'text-red-300 bg-red-900/60'
+                            : 'text-purple-700 bg-purple-100'
+                        }`}>
                           {t('Jami', language)}
                         </span>
                       </div>
-                      <div className="h-8 w-16 bg-purple-200 animate-pulse rounded"></div>
-                      <p className="text-sm text-purple-600 mt-2">{t('Tovar turlari', language)}</p>
+                      <div className={`h-8 w-16 animate-pulse rounded ${
+                        isDarkMode ? 'bg-red-800' : 'bg-purple-200'
+                      }`}></div>
+                      <p className={`text-sm mt-2 ${
+                        isDarkMode ? 'text-red-400' : 'text-purple-600'
+                      }`}>{t('Tovar turlari', language)}</p>
                     </div>
 
-                    <div className="flex-1 min-w-[200px] relative overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border-2 border-blue-200">
+                    <div className={`flex-1 min-w-[200px] relative overflow-hidden rounded-xl p-4 border-2 ${
+                      isDarkMode
+                        ? 'bg-gradient-to-br from-blue-900/40 to-indigo-900/40 border-blue-700'
+                        : 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200'
+                    }`}>
                       <div className="flex items-center justify-between mb-2">
-                        <div className="p-2 bg-blue-500 rounded-lg">
+                        <div className={`p-2 rounded-lg ${
+                          isDarkMode ? 'bg-blue-600' : 'bg-blue-500'
+                        }`}>
                           <Package className="h-5 w-5 text-white" />
                         </div>
-                        <span className="text-xs font-semibold text-blue-700 bg-blue-100 px-2 py-1 rounded-full">
+                        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                          isDarkMode
+                            ? 'text-blue-300 bg-blue-900/60'
+                            : 'text-blue-700 bg-blue-100'
+                        }`}>
                           {t('Qiymat', language)}
                         </span>
                       </div>
-                      <div className="h-8 w-20 bg-blue-200 animate-pulse rounded"></div>
-                      <p className="text-sm text-blue-600 mt-2">{t('Umumiy qiymat', language)}</p>
+                      <div className={`h-8 w-20 animate-pulse rounded ${
+                        isDarkMode ? 'bg-blue-800' : 'bg-blue-200'
+                      }`}></div>
+                      <p className={`text-sm mt-2 ${
+                        isDarkMode ? 'text-blue-400' : 'text-blue-600'
+                      }`}>{t('Umumiy qiymat', language)}</p>
                     </div>
 
-                    <div className="flex-1 min-w-[200px] relative overflow-hidden bg-gradient-to-br from-red-50 to-pink-50 rounded-xl p-4 border-2 border-red-200">
+                    <div className={`flex-1 min-w-[200px] relative overflow-hidden rounded-xl p-4 border-2 ${
+                      isDarkMode
+                        ? 'bg-gradient-to-br from-red-900/40 to-pink-900/40 border-red-700'
+                        : 'bg-gradient-to-br from-red-50 to-pink-50 border-red-200'
+                    }`}>
                       <div className="flex items-center justify-between mb-2">
-                        <div className="p-2 bg-red-500 rounded-lg">
+                        <div className={`p-2 rounded-lg ${
+                          isDarkMode ? 'bg-red-600' : 'bg-red-500'
+                        }`}>
                           <AlertCircle className="h-5 w-5 text-white" />
                         </div>
-                        <span className="text-xs font-semibold text-red-700 bg-red-100 px-2 py-1 rounded-full">
+                        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                          isDarkMode
+                            ? 'text-red-300 bg-red-900/60'
+                            : 'text-red-700 bg-red-100'
+                        }`}>
                           {t('Ogohlantirish', language)}
                         </span>
                       </div>
-                      <div className="h-8 w-12 bg-red-200 animate-pulse rounded"></div>
-                      <p className="text-sm text-red-600 mt-2">{t('Kam qolgan', language)}</p>
+                      <div className={`h-8 w-12 animate-pulse rounded ${
+                        isDarkMode ? 'bg-red-800' : 'bg-red-200'
+                      }`}></div>
+                      <p className={`text-sm mt-2 ${
+                        isDarkMode ? 'text-red-400' : 'text-red-600'
+                      }`}>{t('Kam qolgan', language)}</p>
                     </div>
                   </>
                 ) : (
                   // Data loaded
                   <>
-                    <div className="flex-1 min-w-[200px] relative overflow-hidden bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-4 border-2 border-purple-200 hover:shadow-lg transition-all cursor-pointer hover:scale-105">
+                    <div className={`flex-1 min-w-[200px] relative overflow-hidden rounded-xl p-4 border-2 hover:shadow-lg transition-all cursor-pointer hover:scale-105 ${
+                      isDarkMode
+                        ? 'bg-gradient-to-br from-red-900/40 to-pink-900/40 border-red-700'
+                        : 'bg-gradient-to-br from-purple-50 to-indigo-50 border-purple-200'
+                    }`}>
                       <div className="flex items-center justify-between mb-2">
-                        <div className="p-2 bg-purple-500 rounded-lg shadow-md">
+                        <div className={`p-2 rounded-lg shadow-md ${
+                          isDarkMode ? 'bg-red-600' : 'bg-purple-500'
+                        }`}>
                           <Box className="h-5 w-5 text-white" />
                         </div>
-                        <span className="text-xs font-semibold text-purple-700 bg-purple-100 px-2 py-1 rounded-full">
+                        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                          isDarkMode
+                            ? 'text-red-300 bg-red-900/60'
+                            : 'text-purple-700 bg-purple-100'
+                        }`}>
                           {t('Jami', language)}
                         </span>
                       </div>
-                      <div className="text-3xl font-black text-purple-900 mb-1">
+                      <div className={`text-3xl font-black mb-1 ${
+                        isDarkMode ? 'text-red-300' : 'text-purple-900'
+                      }`}>
                         {spareParts?.length || 0}
                       </div>
-                      <p className="text-sm text-purple-600 font-medium">{t('Tovar turlari', language)}</p>
+                      <p className={`text-sm font-medium ${
+                        isDarkMode ? 'text-red-400' : 'text-purple-600'
+                      }`}>{t('Tovar turlari', language)}</p>
                     </div>
 
-                    <div className="flex-1 min-w-[200px] relative overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border-2 border-blue-200 hover:shadow-lg transition-all cursor-pointer hover:scale-105">
+                    <div className={`flex-1 min-w-[200px] relative overflow-hidden rounded-xl p-4 border-2 hover:shadow-lg transition-all cursor-pointer hover:scale-105 ${
+                      isDarkMode
+                        ? 'bg-gradient-to-br from-blue-900/40 to-indigo-900/40 border-blue-700'
+                        : 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200'
+                    }`}>
                       <div className="flex items-center justify-between mb-2">
-                        <div className="p-2 bg-blue-500 rounded-lg shadow-md">
+                        <div className={`p-2 rounded-lg shadow-md ${
+                          isDarkMode ? 'bg-blue-600' : 'bg-blue-500'
+                        }`}>
                           <Package className="h-5 w-5 text-white" />
                         </div>
-                        <span className="text-xs font-semibold text-blue-700 bg-blue-100 px-2 py-1 rounded-full">
+                        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                          isDarkMode
+                            ? 'text-blue-300 bg-blue-900/60'
+                            : 'text-blue-700 bg-blue-100'
+                        }`}>
                           {t('Qiymat', language)}
                         </span>
                       </div>
-                      <div className="text-2xl font-black text-blue-900 mb-1">
+                      <div className={`text-2xl font-black mb-1 ${
+                        isDarkMode ? 'text-blue-300' : 'text-blue-900'
+                      }`}>
                         {formatCurrency(statistics.totalValue)}
                       </div>
-                      <p className="text-sm text-blue-600 font-medium">{t('Umumiy qiymat', language)}</p>
+                      <p className={`text-sm font-medium ${
+                        isDarkMode ? 'text-blue-400' : 'text-blue-600'
+                      }`}>{t('Umumiy qiymat', language)}</p>
                     </div>
 
-                    <div className="flex-1 min-w-[200px] relative overflow-hidden bg-gradient-to-br from-red-50 to-pink-50 rounded-xl p-4 border-2 border-red-200 hover:shadow-lg transition-all cursor-pointer hover:scale-105">
+                    <div className={`flex-1 min-w-[200px] relative overflow-hidden rounded-xl p-4 border-2 hover:shadow-lg transition-all cursor-pointer hover:scale-105 ${
+                      isDarkMode
+                        ? 'bg-gradient-to-br from-red-900/40 to-pink-900/40 border-red-700'
+                        : 'bg-gradient-to-br from-red-50 to-pink-50 border-red-200'
+                    }`}>
                       <div className="flex items-center justify-between mb-2">
-                        <div className="p-2 bg-red-500 rounded-lg shadow-md">
+                        <div className={`p-2 rounded-lg shadow-md ${
+                          isDarkMode ? 'bg-red-600' : 'bg-red-500'
+                        }`}>
                           <AlertCircle className="h-5 w-5 text-white" />
                         </div>
-                        <span className="text-xs font-semibold text-red-700 bg-red-100 px-2 py-1 rounded-full">
+                        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                          isDarkMode
+                            ? 'text-red-300 bg-red-900/60'
+                            : 'text-red-700 bg-red-100'
+                        }`}>
                           {t('Ogohlantirish', language)}
                         </span>
                       </div>
-                      <div className="text-3xl font-black text-red-900 mb-1">
+                      <div className={`text-3xl font-black mb-1 ${
+                        isDarkMode ? 'text-red-300' : 'text-red-900'
+                      }`}>
                         {lowStockParts.length}
                       </div>
-                      <p className="text-sm text-red-600 font-medium">{t('Kam qolgan', language)}</p>
+                      <p className={`text-sm font-medium ${
+                        isDarkMode ? 'text-red-400' : 'text-red-600'
+                      }`}>{t('Kam qolgan', language)}</p>
                     </div>
                   </>
                 )}
@@ -418,93 +582,173 @@ const MasterWarehouse: React.FC = memo(() => {
                 {isAllStatsLoading ? (
                   // Loading state
                   <>
-                    <div className="flex-1 min-w-[200px] bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border-2 border-green-200">
+                    <div className={`flex-1 min-w-[200px] rounded-xl p-4 border-2 ${
+                      isDarkMode
+                        ? 'bg-gradient-to-br from-green-900/40 to-emerald-900/40 border-green-700'
+                        : 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200'
+                    }`}>
                       <div className="flex items-center gap-2 mb-2">
-                        <div className="p-1.5 bg-green-500 rounded-lg">
+                        <div className={`p-1.5 rounded-lg ${
+                          isDarkMode ? 'bg-green-600' : 'bg-green-500'
+                        }`}>
                           <Package className="h-4 w-4 text-white" />
                         </div>
-                        <span className="text-xs font-semibold text-green-700">{t('Sotuvlar', language)}</span>
+                        <span className={`text-xs font-semibold ${
+                          isDarkMode ? 'text-green-300' : 'text-green-700'
+                        }`}>{t('Sotuvlar', language)}</span>
                       </div>
-                      <div className="h-8 w-12 bg-green-200 animate-pulse rounded"></div>
+                      <div className={`h-8 w-12 animate-pulse rounded ${
+                        isDarkMode ? 'bg-green-800' : 'bg-green-200'
+                      }`}></div>
                     </div>
 
-                    <div className="flex-1 min-w-[200px] bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border-2 border-blue-200">
+                    <div className={`flex-1 min-w-[200px] rounded-xl p-4 border-2 ${
+                      isDarkMode
+                        ? 'bg-gradient-to-br from-blue-900/40 to-indigo-900/40 border-blue-700'
+                        : 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200'
+                    }`}>
                       <div className="flex items-center gap-2 mb-2">
-                        <div className="p-1.5 bg-blue-500 rounded-lg">
+                        <div className={`p-1.5 rounded-lg ${
+                          isDarkMode ? 'bg-blue-600' : 'bg-blue-500'
+                        }`}>
                           <Box className="h-4 w-4 text-white" />
                         </div>
-                        <span className="text-xs font-semibold text-blue-700">{t('Miqdor', language)}</span>
+                        <span className={`text-xs font-semibold ${
+                          isDarkMode ? 'text-blue-300' : 'text-blue-700'
+                        }`}>{t('Miqdor', language)}</span>
                       </div>
-                      <div className="h-8 w-12 bg-blue-200 animate-pulse rounded"></div>
+                      <div className={`h-8 w-12 animate-pulse rounded ${
+                        isDarkMode ? 'bg-blue-800' : 'bg-blue-200'
+                      }`}></div>
                     </div>
 
-                    <div className="flex-1 min-w-[200px] bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-4 border-2 border-purple-200">
+                    <div className={`flex-1 min-w-[200px] rounded-xl p-4 border-2 ${
+                      isDarkMode
+                        ? 'bg-gradient-to-br from-red-900/40 to-pink-900/40 border-red-700'
+                        : 'bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200'
+                    }`}>
                       <div className="flex items-center gap-2 mb-2">
-                        <div className="p-1.5 bg-purple-500 rounded-lg">
+                        <div className={`p-1.5 rounded-lg ${
+                          isDarkMode ? 'bg-red-600' : 'bg-purple-500'
+                        }`}>
                           <DollarSign className="h-4 w-4 text-white" />
                         </div>
-                        <span className="text-xs font-semibold text-purple-700">{t('Tushum', language)}</span>
+                        <span className={`text-xs font-semibold ${
+                          isDarkMode ? 'text-red-300' : 'text-purple-700'
+                        }`}>{t('Tushum', language)}</span>
                       </div>
-                      <div className="h-7 w-20 bg-purple-200 animate-pulse rounded"></div>
+                      <div className={`h-7 w-20 animate-pulse rounded ${
+                        isDarkMode ? 'bg-red-800' : 'bg-purple-200'
+                      }`}></div>
                     </div>
                     
-                    <div className="flex-1 min-w-[200px] bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-4 border-2 border-yellow-200">
+                    <div className={`flex-1 min-w-[200px] rounded-xl p-4 border-2 ${
+                      isDarkMode
+                        ? 'bg-gradient-to-br from-yellow-900/40 to-orange-900/40 border-yellow-700'
+                        : 'bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-200'
+                    }`}>
                       <div className="flex items-center gap-2 mb-2">
-                        <div className="p-1.5 bg-yellow-500 rounded-lg">
+                        <div className={`p-1.5 rounded-lg ${
+                          isDarkMode ? 'bg-yellow-600' : 'bg-yellow-500'
+                        }`}>
                           <TrendingUp className="h-4 w-4 text-white" />
                         </div>
-                        <span className="text-xs font-semibold text-yellow-700">{t('Foyda', language)}</span>
+                        <span className={`text-xs font-semibold ${
+                          isDarkMode ? 'text-yellow-300' : 'text-yellow-700'
+                        }`}>{t('Foyda', language)}</span>
                       </div>
-                      <div className="h-7 w-20 bg-yellow-200 animate-pulse rounded"></div>
+                      <div className={`h-7 w-20 animate-pulse rounded ${
+                        isDarkMode ? 'bg-yellow-800' : 'bg-yellow-200'
+                      }`}></div>
                     </div>
                   </>
                 ) : (
                   // Data loaded
                   <>
-                    <div className="flex-1 min-w-[200px] bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border-2 border-green-200 hover:shadow-lg transition-all cursor-pointer hover:scale-105">
+                    <div className={`flex-1 min-w-[200px] rounded-xl p-4 border-2 hover:shadow-lg transition-all cursor-pointer hover:scale-105 ${
+                      isDarkMode
+                        ? 'bg-gradient-to-br from-green-900/40 to-emerald-900/40 border-green-700'
+                        : 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200'
+                    }`}>
                       <div className="flex items-center gap-2 mb-2">
-                        <div className="p-1.5 bg-green-500 rounded-lg shadow-md">
+                        <div className={`p-1.5 rounded-lg shadow-md ${
+                          isDarkMode ? 'bg-green-600' : 'bg-green-500'
+                        }`}>
                           <Package className="h-4 w-4 text-white" />
                         </div>
-                        <span className="text-xs font-semibold text-green-700">{t('Sotuvlar', language)}</span>
+                        <span className={`text-xs font-semibold ${
+                          isDarkMode ? 'text-green-300' : 'text-green-700'
+                        }`}>{t('Sotuvlar', language)}</span>
                       </div>
-                      <div className="text-2xl font-black text-green-900">
+                      <div className={`text-2xl font-black ${
+                        isDarkMode ? 'text-green-300' : 'text-green-900'
+                      }`}>
                         {salesStats?.totalSales || 0}
                       </div>
                     </div>
 
-                    <div className="flex-1 min-w-[200px] bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border-2 border-blue-200 hover:shadow-lg transition-all cursor-pointer hover:scale-105">
+                    <div className={`flex-1 min-w-[200px] rounded-xl p-4 border-2 hover:shadow-lg transition-all cursor-pointer hover:scale-105 ${
+                      isDarkMode
+                        ? 'bg-gradient-to-br from-blue-900/40 to-indigo-900/40 border-blue-700'
+                        : 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200'
+                    }`}>
                       <div className="flex items-center gap-2 mb-2">
-                        <div className="p-1.5 bg-blue-500 rounded-lg shadow-md">
+                        <div className={`p-1.5 rounded-lg shadow-md ${
+                          isDarkMode ? 'bg-blue-600' : 'bg-blue-500'
+                        }`}>
                           <Box className="h-4 w-4 text-white" />
                         </div>
-                        <span className="text-xs font-semibold text-blue-700">{t('Miqdor', language)}</span>
+                        <span className={`text-xs font-semibold ${
+                          isDarkMode ? 'text-blue-300' : 'text-blue-700'
+                        }`}>{t('Miqdor', language)}</span>
                       </div>
-                      <div className="text-2xl font-black text-blue-900">
+                      <div className={`text-2xl font-black ${
+                        isDarkMode ? 'text-blue-300' : 'text-blue-900'
+                      }`}>
                         {salesStats?.totalQuantitySold || 0}
                       </div>
                     </div>
 
-                    <div className="flex-1 min-w-[200px] bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-4 border-2 border-purple-200 hover:shadow-lg transition-all cursor-pointer hover:scale-105">
+                    <div className={`flex-1 min-w-[200px] rounded-xl p-4 border-2 hover:shadow-lg transition-all cursor-pointer hover:scale-105 ${
+                      isDarkMode
+                        ? 'bg-gradient-to-br from-red-900/40 to-pink-900/40 border-red-700'
+                        : 'bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200'
+                    }`}>
                       <div className="flex items-center gap-2 mb-2">
-                        <div className="p-1.5 bg-purple-500 rounded-lg shadow-md">
+                        <div className={`p-1.5 rounded-lg shadow-md ${
+                          isDarkMode ? 'bg-red-600' : 'bg-purple-500'
+                        }`}>
                           <DollarSign className="h-4 w-4 text-white" />
                         </div>
-                        <span className="text-xs font-semibold text-purple-700">{t('Tushum', language)}</span>
+                        <span className={`text-xs font-semibold ${
+                          isDarkMode ? 'text-red-300' : 'text-purple-700'
+                        }`}>{t('Tushum', language)}</span>
                       </div>
-                      <div className="text-xl font-black text-purple-900">
+                      <div className={`text-xl font-black ${
+                        isDarkMode ? 'text-red-300' : 'text-purple-900'
+                      }`}>
                         {formatCurrency(salesStats?.totalRevenue || 0)}
                       </div>
                     </div>
 
-                    <div className="flex-1 min-w-[200px] bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-4 border-2 border-yellow-200 hover:shadow-lg transition-all cursor-pointer hover:scale-105">
+                    <div className={`flex-1 min-w-[200px] rounded-xl p-4 border-2 hover:shadow-lg transition-all cursor-pointer hover:scale-105 ${
+                      isDarkMode
+                        ? 'bg-gradient-to-br from-yellow-900/40 to-orange-900/40 border-yellow-700'
+                        : 'bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-200'
+                    }`}>
                       <div className="flex items-center gap-2 mb-2">
-                        <div className="p-1.5 bg-yellow-500 rounded-lg shadow-md">
+                        <div className={`p-1.5 rounded-lg shadow-md ${
+                          isDarkMode ? 'bg-yellow-600' : 'bg-yellow-500'
+                        }`}>
                           <TrendingUp className="h-4 w-4 text-white" />
                         </div>
-                        <span className="text-xs font-semibold text-yellow-700">{t('Foyda', language)}</span>
+                        <span className={`text-xs font-semibold ${
+                          isDarkMode ? 'text-yellow-300' : 'text-yellow-700'
+                        }`}>{t('Foyda', language)}</span>
                       </div>
-                      <div className="text-xl font-black text-yellow-900">
+                      <div className={`text-xl font-black ${
+                        isDarkMode ? 'text-yellow-300' : 'text-yellow-900'
+                      }`}>
                         {formatCurrency(salesStats?.totalProfit || 0)}
                       </div>
                     </div>
@@ -514,23 +758,37 @@ const MasterWarehouse: React.FC = memo(() => {
             )}
             
             {/* Search Bar */}
-            <div className="mb-6 mt-6 pt-6 border-t border-gray-200 flex justify-end">
+            <div className={`mb-6 mt-6 pt-6 border-t flex justify-end ${
+              isDarkMode ? 'border-gray-700' : 'border-gray-200'
+            }`}>
               <div className="relative w-full md:w-1/2">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${
+                  isDarkMode ? 'text-gray-600' : 'text-gray-400'
+                }`} />
                 <input
                   type="text"
                   placeholder={t('Tovar qidirish...', language)}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900 placeholder-gray-400 text-sm font-medium transition-all"
+                  className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 text-sm font-medium transition-all ${
+                    isDarkMode
+                      ? 'bg-gray-800 border-red-900/30 text-white placeholder-gray-600 focus:ring-red-500 focus:border-red-500'
+                      : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:ring-purple-500 focus:border-transparent'
+                  }`}
                 />
               </div>
             </div>
 
             {/* Parts List */}
             <div className="mt-6">
-              <h3 className="text-lg sm:text-xl font-black text-gray-900 flex items-center gap-2 mb-4">
-                <div className="p-1.5 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg">
+              <h3 className={`text-lg sm:text-xl font-black flex items-center gap-2 mb-4 ${
+                isDarkMode ? 'text-white' : 'text-gray-900'
+              }`}>
+                <div className={`p-1.5 rounded-lg ${
+                  isDarkMode
+                    ? 'bg-gradient-to-br from-red-600 via-red-700 to-gray-900'
+                    : 'bg-gradient-to-br from-purple-500 to-indigo-600'
+                }`}>
                   <Package className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                 </div>
                 {t("Tovarlar ro'yxati", language)}
@@ -541,21 +799,39 @@ const MasterWarehouse: React.FC = memo(() => {
               {isLoading && !spareParts.length ? (
                 <div className="text-center py-12">
                   <div className="relative mx-auto w-16 h-16 mb-4">
-                    <div className="absolute inset-0 border-4 border-purple-200 rounded-full"></div>
-                    <div className="absolute inset-0 border-4 border-purple-600 rounded-full border-t-transparent animate-spin"></div>
+                    <div className={`absolute inset-0 border-4 rounded-full ${
+                      isDarkMode ? 'border-gray-700' : 'border-purple-200'
+                    }`}></div>
+                    <div className={`absolute inset-0 border-4 rounded-full border-t-transparent animate-spin ${
+                      isDarkMode ? 'border-red-600' : 'border-purple-600'
+                    }`}></div>
                   </div>
-                  <p className="text-base text-gray-600 font-medium">{t('Yuklanmoqda...', language)}</p>
+                  <p className={`text-base font-medium ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                  }`}>{t('Yuklanmoqda...', language)}</p>
                 </div>
               ) : filteredParts.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="relative inline-block mb-4">
-                    <div className="absolute inset-0 bg-gray-200 rounded-full blur-xl opacity-50"></div>
-                    <div className="relative p-5 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full">
-                      <Package className="h-12 w-12 text-gray-400" />
+                    <div className={`absolute inset-0 rounded-full blur-xl opacity-50 ${
+                      isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
+                    }`}></div>
+                    <div className={`relative p-5 rounded-full ${
+                      isDarkMode
+                        ? 'bg-gradient-to-br from-gray-800 to-gray-900'
+                        : 'bg-gradient-to-br from-gray-100 to-gray-200'
+                    }`}>
+                      <Package className={`h-12 w-12 ${
+                        isDarkMode ? 'text-gray-600' : 'text-gray-400'
+                      }`} />
                     </div>
                   </div>
-                  <p className="text-base text-gray-600 font-semibold mb-2">{t('Tovarlar yo\'q', language)}</p>
-                  <p className="text-sm text-gray-400">
+                  <p className={`text-base font-semibold mb-2 ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                  }`}>{t('Tovarlar yo\'q', language)}</p>
+                  <p className={`text-sm ${
+                    isDarkMode ? 'text-gray-600' : 'text-gray-400'
+                  }`}>
                     {searchQuery ? t('Qidiruv natijasi topilmadi', language) : t('Tovar qo\'shing', language)}
                   </p>
                 </div>
@@ -582,34 +858,56 @@ const MasterWarehouse: React.FC = memo(() => {
 
                       {/* Product Name */}
                       <div className="mb-2">
-                        <h4 className="font-bold text-sm text-gray-900 line-clamp-2 min-h-[2.5rem]">
+                        <h4 className={`font-bold text-sm line-clamp-2 min-h-[2.5rem] ${
+                          isDarkMode ? 'text-white' : 'text-gray-900'
+                        }`}>
                           {part.name}
                         </h4>
                         
                         {/* Kategoriya va balon ma'lumotlari */}
                         {part.category === 'balon' && (
                           <div className="mt-2 space-y-1">
-                            <span className="inline-block px-2 py-0.5 text-xs font-semibold rounded-full bg-orange-100 text-orange-700 border border-orange-300">
+                            <span className={`inline-block px-2 py-0.5 text-xs font-semibold rounded-full border ${
+                              isDarkMode
+                                ? 'bg-orange-900/60 text-orange-300 border-orange-700'
+                                : 'bg-orange-100 text-orange-700 border-orange-300'
+                            }`}>
                               🚗 {t('Balon', language)}
                             </span>
                             <div className="flex flex-wrap gap-1 mt-1">
                               {part.tireSize && (
-                                <span className="px-1.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 rounded">
+                                <span className={`px-1.5 py-0.5 text-xs font-medium rounded ${
+                                  isDarkMode
+                                    ? 'bg-blue-900/60 text-blue-300'
+                                    : 'bg-blue-100 text-blue-700'
+                                }`}>
                                   {part.tireSize}
                                 </span>
                               )}
                               {part.tireFullSize && (
-                                <span className="px-1.5 py-0.5 text-xs font-medium bg-purple-100 text-purple-700 rounded">
+                                <span className={`px-1.5 py-0.5 text-xs font-medium rounded ${
+                                  isDarkMode
+                                    ? 'bg-purple-900/60 text-purple-300'
+                                    : 'bg-purple-100 text-purple-700'
+                                }`}>
                                   {part.tireFullSize}
                                 </span>
                               )}
                               {part.tireBrand && (
-                                <span className="px-1.5 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded">
+                                <span className={`px-1.5 py-0.5 text-xs font-medium rounded ${
+                                  isDarkMode
+                                    ? 'bg-green-900/60 text-green-300'
+                                    : 'bg-green-100 text-green-700'
+                                }`}>
                                   {part.tireBrand}
                                 </span>
                               )}
                               {part.tireType && (
-                                <span className="px-1.5 py-0.5 text-xs font-medium bg-cyan-100 text-cyan-700 rounded">
+                                <span className={`px-1.5 py-0.5 text-xs font-medium rounded ${
+                                  isDarkMode
+                                    ? 'bg-cyan-900/60 text-cyan-300'
+                                    : 'bg-cyan-100 text-cyan-700'
+                                }`}>
                                   {part.tireType === 'yozgi' ? '☀️' : part.tireType === 'qishki' ? '❄️' : '🔄'} {part.tireType}
                                 </span>
                               )}
@@ -620,7 +918,11 @@ const MasterWarehouse: React.FC = memo(() => {
                         {/* Zapchast va boshqa kategoriyalar uchun */}
                         {(part.category === 'zapchast' || part.category === 'boshqa') && (
                           <div className="mt-2">
-                            <span className="inline-block px-2 py-0.5 text-xs font-semibold rounded-full bg-blue-100 text-blue-700 border border-blue-300">
+                            <span className={`inline-block px-2 py-0.5 text-xs font-semibold rounded-full border ${
+                              isDarkMode
+                                ? 'bg-blue-900/60 text-blue-300 border-blue-700'
+                                : 'bg-blue-100 text-blue-700 border-blue-300'
+                            }`}>
                               {part.category === 'zapchast' ? '🔧 ' + t('Zapchast', language) : '📦 ' + t('Boshqa', language)}
                             </span>
                           </div>
@@ -629,22 +931,42 @@ const MasterWarehouse: React.FC = memo(() => {
 
                       {/* Quantity & Price */}
                       <div className="space-y-1.5 mb-2">
-                        <div className="flex items-center justify-between bg-white/60 rounded-lg p-1.5">
-                          <span className="text-xs text-gray-600">{t('Miqdor', language)}</span>
-                          <span className="text-sm font-bold text-gray-900">
+                        <div className={`flex items-center justify-between rounded-lg p-1.5 ${
+                          isDarkMode
+                            ? 'bg-gray-800/60 border border-gray-700'
+                            : 'bg-white/60'
+                        }`}>
+                          <span className={`text-xs ${
+                            isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                          }`}>{t('Miqdor', language)}</span>
+                          <span className={`text-sm font-bold ${
+                            isDarkMode ? 'text-white' : 'text-gray-900'
+                          }`}>
                             {part.quantity} {part.unit}
                           </span>
                         </div>
-                        <div className="flex items-center justify-between bg-white/60 rounded-lg p-1.5">
-                          <span className="text-xs text-gray-600">{t('Narx', language)}</span>
-                          <span className="text-sm font-bold text-purple-600">
+                        <div className={`flex items-center justify-between rounded-lg p-1.5 ${
+                          isDarkMode
+                            ? 'bg-gray-800/60 border border-gray-700'
+                            : 'bg-white/60'
+                        }`}>
+                          <span className={`text-xs ${
+                            isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                          }`}>{t('Narx', language)}</span>
+                          <span className={`text-sm font-bold ${
+                            isDarkMode ? 'text-red-400' : 'text-purple-600'
+                          }`}>
                             {part.currency === 'USD' ? '$' : ''}{formatCurrency(part.sellingPrice || part.price || 0)}{part.currency === 'UZS' ? '' : ''}
                           </span>
                         </div>
                       </div>
 
                       {/* Action Buttons - CARD RANGIGA MOS */}
-                      <div className="mt-2 bg-white rounded-lg p-1.5 border-2 border-gray-300 shadow-md">
+                      <div className={`mt-2 rounded-lg p-1.5 border-2 shadow-md ${
+                        isDarkMode
+                          ? 'bg-gray-800 border-gray-700'
+                          : 'bg-white border-gray-300'
+                      }`}>
                         <div className="grid grid-cols-4 gap-1.5">
                           <button
                             onClick={() => handleSell(part)}

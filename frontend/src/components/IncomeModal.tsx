@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import { t } from '@/lib/transliteration';
 import { formatNumber, parseFormattedNumber, formatCurrency } from '@/lib/utils';
 import CarPaymentModalHybrid from './CarPaymentModalHybrid';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface IncomeModalProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ interface IncomeModalProps {
 }
 
 const IncomeModal: React.FC<IncomeModalProps> = ({ isOpen, onClose }) => {
+  const { isDarkMode } = useTheme();
   const queryClient = useQueryClient();
   const [step, setStep] = useState<'select' | 'form' | 'debtList' | 'carList'>('select');
   const [selectedType, setSelectedType] = useState<'debt' | 'car' | 'other'>('other');
@@ -316,9 +318,17 @@ const IncomeModal: React.FC<IncomeModalProps> = ({ isOpen, onClose }) => {
       <div className="flex min-h-screen items-center justify-center p-4">
         <div className="fixed inset-0 bg-black bg-opacity-50" onClick={handleClose} />
         
-        <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto scrollbar-hide">
+        <div className={`relative rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto scrollbar-hide ${
+          isDarkMode
+            ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800'
+            : 'bg-white'
+        }`}>
           {/* Header */}
-          <div className="bg-gradient-to-r from-green-600 to-emerald-600 p-6 rounded-t-2xl sticky top-0 z-10">
+          <div className={`p-6 rounded-t-2xl sticky top-0 z-10 ${
+            isDarkMode
+              ? 'bg-gradient-to-r from-green-600 via-green-700 to-emerald-700'
+              : 'bg-gradient-to-r from-green-600 to-emerald-600'
+          }`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 {step !== 'select' && (
@@ -364,23 +374,33 @@ const IncomeModal: React.FC<IncomeModalProps> = ({ isOpen, onClose }) => {
             {/* Step 1: Kirim turini tanlash */}
             {step === 'select' && (
               <div className="space-y-4">
-                <p className="text-gray-600 text-sm mb-6">
+                <p className={`text-sm mb-6 ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                }`}>
                   {t('Kirim turini tanlang:', language)}
                 </p>
 
                 <button
                   onClick={() => handleTypeSelect('debt')}
-                  className="w-full p-4 bg-gradient-to-r from-blue-50 to-blue-100 border-2 border-blue-200 rounded-xl hover:border-blue-400 hover:shadow-lg transition-all text-left group"
+                  className={`w-full p-4 border-2 rounded-xl hover:shadow-lg transition-all text-left group ${
+                    isDarkMode
+                      ? 'bg-gradient-to-r from-blue-900/40 to-blue-800/40 border-blue-700 hover:border-blue-500'
+                      : 'bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200 hover:border-blue-400'
+                  }`}
                 >
                   <div className="flex items-center space-x-4">
                     <div className="bg-blue-500 p-3 rounded-xl group-hover:scale-110 transition-transform shadow-lg">
                       <DollarSign className="h-6 w-6 text-white" />
                     </div>
                     <div>
-                      <p className="text-lg font-bold text-gray-900">
+                      <p className={`text-lg font-bold ${
+                        isDarkMode ? 'text-white' : 'text-gray-900'
+                      }`}>
                         {t('Qarz to\'lovi', language)}
                       </p>
-                      <p className="text-sm text-gray-600">
+                      <p className={`text-sm ${
+                        isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                      }`}>
                         {t('Kimdir qarzini to\'lasa', language)}
                       </p>
                     </div>
@@ -389,17 +409,25 @@ const IncomeModal: React.FC<IncomeModalProps> = ({ isOpen, onClose }) => {
 
                 <button
                   onClick={() => handleTypeSelect('car')}
-                  className="w-full p-4 bg-gradient-to-r from-purple-50 to-purple-100 border-2 border-purple-200 rounded-xl hover:border-purple-400 hover:shadow-lg transition-all text-left group"
+                  className={`w-full p-4 border-2 rounded-xl hover:shadow-lg transition-all text-left group ${
+                    isDarkMode
+                      ? 'bg-gradient-to-r from-purple-900/40 to-purple-800/40 border-purple-700 hover:border-purple-500'
+                      : 'bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200 hover:border-purple-400'
+                  }`}
                 >
                   <div className="flex items-center space-x-4">
                     <div className="bg-purple-500 p-3 rounded-xl group-hover:scale-110 transition-transform shadow-lg">
                       <DollarSign className="h-6 w-6 text-white" />
                     </div>
                     <div>
-                      <p className="text-lg font-bold text-gray-900">
+                      <p className={`text-lg font-bold ${
+                        isDarkMode ? 'text-white' : 'text-gray-900'
+                      }`}>
                         {t('Mashina to\'lovi', language)}
                       </p>
-                      <p className="text-sm text-gray-600">
+                      <p className={`text-sm ${
+                        isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                      }`}>
                         {t('Mashina puli berilsa', language)}
                       </p>
                     </div>
@@ -408,17 +436,25 @@ const IncomeModal: React.FC<IncomeModalProps> = ({ isOpen, onClose }) => {
 
                 <button
                   onClick={() => handleTypeSelect('other')}
-                  className="w-full p-4 bg-gradient-to-r from-green-50 to-green-100 border-2 border-green-200 rounded-xl hover:border-green-400 hover:shadow-lg transition-all text-left group"
+                  className={`w-full p-4 border-2 rounded-xl hover:shadow-lg transition-all text-left group ${
+                    isDarkMode
+                      ? 'bg-gradient-to-r from-green-900/40 to-green-800/40 border-green-700 hover:border-green-500'
+                      : 'bg-gradient-to-r from-green-50 to-green-100 border-green-200 hover:border-green-400'
+                  }`}
                 >
                   <div className="flex items-center space-x-4">
                     <div className="bg-green-500 p-3 rounded-xl group-hover:scale-110 transition-transform shadow-lg">
                       <DollarSign className="h-6 w-6 text-white" />
                     </div>
                     <div>
-                      <p className="text-lg font-bold text-gray-900">
+                      <p className={`text-lg font-bold ${
+                        isDarkMode ? 'text-white' : 'text-gray-900'
+                      }`}>
                         {t('Boshqa kirim', language)}
                       </p>
-                      <p className="text-sm text-gray-600">
+                      <p className={`text-sm ${
+                        isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                      }`}>
                         {t('Qandaydir sabab tufayli kirim', language)}
                       </p>
                     </div>
@@ -430,25 +466,37 @@ const IncomeModal: React.FC<IncomeModalProps> = ({ isOpen, onClose }) => {
             {/* Step 2: Qarzlar ro'yxati */}
             {step === 'debtList' && (
               <div className="space-y-3">
-                <p className="text-sm text-gray-600 mb-4">
+                <p className={`text-sm mb-4 ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                }`}>
                   {t('Qarz to\'lovchini tanlang:', language)}
                 </p>
 
                 {debtsError ? (
                   <div className="text-center py-8">
-                    <p className="text-red-500">{t('Xatolik yuz berdi', language)}</p>
-                    <p className="text-xs text-gray-400 mt-2">
+                    <p className={isDarkMode ? 'text-red-400' : 'text-red-500'}>
+                      {t('Xatolik yuz berdi', language)}
+                    </p>
+                    <p className={`text-xs mt-2 ${
+                      isDarkMode ? 'text-gray-600' : 'text-gray-400'
+                    }`}>
                       {debtsError instanceof Error ? debtsError.message : t('Ma\'lumotlarni yuklashda xatolik', language)}
                     </p>
                   </div>
                 ) : debts.length === 0 ? (
                   <div className="text-center py-8">
-                    <p className="text-gray-500">{t('Hozircha qarzlar yo\'q', language)}</p>
-                    <p className="text-xs text-gray-400 mt-2">
+                    <p className={isDarkMode ? 'text-gray-500' : 'text-gray-500'}>
+                      {t('Hozircha qarzlar yo\'q', language)}
+                    </p>
+                    <p className={`text-xs mt-2 ${
+                      isDarkMode ? 'text-gray-600' : 'text-gray-400'
+                    }`}>
                       {t('Qarzlar avtomatik yaratiladi', language)}
                     </p>
                     {debtsArray.length > 0 && (
-                      <p className="text-xs text-orange-500 mt-2">
+                      <p className={`text-xs mt-2 ${
+                        isDarkMode ? 'text-orange-400' : 'text-orange-500'
+                      }`}>
                         {t('Barcha qarzlar to\'liq to\'langan', language)} ({debtsArray.length} ta)
                       </p>
                     )}
@@ -460,31 +508,53 @@ const IncomeModal: React.FC<IncomeModalProps> = ({ isOpen, onClose }) => {
                       <button
                         key={debt._id}
                         onClick={() => handleDebtSelect(debt)}
-                        className="w-full p-4 bg-white border-2 border-gray-200 rounded-xl hover:border-blue-400 transition-all text-left group"
+                        className={`w-full p-4 border-2 rounded-xl transition-all text-left group ${
+                          isDarkMode
+                            ? 'bg-gray-800 border-blue-900/30 hover:border-blue-700'
+                            : 'bg-white border-gray-200 hover:border-blue-400'
+                        }`}
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex items-start space-x-3">
-                            <div className="bg-blue-100 p-2 rounded-lg group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                            <div className={`p-2 rounded-lg transition-colors ${
+                              isDarkMode
+                                ? 'bg-blue-900/60 text-blue-400 group-hover:bg-blue-600 group-hover:text-white'
+                                : 'bg-blue-100 group-hover:bg-blue-500 group-hover:text-white'
+                            }`}>
                               <User className="h-5 w-5" />
                             </div>
                             <div>
-                              <p className="font-semibold text-gray-900">{debt.creditorName}</p>
+                              <p className={`font-semibold ${
+                                isDarkMode ? 'text-white' : 'text-gray-900'
+                              }`}>{debt.creditorName}</p>
                               {debt.creditorPhone && (
-                                <p className="text-sm text-gray-600">{debt.creditorPhone}</p>
+                                <p className={`text-sm ${
+                                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                                }`}>{debt.creditorPhone}</p>
                               )}
                               <div className="mt-2 space-y-1">
-                                <p className="text-xs text-gray-500">
+                                <p className={`text-xs ${
+                                  isDarkMode ? 'text-gray-500' : 'text-gray-500'
+                                }`}>
                                   {t('Jami qarz', language)}: <span className="font-semibold">{formatCurrency(debt.amount)}</span>
                                 </p>
-                                <p className="text-xs text-gray-500">
-                                  {t('To\'langan', language)}: <span className="font-semibold text-green-600">{formatCurrency(debt.paidAmount)}</span>
+                                <p className={`text-xs ${
+                                  isDarkMode ? 'text-gray-500' : 'text-gray-500'
+                                }`}>
+                                  {t('To\'langan', language)}: <span className={`font-semibold ${
+                                    isDarkMode ? 'text-green-400' : 'text-green-600'
+                                  }`}>{formatCurrency(debt.paidAmount)}</span>
                                 </p>
                               </div>
                             </div>
                           </div>
                           <div className="text-right">
-                            <p className="text-xs text-gray-500 mb-1">{t('Qolgan', language)}</p>
-                            <p className="text-lg font-bold text-red-600">{formatCurrency(remaining)}</p>
+                            <p className={`text-xs mb-1 ${
+                              isDarkMode ? 'text-gray-500' : 'text-gray-500'
+                            }`}>{t('Qolgan', language)}</p>
+                            <p className={`text-lg font-bold ${
+                              isDarkMode ? 'text-red-400' : 'text-red-600'
+                            }`}>{formatCurrency(remaining)}</p>
                           </div>
                         </div>
                       </button>
@@ -498,18 +568,26 @@ const IncomeModal: React.FC<IncomeModalProps> = ({ isOpen, onClose }) => {
             {step === 'carList' && (
               <div className="space-y-3">
                 <div className="mb-4">
-                  <p className="text-sm text-gray-600 mb-3">
+                  <p className={`text-sm mb-3 ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                  }`}>
                     {t('Avtomobilni tanlang:', language)}
                   </p>
                   
                   {/* Qidiruv */}
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Search className={`absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 ${
+                      isDarkMode ? 'text-gray-600' : 'text-gray-400'
+                    }`} />
                     <input
                       type="text"
                       value={carSearchQuery}
                       onChange={(e) => setCarSearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-400 transition-all"
+                      className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:outline-none transition-all ${
+                        isDarkMode
+                          ? 'bg-gray-800 border-purple-900/30 text-white placeholder:text-gray-600 focus:border-purple-500'
+                          : 'bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-purple-400'
+                      }`}
                       placeholder={t('Davlat raqami, marka yoki egasi...', language)}
                     />
                   </div>
@@ -518,7 +596,7 @@ const IncomeModal: React.FC<IncomeModalProps> = ({ isOpen, onClose }) => {
                 <div className="max-h-96 overflow-y-auto space-y-2">
                   {filteredCars.length === 0 ? (
                     <div className="text-center py-8">
-                      <p className="text-gray-500">
+                      <p className={isDarkMode ? 'text-gray-500' : 'text-gray-500'}>
                         {carSearchQuery 
                           ? t('Avtomobil topilmadi', language)
                           : selectedType === 'car' 
@@ -526,7 +604,9 @@ const IncomeModal: React.FC<IncomeModalProps> = ({ isOpen, onClose }) => {
                             : t('Qarzi bor avtomobillar yo\'q', language)
                         }
                       </p>
-                      <p className="text-xs text-gray-400 mt-2">
+                      <p className={`text-xs mt-2 ${
+                        isDarkMode ? 'text-gray-600' : 'text-gray-400'
+                      }`}>
                         {selectedType === 'car' 
                           ? t('Barcha mashinalar arxivda yoki to\'liq to\'langan', language)
                           : t('Barcha mashinalar to\'liq to\'langan', language)
@@ -545,45 +625,69 @@ const IncomeModal: React.FC<IncomeModalProps> = ({ isOpen, onClose }) => {
                           key={car._id}
                           onClick={() => handleCarSelect(car)}
                           disabled={isPaid}
-                          className={`w-full p-4 bg-white border-2 rounded-xl transition-all text-left group ${
+                          className={`w-full p-4 border-2 rounded-xl transition-all text-left group ${
                             isPaid 
-                              ? 'border-green-200 bg-green-50 opacity-60 cursor-not-allowed' 
-                              : 'border-gray-200 hover:border-purple-400'
+                              ? isDarkMode
+                                ? 'border-green-900/30 bg-green-900/20 opacity-60 cursor-not-allowed'
+                                : 'border-green-200 bg-green-50 opacity-60 cursor-not-allowed'
+                              : isDarkMode
+                                ? 'bg-gray-800 border-purple-900/30 hover:border-purple-700'
+                                : 'bg-white border-gray-200 hover:border-purple-400'
                           }`}
                         >
                           <div className="flex items-start justify-between">
                             <div className="flex items-start space-x-3 flex-1">
                               <div className={`p-2 rounded-lg transition-colors ${
                                 isPaid 
-                                  ? 'bg-green-100 text-green-600' 
-                                  : 'bg-purple-100 group-hover:bg-purple-500 group-hover:text-white'
+                                  ? isDarkMode
+                                    ? 'bg-green-900/60 text-green-400'
+                                    : 'bg-green-100 text-green-600'
+                                  : isDarkMode
+                                    ? 'bg-purple-900/60 text-purple-400 group-hover:bg-purple-600 group-hover:text-white'
+                                    : 'bg-purple-100 group-hover:bg-purple-500 group-hover:text-white'
                               }`}>
                                 <Car className="h-5 w-5" />
                               </div>
                               <div className="flex-1">
                                 <div className="flex items-center gap-2">
-                                  <p className="font-semibold text-gray-900">
+                                  <p className={`font-semibold ${
+                                    isDarkMode ? 'text-white' : 'text-gray-900'
+                                  }`}>
                                     {car.make} {car.carModel}
                                   </p>
                                   {isPaid && (
-                                    <span className="px-2 py-0.5 text-xs font-semibold bg-green-500 text-white rounded-full">
+                                    <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${
+                                      isDarkMode
+                                        ? 'bg-green-600 text-white'
+                                        : 'bg-green-500 text-white'
+                                    }`}>
                                       {t('Yopilgan', language)}
                                     </span>
                                   )}
                                 </div>
-                                <p className="text-sm font-mono text-purple-600 font-bold">
+                                <p className={`text-sm font-mono font-bold ${
+                                  isDarkMode ? 'text-purple-400' : 'text-purple-600'
+                                }`}>
                                   {car.licensePlate}
                                 </p>
                                 {car.ownerName && (
-                                  <p className="text-sm text-gray-600">{car.ownerName}</p>
+                                  <p className={`text-sm ${
+                                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                                  }`}>{car.ownerName}</p>
                                 )}
                                 {totalPrice > 0 && (
                                   <div className="mt-2 space-y-1">
-                                    <p className="text-xs text-gray-500">
+                                    <p className={`text-xs ${
+                                      isDarkMode ? 'text-gray-500' : 'text-gray-500'
+                                    }`}>
                                       {t('Jami xizmat', language)}: <span className="font-semibold">{formatCurrency(totalPrice)}</span>
                                     </p>
-                                    <p className="text-xs text-gray-500">
-                                      {t('To\'langan', language)}: <span className="font-semibold text-green-600">{formatCurrency(paidAmount)}</span>
+                                    <p className={`text-xs ${
+                                      isDarkMode ? 'text-gray-500' : 'text-gray-500'
+                                    }`}>
+                                      {t('To\'langan', language)}: <span className={`font-semibold ${
+                                        isDarkMode ? 'text-green-400' : 'text-green-600'
+                                      }`}>{formatCurrency(paidAmount)}</span>
                                     </p>
                                   </div>
                                 )}
@@ -592,13 +696,21 @@ const IncomeModal: React.FC<IncomeModalProps> = ({ isOpen, onClose }) => {
                             <div className="text-right ml-2">
                               {isPaid ? (
                                 <div className="flex flex-col items-end">
-                                  <CheckCircle className="h-8 w-8 text-green-500 mb-1" />
-                                  <p className="text-xs text-green-600 font-semibold">{t('To\'liq to\'langan', language)}</p>
+                                  <CheckCircle className={`h-8 w-8 mb-1 ${
+                                    isDarkMode ? 'text-green-400' : 'text-green-500'
+                                  }`} />
+                                  <p className={`text-xs font-semibold ${
+                                    isDarkMode ? 'text-green-400' : 'text-green-600'
+                                  }`}>{t('To\'liq to\'langan', language)}</p>
                                 </div>
                               ) : (
                                 <>
-                                  <p className="text-xs text-gray-500 mb-1">{t('Qolgan', language)}</p>
-                                  <p className="text-lg font-bold text-red-600">{formatCurrency(remaining)}</p>
+                                  <p className={`text-xs mb-1 ${
+                                    isDarkMode ? 'text-gray-500' : 'text-gray-500'
+                                  }`}>{t('Qolgan', language)}</p>
+                                  <p className={`text-lg font-bold ${
+                                    isDarkMode ? 'text-red-400' : 'text-red-600'
+                                  }`}>{formatCurrency(remaining)}</p>
                                 </>
                               )}
                             </div>
@@ -616,30 +728,52 @@ const IncomeModal: React.FC<IncomeModalProps> = ({ isOpen, onClose }) => {
               <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Agar qarz to'lovi bo'lsa, qarz ma'lumotlarini ko'rsatish */}
                 {selectedDebt && (
-                  <div className="p-4 rounded-lg bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-200">
+                  <div className={`p-4 rounded-lg border-2 ${
+                    isDarkMode
+                      ? 'bg-gradient-to-br from-blue-900/40 to-cyan-900/40 border-blue-700'
+                      : 'bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200'
+                  }`}>
                     <div className="flex items-center gap-2 mb-3">
-                      <User className="h-5 w-5 text-blue-600" />
-                      <span className="font-semibold text-gray-900">{selectedDebt.creditorName}</span>
+                      <User className={`h-5 w-5 ${
+                        isDarkMode ? 'text-blue-400' : 'text-blue-600'
+                      }`} />
+                      <span className={`font-semibold ${
+                        isDarkMode ? 'text-white' : 'text-gray-900'
+                      }`}>{selectedDebt.creditorName}</span>
                     </div>
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       <div>
-                        <div className="text-gray-600">{t('Jami qarz', language)}</div>
-                        <div className="font-bold text-gray-900">{formatCurrency(selectedDebt.amount)}</div>
+                        <div className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
+                          {t('Jami qarz', language)}
+                        </div>
+                        <div className={`font-bold ${
+                          isDarkMode ? 'text-white' : 'text-gray-900'
+                        }`}>{formatCurrency(selectedDebt.amount)}</div>
                       </div>
                       <div>
-                        <div className="text-gray-600">{t('To\'langan', language)}</div>
-                        <div className="font-bold text-green-600">{formatCurrency(selectedDebt.paidAmount)}</div>
+                        <div className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
+                          {t('To\'langan', language)}
+                        </div>
+                        <div className={`font-bold ${
+                          isDarkMode ? 'text-green-400' : 'text-green-600'
+                        }`}>{formatCurrency(selectedDebt.paidAmount)}</div>
                       </div>
                       <div className="col-span-2">
-                        <div className="text-gray-600">{t('Qolgan qarz', language)}</div>
-                        <div className="text-xl font-bold text-red-600">{formatCurrency(selectedDebt.amount - selectedDebt.paidAmount)}</div>
+                        <div className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
+                          {t('Qolgan qarz', language)}
+                        </div>
+                        <div className={`text-xl font-bold ${
+                          isDarkMode ? 'text-red-400' : 'text-red-600'
+                        }`}>{formatCurrency(selectedDebt.amount - selectedDebt.paidAmount)}</div>
                       </div>
                     </div>
                   </div>
                 )}
 
                 <div>
-                  <label className="label">
+                  <label className={`label ${
+                    isDarkMode ? 'text-gray-300' : ''
+                  }`}>
                     <DollarSign className="h-4 w-4 inline mr-1" />
                     {t('Summa (so\'m)', language)} *
                   </label>
@@ -647,7 +781,11 @@ const IncomeModal: React.FC<IncomeModalProps> = ({ isOpen, onClose }) => {
                     type="text"
                     value={amountDisplay}
                     onChange={handleAmountChange}
-                    className="input"
+                    className={`input ${
+                      isDarkMode
+                        ? 'bg-gray-800 border-green-900/30 text-white placeholder:text-gray-600 focus:ring-green-500 focus:border-green-500'
+                        : ''
+                    }`}
                     placeholder="1.000.000"
                     required
                   />
@@ -658,28 +796,44 @@ const IncomeModal: React.FC<IncomeModalProps> = ({ isOpen, onClose }) => {
                       <button
                         type="button"
                         onClick={() => handleQuickAmount(25)}
-                        className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors"
+                        className={`px-3 py-1 text-xs rounded-lg font-medium transition-colors ${
+                          isDarkMode
+                            ? 'bg-gray-800 hover:bg-gray-700 text-gray-300'
+                            : 'bg-gray-100 hover:bg-gray-200'
+                        }`}
                       >
                         25%
                       </button>
                       <button
                         type="button"
                         onClick={() => handleQuickAmount(50)}
-                        className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors"
+                        className={`px-3 py-1 text-xs rounded-lg font-medium transition-colors ${
+                          isDarkMode
+                            ? 'bg-gray-800 hover:bg-gray-700 text-gray-300'
+                            : 'bg-gray-100 hover:bg-gray-200'
+                        }`}
                       >
                         50%
                       </button>
                       <button
                         type="button"
                         onClick={() => handleQuickAmount(75)}
-                        className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors"
+                        className={`px-3 py-1 text-xs rounded-lg font-medium transition-colors ${
+                          isDarkMode
+                            ? 'bg-gray-800 hover:bg-gray-700 text-gray-300'
+                            : 'bg-gray-100 hover:bg-gray-200'
+                        }`}
                       >
                         75%
                       </button>
                       <button
                         type="button"
                         onClick={() => handleQuickAmount(100)}
-                        className="px-3 py-1 text-xs bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-medium hover:shadow-lg transition-all"
+                        className={`px-3 py-1 text-xs rounded-lg font-medium hover:shadow-lg transition-all ${
+                          isDarkMode
+                            ? 'bg-gradient-to-r from-green-600 to-emerald-700 text-white'
+                            : 'bg-gradient-to-r from-green-500 to-emerald-600 text-white'
+                        }`}
                       >
                         {t('To\'liq to\'lash', language)}
                       </button>
@@ -688,14 +842,20 @@ const IncomeModal: React.FC<IncomeModalProps> = ({ isOpen, onClose }) => {
                 </div>
 
                 <div>
-                  <label className="label">
+                  <label className={`label ${
+                    isDarkMode ? 'text-gray-300' : ''
+                  }`}>
                     <FileText className="h-4 w-4 inline mr-1" />
                     {t('Izoh', language)} *
                   </label>
                   <textarea
                     value={formData.description}
                     onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                    className="input"
+                    className={`input ${
+                      isDarkMode
+                        ? 'bg-gray-800 border-green-900/30 text-white placeholder:text-gray-600 focus:ring-green-500 focus:border-green-500'
+                        : ''
+                    }`}
                     rows={3}
                     placeholder={t('Kirim haqida ma\'lumot...', language)}
                     required
@@ -703,14 +863,20 @@ const IncomeModal: React.FC<IncomeModalProps> = ({ isOpen, onClose }) => {
                 </div>
 
                 <div>
-                  <label className="label">
+                  <label className={`label ${
+                    isDarkMode ? 'text-gray-300' : ''
+                  }`}>
                     <CreditCard className="h-4 w-4 inline mr-1" />
                     {t('To\'lov usuli', language)}
                   </label>
                   <select
                     value={formData.paymentMethod}
                     onChange={(e) => setFormData(prev => ({ ...prev, paymentMethod: e.target.value as 'cash' | 'card' | 'click' }))}
-                    className="input"
+                    className={`input ${
+                      isDarkMode
+                        ? 'bg-gray-800 border-green-900/30 text-white focus:ring-green-500 focus:border-green-500'
+                        : ''
+                    }`}
                   >
                     <option value="cash">{t('Naqd', language)}</option>
                     <option value="card">{t('Karta', language)}</option>
@@ -720,20 +886,38 @@ const IncomeModal: React.FC<IncomeModalProps> = ({ isOpen, onClose }) => {
 
                 {/* Xulosa */}
                 {formData.amount > 0 && (
-                  <div className="p-4 rounded-lg bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200">
+                  <div className={`p-4 rounded-lg border-2 ${
+                    isDarkMode
+                      ? 'bg-gradient-to-br from-green-900/40 to-emerald-900/40 border-green-700'
+                      : 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200'
+                  }`}>
                     <div className="flex items-center gap-2 mb-3">
-                      <CheckCircle className="h-5 w-5 text-green-600" />
-                      <span className="font-semibold text-gray-900">{t('Xulosa', language)}</span>
+                      <CheckCircle className={`h-5 w-5 ${
+                        isDarkMode ? 'text-green-400' : 'text-green-600'
+                      }`} />
+                      <span className={`font-semibold ${
+                        isDarkMode ? 'text-white' : 'text-gray-900'
+                      }`}>{t('Xulosa', language)}</span>
                     </div>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-gray-600">{t('Kirim miqdori', language)}:</span>
-                        <span className="font-bold text-gray-900">{formatCurrency(formData.amount)}</span>
+                        <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
+                          {t('Kirim miqdori', language)}:
+                        </span>
+                        <span className={`font-bold ${
+                          isDarkMode ? 'text-white' : 'text-gray-900'
+                        }`}>{formatCurrency(formData.amount)}</span>
                       </div>
                       {selectedDebt && (
-                        <div className="flex justify-between pt-2 border-t border-gray-300">
-                          <span className="text-gray-600">{t('Qolgan qarz', language)}:</span>
-                          <span className="font-bold text-red-600">
+                        <div className={`flex justify-between pt-2 border-t ${
+                          isDarkMode ? 'border-gray-700' : 'border-gray-300'
+                        }`}>
+                          <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
+                            {t('Qolgan qarz', language)}:
+                          </span>
+                          <span className={`font-bold ${
+                            isDarkMode ? 'text-red-400' : 'text-red-600'
+                          }`}>
                             {formatCurrency((selectedDebt.amount - selectedDebt.paidAmount) - formData.amount)}
                           </span>
                         </div>
@@ -742,7 +926,9 @@ const IncomeModal: React.FC<IncomeModalProps> = ({ isOpen, onClose }) => {
                   </div>
                 )}
 
-                <div className="flex items-center justify-end space-x-3 pt-4 border-t">
+                <div className={`flex items-center justify-end space-x-3 pt-4 border-t ${
+                  isDarkMode ? 'border-gray-700' : ''
+                }`}>
                   <button
                     type="button"
                     onClick={() => {
@@ -753,13 +939,21 @@ const IncomeModal: React.FC<IncomeModalProps> = ({ isOpen, onClose }) => {
                         setStep('select');
                       }
                     }}
-                    className="btn-secondary"
+                    className={`btn-secondary ${
+                      isDarkMode
+                        ? 'bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700'
+                        : ''
+                    }`}
                   >
                     {t('Orqaga', language)}
                   </button>
                   <button
                     type="submit"
-                    className="btn-primary"
+                    className={`btn-primary ${
+                      isDarkMode
+                        ? 'bg-gradient-to-r from-green-600 via-green-700 to-emerald-700'
+                        : ''
+                    }`}
                   >
                     {t('Saqlash', language)}
                   </button>

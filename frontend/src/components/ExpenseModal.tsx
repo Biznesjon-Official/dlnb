@@ -16,6 +16,7 @@ import { Transaction } from '@/types';
 import SalaryExpenseModal from './SalaryExpenseModal';
 import SparePartExpenseModal from './SparePartExpenseModal';
 import toast from 'react-hot-toast';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface ExpenseModalProps {
   isOpen: boolean;
@@ -23,6 +24,7 @@ interface ExpenseModalProps {
 }
 
 const ExpenseModal: React.FC<ExpenseModalProps> = ({ isOpen, onClose }) => {
+  const { isDarkMode } = useTheme();
   // localStorage'dan tilni o'qish
   const language = React.useMemo<'latin' | 'cyrillic'>(() => {
     const savedLanguage = localStorage.getItem('language');
@@ -226,9 +228,17 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({ isOpen, onClose }) => {
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4">
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={handleClose} />
       
-      <div className="relative bg-white rounded-xl sm:rounded-2xl shadow-2xl max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden mx-2 sm:mx-0 my-4 sm:my-0">
+      <div className={`relative rounded-xl sm:rounded-2xl shadow-2xl max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden mx-2 sm:mx-0 my-4 sm:my-0 ${
+        isDarkMode
+          ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800'
+          : 'bg-white'
+      }`}>
         {/* Header */}
-        <div className="bg-gradient-to-r from-red-600 to-pink-600 px-4 py-3">
+        <div className={`px-4 py-3 ${
+          isDarkMode
+            ? 'bg-gradient-to-r from-red-600 via-red-700 to-pink-700'
+            : 'bg-gradient-to-r from-red-600 to-pink-600'
+        }`}>
           <button onClick={handleClose} className="absolute top-2 right-2 text-white/80 hover:text-white rounded-lg p-1 transition-colors">
             <X className="h-4 w-4" />
           </button>
@@ -257,11 +267,19 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({ isOpen, onClose }) => {
                 </div>
               ) : filteredCategories.length === 0 ? (
                 <div className="text-center py-12">
-                  <Grid3X3 className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500 mb-4">{t('Xarajat kategoriyalari topilmadi', language)}</p>
+                  <Grid3X3 className={`h-16 w-16 mx-auto mb-4 ${
+                    isDarkMode ? 'text-gray-700' : 'text-gray-300'
+                  }`} />
+                  <p className={`mb-4 ${
+                    isDarkMode ? 'text-gray-500' : 'text-gray-500'
+                  }`}>{t('Xarajat kategoriyalari topilmadi', language)}</p>
                   <button
                     onClick={handleClose}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                    className={`px-4 py-2 text-white rounded-lg transition-colors ${
+                      isDarkMode
+                        ? 'bg-red-600 hover:bg-red-700'
+                        : 'bg-red-600 hover:bg-red-700'
+                    }`}
                   >
                     {t('Yopish', language)}
                   </button>
@@ -272,7 +290,11 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({ isOpen, onClose }) => {
                     <button
                       key={category._id}
                       onClick={() => handleCategorySelect(category)}
-                      className="w-full p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-all text-left border border-gray-200"
+                      className={`w-full p-3 rounded-lg transition-all text-left border ${
+                        isDarkMode
+                          ? 'bg-gray-800 hover:bg-gray-750 border-red-900/30'
+                          : 'bg-gray-50 hover:bg-gray-100 border-gray-200'
+                      }`}
                     >
                       <div className="flex items-center gap-3">
                         <div 
@@ -289,10 +311,14 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({ isOpen, onClose }) => {
                           {getIconComponent(category.icon, 'sm')}
                         </div>
                         <div className="flex-1">
-                          <h3 className="text-sm font-bold text-gray-900">
+                          <h3 className={`text-sm font-bold ${
+                            isDarkMode ? 'text-white' : 'text-gray-900'
+                          }`}>
                             {category.nameUz}
                           </h3>
-                          <p className="text-xs text-gray-500">
+                          <p className={`text-xs ${
+                            isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                          }`}>
                             {category.description}
                           </p>
                         </div>
@@ -306,7 +332,11 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({ isOpen, onClose }) => {
             // Step 2: Chiqim formasi
             <form onSubmit={handleSubmit} className="space-y-3">
               {/* Tanlangan kategoriya */}
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+              <div className={`p-3 border rounded-lg ${
+                isDarkMode
+                  ? 'bg-red-900/40 border-red-700'
+                  : 'bg-red-50 border-red-200'
+              }`}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div 
@@ -322,14 +352,20 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({ isOpen, onClose }) => {
                     >
                       {selectedCategory && getIconComponent(selectedCategory.icon, 'sm')}
                     </div>
-                    <h3 className="text-sm font-semibold text-gray-900">
+                    <h3 className={`text-sm font-semibold ${
+                      isDarkMode ? 'text-white' : 'text-gray-900'
+                    }`}>
                       {selectedCategory?.nameUz}
                     </h3>
                   </div>
                   <button
                     type="button"
                     onClick={() => setStep('categories')}
-                    className="text-red-600 hover:text-red-700 font-medium text-xs"
+                    className={`font-medium text-xs ${
+                      isDarkMode
+                        ? 'text-red-400 hover:text-red-300'
+                        : 'text-red-600 hover:text-red-700'
+                    }`}
                   >
                     {t('O\'zgartirish', language)}
                   </button>
@@ -338,7 +374,9 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({ isOpen, onClose }) => {
 
               {/* Summa */}
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
+                <label className={`block text-xs font-medium mb-1 ${
+                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                }`}>
                   {t("Summa", language)} *
                 </label>
                 <input
@@ -350,19 +388,27 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({ isOpen, onClose }) => {
                   autoComplete="off"
                   className={`w-full px-3 py-2 border rounded-lg focus:outline-none transition-all text-sm ${
                     errors.amount 
-                      ? 'border-red-300 focus:border-red-500' 
-                      : 'border-gray-300 focus:border-red-500'
+                      ? isDarkMode
+                        ? 'border-red-700 focus:border-red-500 bg-gray-800 text-white'
+                        : 'border-red-300 focus:border-red-500'
+                      : isDarkMode
+                        ? 'bg-gray-800 border-red-900/30 text-white placeholder:text-gray-600 focus:ring-red-500 focus:border-red-500'
+                        : 'border-gray-300 focus:border-red-500'
                   }`}
                   placeholder="1,000,000"
                 />
                 {errors.amount && (
-                  <p className="mt-1 text-xs text-red-600">{errors.amount}</p>
+                  <p className={`mt-1 text-xs ${
+                    isDarkMode ? 'text-red-400' : 'text-red-600'
+                  }`}>{errors.amount}</p>
                 )}
               </div>
 
               {/* Izoh */}
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
+                <label className={`block text-xs font-medium mb-1 ${
+                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                }`}>
                   {t('Izoh', language)} *
                 </label>
                 <textarea
@@ -373,19 +419,27 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({ isOpen, onClose }) => {
                   rows={2}
                   className={`w-full px-3 py-2 border rounded-lg focus:outline-none transition-all text-sm resize-none ${
                     errors.description 
-                      ? 'border-red-300 focus:border-red-500' 
-                      : 'border-gray-300 focus:border-red-500'
+                      ? isDarkMode
+                        ? 'border-red-700 focus:border-red-500 bg-gray-800 text-white'
+                        : 'border-red-300 focus:border-red-500'
+                      : isDarkMode
+                        ? 'bg-gray-800 border-red-900/30 text-white placeholder:text-gray-600 focus:ring-red-500 focus:border-red-500'
+                        : 'border-gray-300 focus:border-red-500'
                   }`}
                   placeholder={t('Chiqim haqida...', language)}
                 />
                 {errors.description && (
-                  <p className="mt-1 text-xs text-red-600">{errors.description}</p>
+                  <p className={`mt-1 text-xs ${
+                    isDarkMode ? 'text-red-400' : 'text-red-600'
+                  }`}>{errors.description}</p>
                 )}
               </div>
 
               {/* To'lov usuli */}
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
+                <label className={`block text-xs font-medium mb-1 ${
+                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                }`}>
                   {t("To'lov usuli", language)} *
                 </label>
                 <select
@@ -393,7 +447,11 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({ isOpen, onClose }) => {
                   required
                   value={formData.paymentMethod}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-red-500 transition-all text-sm"
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none transition-all text-sm ${
+                    isDarkMode
+                      ? 'bg-gray-800 border-red-900/30 text-white focus:ring-red-500 focus:border-red-500'
+                      : 'border-gray-300 focus:border-red-500'
+                  }`}
                 >
                   <option value="cash">{t('Naqd', language)}</option>
                   <option value="card">{t('Karta', language)}</option>
@@ -406,14 +464,22 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({ isOpen, onClose }) => {
                 <button
                   type="button"
                   onClick={() => setStep('categories')}
-                  className="flex-1 px-3 py-2 text-xs font-semibold text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                  className={`flex-1 px-3 py-2 text-xs font-semibold rounded-lg transition-colors ${
+                    isDarkMode
+                      ? 'text-gray-300 bg-gray-800 hover:bg-gray-700'
+                      : 'text-gray-700 bg-gray-100 hover:bg-gray-200'
+                  }`}
                 >
                   {t('Orqaga', language)}
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 px-3 py-2 text-xs font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 transition-all"
+                  className={`flex-1 px-3 py-2 text-xs font-semibold text-white rounded-lg disabled:opacity-50 transition-all ${
+                    isDarkMode
+                      ? 'bg-gradient-to-r from-red-600 via-red-700 to-pink-700 hover:from-red-700 hover:via-red-800 hover:to-pink-800'
+                      : 'bg-red-600 hover:bg-red-700'
+                  }`}
                 >
                   {loading ? t('Saqlanmoqda...', language) : t("Chiqim qo'shish", language)}
                 </button>

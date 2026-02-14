@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { t } from '@/lib/transliteration';
 import api from '@/lib/api';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface ApprovedTask {
   _id: string;
@@ -33,6 +34,7 @@ interface ApprenticeEarningsData {
 }
 
 const ApprenticeAchievements: React.FC = () => {
+  const { isDarkMode } = useTheme();
   const { user } = useAuth();
   const { data: tasks } = useTasks();
   const [timeFilter, setTimeFilter] = useState<'today' | 'yesterday' | 'week' | 'month' | 'year' | 'all'>('all');
@@ -167,52 +169,84 @@ const ApprenticeAchievements: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className={`flex items-center justify-center min-h-screen ${
+        isDarkMode
+          ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900'
+          : 'bg-gray-50'
+      }`}>
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">{t('Yuklanmoqda...', language)}</p>
+          <div className={`animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4 ${
+            isDarkMode ? 'border-red-600' : 'border-blue-600'
+          }`}></div>
+          <p className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>{t('Yuklanmoqda...', language)}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-3 sm:space-y-6 p-2 sm:p-0 pb-20">
+    <div className={`space-y-3 sm:space-y-6 p-2 sm:p-0 pb-20 min-h-screen ${
+      isDarkMode
+        ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900'
+        : 'bg-gray-50'
+    }`}>
       {/* Mobile-First Header */}
       <div className="text-center sm:text-left">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{t('Mening daromadim', language)}</h1>
-        <p className="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600">
+        <h1 className={`text-2xl sm:text-3xl font-bold ${
+          isDarkMode ? 'text-white' : 'text-gray-900'
+        }`}>{t('Mening daromadim', language)}</h1>
+        <p className={`mt-1 sm:mt-2 text-sm sm:text-base ${
+          isDarkMode ? 'text-gray-400' : 'text-gray-600'
+        }`}>
           {t('Sizning professional rivojlanishingiz va erishgan yutuqlaringiz.', language)}
         </p>
       </div>
 
       {/* Jami daromad kartasi */}
-      <div className="card p-4 sm:p-6 bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-xl">
+      <div className={`rounded-xl p-4 sm:p-6 text-white shadow-xl ${
+        isDarkMode
+          ? 'bg-gradient-to-br from-red-600 via-red-700 to-gray-900'
+          : 'bg-gradient-to-br from-blue-500 to-indigo-600'
+      }`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 sm:gap-4">
             <div className="flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
               <Award className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
             </div>
             <div>
-              <p className="text-sm sm:text-base text-blue-100 mb-1">{t('Jami daromad', language)}</p>
+              <p className={`text-sm sm:text-base mb-1 ${
+                isDarkMode ? 'text-red-100' : 'text-blue-100'
+              }`}>{t('Jami daromad', language)}</p>
               <p className="text-3xl sm:text-4xl font-bold">
                 {new Intl.NumberFormat('uz-UZ').format(earningsData?.currentMonthEarnings || 0)}
               </p>
-              <p className="text-xs sm:text-sm text-blue-100 mt-1">{t('so\'m (joriy oy)', language)}</p>
+              <p className={`text-xs sm:text-sm mt-1 ${
+                isDarkMode ? 'text-red-100' : 'text-blue-100'
+              }`}>{t('so\'m (joriy oy)', language)}</p>
             </div>
           </div>
           <div className="text-right hidden sm:block">
             <div className="text-2xl font-bold">{earningsData?.approvedTasksCount || 0}</div>
-            <div className="text-sm text-blue-100">{t('ta vazifa', language)}</div>
+            <div className={`text-sm ${
+              isDarkMode ? 'text-red-100' : 'text-blue-100'
+            }`}>{t('ta vazifa', language)}</div>
           </div>
         </div>
       </div>
 
       {/* Mobile-First Daromad Section */}
-      <div className="card p-3 sm:p-6">
+      <div className={`rounded-xl p-3 sm:p-6 shadow-lg border ${
+        isDarkMode
+          ? 'bg-gradient-to-br from-gray-800 via-red-900/20 to-gray-800 border-red-900/30'
+          : 'bg-white border-gray-100'
+      }`}>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-3">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <Award className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
+          <h3 className={`text-base sm:text-lg font-semibold flex items-center gap-2 ${
+            isDarkMode ? 'text-white' : 'text-gray-900'
+          }`}>
+            <Award className={`h-5 w-5 sm:h-6 sm:w-6 ${
+              isDarkMode ? 'text-red-400' : 'text-blue-600'
+            }`} />
             {t('Daromad tarixi', language)}
           </h3>
           
@@ -220,7 +254,11 @@ const ApprenticeAchievements: React.FC = () => {
           <select
             value={timeFilter}
             onChange={(e) => setTimeFilter(e.target.value as any)}
-            className="px-3 sm:px-4 py-2 border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white font-medium text-gray-700 text-sm w-full sm:w-auto"
+            className={`px-3 sm:px-4 py-2 border-2 rounded-lg focus:ring-2 focus:border-transparent font-medium text-sm w-full sm:w-auto ${
+              isDarkMode
+                ? 'bg-gray-800 border-red-900/30 text-white focus:ring-red-500'
+                : 'bg-white border-blue-200 text-gray-700 focus:ring-blue-500'
+            }`}
           >
             <option value="yesterday">{t('Kecha', language)}</option>
             <option value="today">{t('Bugun', language)}</option>
@@ -236,8 +274,12 @@ const ApprenticeAchievements: React.FC = () => {
         {/* Tasks List */}
         {filteredTasks.length === 0 ? (
           <div className="text-center py-12">
-            <Award className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500 text-lg">
+            <Award className={`h-16 w-16 mx-auto mb-4 ${
+              isDarkMode ? 'text-gray-600' : 'text-gray-400'
+            }`} />
+            <p className={`text-lg ${
+              isDarkMode ? 'text-gray-400' : 'text-gray-500'
+            }`}>
               {timeFilter === 'today' ? t('Bugun daromad yo\'q', language) :
                timeFilter === 'yesterday' ? t('Kecha daromad yo\'q', language) :
                timeFilter === 'week' ? t('Bu haftada daromad yo\'q', language) :
@@ -245,7 +287,9 @@ const ApprenticeAchievements: React.FC = () => {
                timeFilter === 'year' ? t('Bu yilda daromad yo\'q', language) :
                t('Hali daromad yo\'q', language)}
             </p>
-            <p className="text-sm text-gray-400 mt-2">{t('Vazifalarni bajaring va daromad oling!', language)}</p>
+            <p className={`text-sm mt-2 ${
+              isDarkMode ? 'text-gray-600' : 'text-gray-400'
+            }`}>{t('Vazifalarni bajaring va daromad oling!', language)}</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -254,17 +298,31 @@ const ApprenticeAchievements: React.FC = () => {
                 if (task.earning === 0) return null;
                 
                 return (
-                  <div key={task._id} className="flex items-center justify-between p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200 hover:shadow-md transition-shadow gap-3">
+                  <div key={task._id} className={`flex items-center justify-between p-3 sm:p-4 rounded-lg border hover:shadow-md transition-shadow gap-3 ${
+                    isDarkMode
+                      ? 'bg-gradient-to-r from-red-900/30 to-gray-800 border-red-900/30'
+                      : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200'
+                  }`}>
                     <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
-                      <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-lg bg-blue-500 text-white font-bold text-sm sm:text-lg flex-shrink-0">
+                      <div className={`flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-lg text-white font-bold text-sm sm:text-lg flex-shrink-0 ${
+                        isDarkMode
+                          ? 'bg-red-600'
+                          : 'bg-blue-500'
+                      }`}>
                         {index + 1}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-gray-900 text-sm sm:text-base truncate">{task.title}</h4>
-                        <p className="text-xs sm:text-sm text-gray-600 truncate">
+                        <h4 className={`font-semibold text-sm sm:text-base truncate ${
+                          isDarkMode ? 'text-white' : 'text-gray-900'
+                        }`}>{task.title}</h4>
+                        <p className={`text-xs sm:text-sm truncate ${
+                          isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                        }`}>
                           {task.car?.make} {task.car?.carModel} - {task.car?.licensePlate}
                         </p>
-                        <p className="text-xs text-gray-500 mt-1 truncate">
+                        <p className={`text-xs mt-1 truncate ${
+                          isDarkMode ? 'text-gray-500' : 'text-gray-500'
+                        }`}>
                           {task.approvedAt ? new Date(task.approvedAt).toLocaleDateString('uz-UZ', {
                             year: 'numeric',
                             month: '2-digit',
@@ -274,19 +332,27 @@ const ApprenticeAchievements: React.FC = () => {
                           }) : 'Sana noma\'lum'}
                         </p>
                         {task.percentage && task.totalPayment > 0 && (
-                          <p className="text-xs text-blue-600 mt-1">
+                          <p className={`text-xs mt-1 ${
+                            isDarkMode ? 'text-red-400' : 'text-blue-600'
+                          }`}>
                             {t('Umumiy:', language)} {new Intl.NumberFormat('uz-UZ').format(task.totalPayment)} • {task.percentage}%
                           </p>
                         )}
                       </div>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <p className="text-lg sm:text-2xl font-bold text-blue-600">
+                      <p className={`text-lg sm:text-2xl font-bold ${
+                        isDarkMode ? 'text-red-400' : 'text-blue-600'
+                      }`}>
                         +{new Intl.NumberFormat('uz-UZ').format(task.earning)}
                       </p>
-                      <p className="text-xs text-blue-700">so'm</p>
+                      <p className={`text-xs ${
+                        isDarkMode ? 'text-red-500' : 'text-blue-700'
+                      }`}>so'm</p>
                       {task.percentage && (
-                        <p className="text-xs text-gray-600">({task.percentage}%)</p>
+                        <p className={`text-xs ${
+                          isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                        }`}>({task.percentage}%)</p>
                       )}
                     </div>
                   </div>
@@ -295,7 +361,7 @@ const ApprenticeAchievements: React.FC = () => {
             
             {filteredTasks.every((task) => task.earning === 0) && (
               <div className="text-center py-8">
-                <p className="text-gray-500">{t('To\'lovli vazifalar yo\'q', language)}</p>
+                <p className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>{t('To\'lovli vazifalar yo\'q', language)}</p>
               </div>
             )}
           </div>
@@ -305,26 +371,46 @@ const ApprenticeAchievements: React.FC = () => {
 
 
       {/* Progress Chart */}
-      <div className="card p-3 sm:p-6">
-        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 sm:mb-6">{t('Haftalik faoliyat', language)}</h3>
+      <div className={`rounded-xl p-3 sm:p-6 shadow-lg border ${
+        isDarkMode
+          ? 'bg-gradient-to-br from-gray-800 via-red-900/20 to-gray-800 border-red-900/30'
+          : 'bg-white border-gray-100'
+      }`}>
+        <h3 className={`text-base sm:text-lg font-semibold mb-4 sm:mb-6 ${
+          isDarkMode ? 'text-white' : 'text-gray-900'
+        }`}>{t('Haftalik faoliyat', language)}</h3>
         {weeklyActivity.every(day => day.hours === 0) ? (
           <div className="text-center py-6 sm:py-8">
-            <Clock className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
-            <p className="text-sm sm:text-base text-gray-500">{t('Hali haftalik faoliyat yo\'q', language)}</p>
-            <p className="text-xs sm:text-sm text-gray-400 mt-1">{t('Vazifalarni bajarib, statistikangizni ko\'ring!', language)}</p>
+            <Clock className={`h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 ${
+              isDarkMode ? 'text-gray-600' : 'text-gray-400'
+            }`} />
+            <p className={`text-sm sm:text-base ${
+              isDarkMode ? 'text-gray-400' : 'text-gray-500'
+            }`}>{t('Hali haftalik faoliyat yo\'q', language)}</p>
+            <p className={`text-xs sm:text-sm mt-1 ${
+              isDarkMode ? 'text-gray-600' : 'text-gray-400'
+            }`}>{t('Vazifalarni bajarib, statistikangizni ko\'ring!', language)}</p>
           </div>
         ) : (
           <div className="space-y-3 sm:space-y-4">
             {weeklyActivity.map((day, index) => (
               <div key={index} className="flex items-center justify-between gap-2 sm:gap-4">
-                <span className="text-xs sm:text-sm text-gray-600 w-16 sm:w-24 flex-shrink-0">{day.day}</span>
-                <div className="flex-1 bg-gray-200 rounded-full h-2">
+                <span className={`text-xs sm:text-sm w-16 sm:w-24 flex-shrink-0 ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                }`}>{day.day}</span>
+                <div className={`flex-1 rounded-full h-2 ${
+                  isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
+                }`}>
                   <div 
-                    className="bg-blue-500 h-2 rounded-full transition-all duration-300" 
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      isDarkMode ? 'bg-red-500' : 'bg-blue-500'
+                    }`}
                     style={{ width: `${day.percentage}%` }}
                   ></div>
                 </div>
-                <span className="text-xs sm:text-sm text-gray-900 w-12 sm:w-16 text-right flex-shrink-0">
+                <span className={`text-xs sm:text-sm w-12 sm:w-16 text-right flex-shrink-0 ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}>
                   {day.hours > 0 ? `${day.hours.toFixed(1)} ${t('soat', language)}` : '-'}
                 </span>
               </div>

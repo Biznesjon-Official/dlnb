@@ -7,6 +7,7 @@ import { useCarsNew } from '@/hooks/useCarsNew';
 import { useCreateTransaction } from '@/hooks/useTransactions';
 import { useCarServices } from '@/hooks/useCarServices';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface CarPaymentModalProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ interface CarPaymentModalProps {
 }
 
 const CarPaymentModalHybrid: React.FC<CarPaymentModalProps> = ({ isOpen, onClose, car, onSuccess }) => {
+  const { isDarkMode } = useTheme();
   const language = React.useMemo<'latin' | 'cyrillic'>(() => {
     const savedLanguage = localStorage.getItem('language');
     return (savedLanguage as 'latin' | 'cyrillic') || 'latin';
@@ -91,10 +93,20 @@ const CarPaymentModalHybrid: React.FC<CarPaymentModalProps> = ({ isOpen, onClose
     return (
       <div className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4">
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-        <div className="relative bg-white rounded-xl sm:rounded-2xl shadow-2xl max-w-md w-full mx-2 sm:mx-0 p-6">
+        <div className={`relative rounded-xl sm:rounded-2xl shadow-2xl max-w-md w-full mx-2 sm:mx-0 p-6 ${
+          isDarkMode
+            ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800'
+            : 'bg-white'
+        }`}>
           <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-200 border-t-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">{t('Yuklanmoqda...', language)}</p>
+            <div className={`animate-spin rounded-full h-12 w-12 border-4 mx-auto mb-4 ${
+              isDarkMode
+                ? 'border-red-900/30 border-t-red-600'
+                : 'border-blue-200 border-t-blue-600'
+            }`}></div>
+            <p className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
+              {t('Yuklanmoqda...', language)}
+            </p>
           </div>
         </div>
       </div>
@@ -105,17 +117,39 @@ const CarPaymentModalHybrid: React.FC<CarPaymentModalProps> = ({ isOpen, onClose
     return (
       <div className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4">
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-        <div className="relative bg-white rounded-xl sm:rounded-2xl shadow-2xl max-w-md w-full mx-2 sm:mx-0 p-6">
-          <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 rounded-lg p-1.5 transition-colors">
+        <div className={`relative rounded-xl sm:rounded-2xl shadow-2xl max-w-md w-full mx-2 sm:mx-0 p-6 ${
+          isDarkMode
+            ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800'
+            : 'bg-white'
+        }`}>
+          <button onClick={onClose} className={`absolute top-4 right-4 rounded-lg p-1.5 transition-colors ${
+            isDarkMode
+              ? 'text-gray-400 hover:text-gray-200 hover:bg-gray-800'
+              : 'text-gray-400 hover:text-gray-600'
+          }`}>
             <X className="h-5 w-5" />
           </button>
           <div className="text-center py-8">
-            <div className="bg-yellow-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-              <AlertCircle className="h-8 w-8 text-yellow-600" />
+            <div className={`rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4 ${
+              isDarkMode
+                ? 'bg-yellow-900/40'
+                : 'bg-yellow-50'
+            }`}>
+              <AlertCircle className={`h-8 w-8 ${
+                isDarkMode ? 'text-yellow-400' : 'text-yellow-600'
+              }`} />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">{t("Xizmat narxi topilmadi", language)}</h3>
-            <p className="text-gray-600 mb-6">{t("Bu mashina uchun hali xizmat narxi belgilanmagan.", language)}</p>
-            <button onClick={onClose} className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+            <h3 className={`text-xl font-bold mb-2 ${
+              isDarkMode ? 'text-white' : 'text-gray-900'
+            }`}>{t("Xizmat narxi topilmadi", language)}</h3>
+            <p className={`mb-6 ${
+              isDarkMode ? 'text-gray-400' : 'text-gray-600'
+            }`}>{t("Bu mashina uchun hali xizmat narxi belgilanmagan.", language)}</p>
+            <button onClick={onClose} className={`px-6 py-3 rounded-lg transition-colors font-medium ${
+              isDarkMode
+                ? 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white'
+                : 'bg-blue-600 hover:bg-blue-700 text-white'
+            }`}>
               {t("Yopish", language)}
             </button>
           </div>
@@ -409,9 +443,17 @@ const CarPaymentModalHybrid: React.FC<CarPaymentModalProps> = ({ isOpen, onClose
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4">
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       
-      <div className="relative bg-white rounded-xl shadow-2xl max-w-md w-full mx-2 sm:mx-0">
+      <div className={`relative rounded-xl shadow-2xl max-w-md w-full mx-2 sm:mx-0 ${
+        isDarkMode
+          ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800'
+          : 'bg-white'
+      }`}>
         {/* Header */}
-        <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-3 rounded-t-xl">
+        <div className={`px-4 py-3 rounded-t-xl ${
+          isDarkMode
+            ? 'bg-gradient-to-r from-red-600 via-red-700 to-gray-900'
+            : 'bg-gradient-to-r from-green-500 to-emerald-600'
+        }`}>
           <button onClick={onClose} className="absolute top-3 right-3 text-white/80 hover:text-white hover:bg-white/20 rounded-lg p-1 transition-colors">
             <X className="h-5 w-5" />
           </button>
@@ -433,14 +475,24 @@ const CarPaymentModalHybrid: React.FC<CarPaymentModalProps> = ({ isOpen, onClose
 
         <form onSubmit={handleSubmit} className="p-4 space-y-3">
           {/* Qolgan summa */}
-          <div className="p-3 rounded-lg bg-gradient-to-br from-red-50 to-orange-50 border border-red-200">
-            <div className="text-xs text-gray-600 mb-0.5">{t('Qolgan summa', language)}</div>
-            <div className="text-xl font-bold text-red-600">{formatCurrency(remaining)}</div>
+          <div className={`p-3 rounded-lg border ${
+            isDarkMode
+              ? 'bg-gradient-to-br from-red-900/40 to-red-800/40 border-red-700'
+              : 'bg-gradient-to-br from-red-50 to-orange-50 border-red-200'
+          }`}>
+            <div className={`text-xs mb-0.5 ${
+              isDarkMode ? 'text-gray-400' : 'text-gray-600'
+            }`}>{t('Qolgan summa', language)}</div>
+            <div className={`text-xl font-bold ${
+              isDarkMode ? 'text-red-400' : 'text-red-600'
+            }`}>{formatCurrency(remaining)}</div>
           </div>
 
           {/* Naqd to'lov */}
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1.5">
+            <label className={`block text-xs font-medium mb-1.5 ${
+              isDarkMode ? 'text-gray-300' : 'text-gray-700'
+            }`}>
               💵 {t("Naqd", language)}
             </label>
             <input
@@ -448,15 +500,27 @@ const CarPaymentModalHybrid: React.FC<CarPaymentModalProps> = ({ isOpen, onClose
               value={cashAmountDisplay}
               onChange={(e) => handleCashAmountChange(e.target.value)}
               autoComplete="off"
-              className="w-full px-3 py-2 border-2 border-green-300 rounded-lg focus:outline-none focus:border-green-500 transition-all text-base font-semibold"
+              className={`w-full px-3 py-2 border-2 rounded-lg focus:outline-none transition-all text-base font-semibold ${
+                isDarkMode
+                  ? 'bg-gray-800 border-green-700 focus:border-green-500 text-white placeholder:text-gray-500'
+                  : 'border-green-300 focus:border-green-500'
+              }`}
               placeholder="0"
             />
             
             <div className="mt-1.5 flex gap-1.5">
-              <button type="button" onClick={() => handleQuickAmount(50, 'cash')} className="flex-1 px-2 py-1 text-xs bg-green-100 hover:bg-green-200 rounded font-medium transition-colors">
+              <button type="button" onClick={() => handleQuickAmount(50, 'cash')} className={`flex-1 px-2 py-1 text-xs rounded font-medium transition-colors ${
+                isDarkMode
+                  ? 'bg-green-900/40 hover:bg-green-900/60 text-green-300'
+                  : 'bg-green-100 hover:bg-green-200'
+              }`}>
                 50%
               </button>
-              <button type="button" onClick={() => handleQuickAmount(100, 'cash')} className="flex-1 px-2 py-1 text-xs bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded font-medium hover:shadow transition-all">
+              <button type="button" onClick={() => handleQuickAmount(100, 'cash')} className={`flex-1 px-2 py-1 text-xs rounded font-medium transition-all ${
+                isDarkMode
+                  ? 'bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-700 hover:to-emerald-800 text-white'
+                  : 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:shadow'
+              }`}>
                 {t("To'liq", language)}
               </button>
             </div>
@@ -464,7 +528,9 @@ const CarPaymentModalHybrid: React.FC<CarPaymentModalProps> = ({ isOpen, onClose
 
           {/* Plastik to'lov */}
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1.5">
+            <label className={`block text-xs font-medium mb-1.5 ${
+              isDarkMode ? 'text-gray-300' : 'text-gray-700'
+            }`}>
               💳 {t("Plastik", language)}
             </label>
             <input
@@ -472,21 +538,35 @@ const CarPaymentModalHybrid: React.FC<CarPaymentModalProps> = ({ isOpen, onClose
               value={cardAmountDisplay}
               onChange={(e) => handleCardAmountChange(e.target.value)}
               autoComplete="off"
-              className="w-full px-3 py-2 border-2 border-purple-300 rounded-lg focus:outline-none focus:border-purple-500 transition-all text-base font-semibold"
+              className={`w-full px-3 py-2 border-2 rounded-lg focus:outline-none transition-all text-base font-semibold ${
+                isDarkMode
+                  ? 'bg-gray-800 border-purple-700 focus:border-purple-500 text-white placeholder:text-gray-500'
+                  : 'border-purple-300 focus:border-purple-500'
+              }`}
               placeholder="0"
             />
             
             <div className="mt-1.5 flex gap-1.5">
-              <button type="button" onClick={() => handleQuickAmount(50, 'card')} className="flex-1 px-2 py-1 text-xs bg-purple-100 hover:bg-purple-200 rounded font-medium transition-colors">
+              <button type="button" onClick={() => handleQuickAmount(50, 'card')} className={`flex-1 px-2 py-1 text-xs rounded font-medium transition-colors ${
+                isDarkMode
+                  ? 'bg-purple-900/40 hover:bg-purple-900/60 text-purple-300'
+                  : 'bg-purple-100 hover:bg-purple-200'
+              }`}>
                 50%
               </button>
-              <button type="button" onClick={() => handleQuickAmount(100, 'card')} className="flex-1 px-2 py-1 text-xs bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded font-medium hover:shadow transition-all">
+              <button type="button" onClick={() => handleQuickAmount(100, 'card')} className={`flex-1 px-2 py-1 text-xs rounded font-medium transition-all ${
+                isDarkMode
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-700 hover:from-purple-700 hover:to-pink-800 text-white'
+                  : 'bg-gradient-to-r from-purple-500 to-pink-600 text-white hover:shadow'
+              }`}>
                 {t("To'liq", language)}
               </button>
             </div>
             
             {errors.payment && (
-              <p className="mt-1.5 text-xs text-red-600 flex items-center gap-1">
+              <p className={`mt-1.5 text-xs flex items-center gap-1 ${
+                isDarkMode ? 'text-red-400' : 'text-red-600'
+              }`}>
                 <AlertCircle className="h-3 w-3" />
                 {errors.payment}
               </p>
@@ -495,14 +575,26 @@ const CarPaymentModalHybrid: React.FC<CarPaymentModalProps> = ({ isOpen, onClose
 
           {/* Jami to'lov */}
           {totalPaymentAmount > 0 && (
-            <div className="p-2.5 rounded-lg bg-blue-50 border border-blue-200">
+            <div className={`p-2.5 rounded-lg border ${
+              isDarkMode
+                ? 'bg-blue-900/40 border-blue-700'
+                : 'bg-blue-50 border-blue-200'
+            }`}>
               <div className="flex justify-between text-xs mb-1">
-                <span className="text-gray-600">{t("Jami to'lov", language)}:</span>
-                <span className="font-bold text-blue-600">{formatCurrency(totalPaymentAmount)}</span>
+                <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
+                  {t("Jami to'lov", language)}:
+                </span>
+                <span className={`font-bold ${
+                  isDarkMode ? 'text-blue-400' : 'text-blue-600'
+                }`}>{formatCurrency(totalPaymentAmount)}</span>
               </div>
               <div className="flex justify-between text-xs">
-                <span className="text-gray-600">{t("Qoladi", language)}:</span>
-                <span className="font-bold text-red-600">{formatCurrency(remaining - totalPaymentAmount)}</span>
+                <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
+                  {t("Qoladi", language)}:
+                </span>
+                <span className={`font-bold ${
+                  isDarkMode ? 'text-red-400' : 'text-red-600'
+                }`}>{formatCurrency(remaining - totalPaymentAmount)}</span>
               </div>
             </div>
           )}
@@ -512,13 +604,21 @@ const CarPaymentModalHybrid: React.FC<CarPaymentModalProps> = ({ isOpen, onClose
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              className={`flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                isDarkMode
+                  ? 'text-gray-300 bg-gray-800 hover:bg-gray-700 border border-red-900/30'
+                  : 'text-gray-700 bg-gray-100 hover:bg-gray-200'
+              }`}
             >
               {t('Bekor qilish', language)}
             </button>
             <button
               type="submit"
-              className="flex-1 px-3 py-2 text-sm font-medium text-white bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg hover:shadow-lg transition-all"
+              className={`flex-1 px-3 py-2 text-sm font-medium text-white rounded-lg transition-all ${
+                isDarkMode
+                  ? 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 hover:shadow-lg'
+                  : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:shadow-lg'
+              }`}
             >
               {t("Tasdiqlash", language)}
             </button>
