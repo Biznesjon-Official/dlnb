@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dalnoboy-v3';
+const CACHE_NAME = 'dalnoboy-v4';
 const urlsToCache = [
   '/',
   '/index.html',

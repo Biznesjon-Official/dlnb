@@ -12,7 +12,7 @@ router.post('/register', [
   body('name').trim().isLength({ min: 2 }).withMessage('Name must be at least 2 characters'),
   body('email').optional().isEmail().withMessage('Please provide a valid email'),
   body('username').trim().isLength({ min: 3 }).withMessage('Username must be at least 3 characters'),
-  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+  body('password').isLength({ min: 4 }).withMessage('Password must be at least 4 characters'),
   body('role').isIn(['master', 'apprentice']).withMessage('Role must be either master or apprentice'),
   handleValidationErrors
 ], register);
@@ -22,7 +22,7 @@ router.post('/login', [
   body('username').optional().trim().isLength({ min: 1 }).withMessage('Username must not be empty'),
   body('email').optional().isEmail().withMessage('Please provide a valid email'),
   body('phone').optional().trim().isLength({ min: 9 }).withMessage('Telefon raqam noto\'g\'ri'),
-  body('password').optional().isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+  body('password').optional().isLength({ min: 4 }).withMessage('Password must be at least 4 characters'),
   // Custom validation: username/email + password YOKI username + phone
   body().custom((value, { req }) => {
     const { username, email, password, phone } = req.body;
@@ -71,7 +71,7 @@ router.post('/users', authenticate, authorize('master'), [
   body('name').trim().isLength({ min: 2 }).withMessage('Name must be at least 2 characters'),
   body('email').optional().isEmail().withMessage('Please provide a valid email'),
   body('username').trim().isLength({ min: 3 }).withMessage('Username must be at least 3 characters'),
-  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+  body('password').isLength({ min: 4 }).withMessage('Password must be at least 4 characters'),
   body('role').isIn(['master', 'apprentice']).withMessage('Role must be either master or apprentice'),
   handleValidationErrors
 ], register);
@@ -99,7 +99,7 @@ router.get('/apprentices', authenticate, authorize('master'), getApprentices);
 router.patch('/users/:id', authenticate, authorize('master'), [
   body('name').optional().trim().isLength({ min: 2 }).withMessage('Name must be at least 2 characters'),
   body('username').optional().trim().isLength({ min: 3 }).withMessage('Username must be at least 3 characters'),
-  body('password').optional().isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+  body('password').optional().isLength({ min: 4 }).withMessage('Password must be at least 4 characters'),
   handleValidationErrors
 ], updateUser);
 

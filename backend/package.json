@@ -43,7 +43,8 @@
     "create-second-master": "ts-node src/scripts/createSecondMaster.ts",
     "seed-daily-worker": "ts-node src/scripts/seedDailyWorker.ts",
     "create-booking-indexes": "ts-node src/scripts/createBookingIndexes.ts",
-    "create-car-indexes": "ts-node src/scripts/createCarIndexes.ts"
+    "create-car-indexes": "ts-node src/scripts/createCarIndexes.ts",
+    "test-daily-worker-missed": "ts-node src/scripts/testDailyWorkerMissedDays.ts"
   },
   "dependencies": {
     "@types/compression": "^1.8.1",

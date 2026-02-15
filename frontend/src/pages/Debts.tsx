@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useDebtsNew } from '@/hooks/useDebtsNew';
 import EditDebtModal from '@/components/EditDebtModal';
 import DeleteDebtModal from '@/components/DeleteDebtModal';
+import DebtsSkeleton from '@/components/DebtsSkeleton';
 import { DollarSign, TrendingUp, TrendingDown, Calendar, Phone, Eye, Edit, Trash2, X, FileText, CheckCircle, AlertTriangle } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { t } from '@/lib/transliteration';
@@ -506,21 +507,7 @@ const Debts: React.FC = () => {
 
         {/* Debts List */}
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-16 sm:py-20">
-            <div className="relative">
-              <div className={`animate-spin rounded-full h-12 w-12 sm:h-16 sm:w-16 border-4 ${
-                isDarkMode ? 'border-red-900/30' : 'border-orange-200'
-              }`}></div>
-              <div className={`animate-spin rounded-full h-12 w-12 sm:h-16 sm:w-16 border-4 absolute top-0 left-0 ${
-                isDarkMode ? 'border-t-red-600' : 'border-t-orange-600'
-              }`}></div>
-            </div>
-            <p className={`mt-4 sm:mt-6 font-medium text-sm sm:text-base ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-600'
-            }`}>
-              {t("Qarzlar yuklanmoqda...", language)}
-            </p>
-          </div>
+          <DebtsSkeleton />
         ) : debts.length === 0 ? (
           <div className={`rounded-lg sm:rounded-2xl shadow-lg border p-6 sm:p-16 text-center ${
             isDarkMode

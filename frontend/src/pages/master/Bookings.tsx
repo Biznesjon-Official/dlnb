@@ -139,14 +139,14 @@ const Bookings: React.FC = () => {
     <div className={`min-h-screen p-4 sm:p-6 lg:p-8 ${
       isDarkMode 
         ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' 
-        : 'bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50'
+        : 'bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50'
     }`}>
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header with Search */}
         <div className={`rounded-2xl shadow-xl p-6 ${
           isDarkMode
             ? 'bg-gradient-to-r from-red-600 via-red-700 to-gray-900'
-            : 'bg-gradient-to-r from-blue-600 to-indigo-600'
+            : 'bg-gradient-to-r from-orange-500 to-amber-600'
         }`}>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
@@ -190,7 +190,7 @@ const Bookings: React.FC = () => {
                 className={`flex items-center gap-2 px-4 py-2.5 text-white rounded-xl transition-all shadow-lg hover:shadow-xl whitespace-nowrap ${
                   isDarkMode
                     ? 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800'
-                    : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700'
+                    : 'bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700'
                 }`}
               >
                 <Plus className="h-5 w-5" />
@@ -239,7 +239,7 @@ const Bookings: React.FC = () => {
                       : 'border-yellow-400 bg-gradient-to-br from-yellow-50 to-white'
                     : isDarkMode
                       ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 border-red-900/30 hover:border-red-700'
-                      : 'bg-white border-gray-200 hover:border-blue-300'
+                      : 'bg-white border-gray-200 hover:border-orange-300'
                 }`}
               >
                 {/* Birthday Badge */}
@@ -446,7 +446,7 @@ const Bookings: React.FC = () => {
                       className={`${isBirthdaySoon ? '' : 'flex-1'} flex items-center justify-center gap-1.5 px-3 py-2 text-white rounded-lg text-xs font-semibold transition-all ${
                         isDarkMode
                           ? 'bg-blue-600 hover:bg-blue-700'
-                          : 'bg-blue-500 hover:bg-blue-600'
+                          : 'bg-orange-500 hover:bg-orange-600'
                       }`}
                     >
                       <Edit2 className="h-3.5 w-3.5" />

@@ -69,7 +69,7 @@ export default defineConfig({
         ]
       },
       devOptions: {
-        enabled: true,
+        enabled: true, // Development'da ham Service Worker'ni yoqish
         type: 'module'
       }
     })
@@ -83,6 +83,12 @@ export default defineConfig({
     port: 5173,
     host: '0.0.0.0',
     strictPort: false,
+    hmr: {
+      overlay: true,
+    },
+    watch: {
+      usePolling: true,
+    },
     proxy: {
       '/api': {
         target: 'http://127.0.0.1:4000',
@@ -95,6 +101,10 @@ export default defineConfig({
         },
       },
     },
+  },
+  cacheDir: 'node_modules/.vite',
+  optimizeDeps: {
+    force: true,
   },
   build: {
     rollupOptions: {

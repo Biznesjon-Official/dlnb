@@ -24,11 +24,11 @@ async function seedMaster() {
     console.log('👤 Yangi master user yaratmoqda...');
     
     const masterUser = new User({
-      name: 'Master Admin',
-      username: 'master',
-      password: '123456', // Bu avtomatik hash qilinadi
+      name: 'Subhonov Mirshod',
+      username: 'Subhonov Mirshod',
+      password: '0303', // Bu avtomatik hash qilinadi
       role: 'master',
-      email: 'master@biznes.com',
+      email: 'subhonov.mirshod@biznes.com',
       earnings: 0
     });
 
@@ -96,10 +96,10 @@ async function seedMaster() {
     console.log('🎉 SEED MUVAFFAQIYATLI YAKUNLANDI!');
     console.log('');
     console.log('📋 LOGIN MA\'LUMOTLARI:');
-    console.log('   👤 Username: master');
-    console.log('   🔑 Password: 123456');
+    console.log('   👤 Username: Subhonov Mirshod');
+    console.log('   🔑 Password: 0303');
     console.log('   🎭 Role: master');
-    console.log('   📧 Email: master@biznes.com');
+    console.log('   📧 Email: subhonov.mirshod@biznes.com');
     console.log('');
     console.log('💡 Bu ma\'lumotlar bilan tizimga kirishingiz mumkin!');
 

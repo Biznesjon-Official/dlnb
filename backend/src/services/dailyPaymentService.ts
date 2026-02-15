@@ -29,15 +29,14 @@ export const startDailyPaymentCron = () => {
 
       for (const worker of dailyWorkers) {
         try {
-          // Bugun allaqachon to'lov qo'shilganmi tekshirish
+          // Oxirgi to'lov sanasini olish
           const lastPaymentDate = worker.lastDailyPaymentDate 
             ? new Date(worker.lastDailyPaymentDate) 
             : null;
           
+          // Agar bugun allaqachon to'lov qo'shilgan bo'lsa, o'tkazib yuborish
           if (lastPaymentDate) {
             lastPaymentDate.setHours(0, 0, 0, 0);
-            
-            // Agar bugun allaqachon to'lov qo'shilgan bo'lsa, o'tkazib yuborish
             if (lastPaymentDate.getTime() === today.getTime()) {
               console.log(`⏭️  ${worker.name} - bugun allaqachon to'lov qo'shilgan`);
               skipCount++;
@@ -45,10 +44,7 @@ export const startDailyPaymentCron = () => {
             }
           }
 
-          // Kunlik to'lovni qo'shish
-          const dailyRate = worker.dailyRate || 0;
-          
-          // Master ID'sini olish (worker.masterId yoki birinchi master)
+          // Master ID'sini olish
           const User = require('../models/User').default;
           const master = worker.masterId 
             ? await User.findById(worker.masterId)
@@ -58,26 +54,48 @@ export const startDailyPaymentCron = () => {
             console.error(`❌ ${worker.name} uchun master topilmadi`);
             continue;
           }
+
+          // O'tkazib yuborilgan kunlarni hisoblash
+          let startDate = lastPaymentDate 
+            ? new Date(lastPaymentDate.getTime() + 24 * 60 * 60 * 1000) // Keyingi kundan boshlash
+            : new Date(today); // Agar hech qachon to'lov qo'shilmagan bo'lsa, bugundan boshlash
           
-          // Transaction yaratish
-          const transaction = new Transaction({
-            type: 'income',
-            category: 'daily_payment',
-            amount: dailyRate,
-            description: `${worker.name} - kunlik to'lov (${today.toLocaleDateString('uz-UZ')})`,
-            apprenticeId: worker._id,
-            createdBy: master._id,
-            date: today
-          });
-          await transaction.save();
+          startDate.setHours(0, 0, 0, 0);
+          
+          let currentDate = new Date(startDate);
+          let totalAdded = 0;
+          let daysAdded = 0;
+          
+          // Har bir o'tkazib yuborilgan kun uchun to'lov qo'shish
+          while (currentDate <= today) {
+            const dailyRate = worker.dailyRate || 0;
+            
+            // Transaction yaratish
+            const transaction = new Transaction({
+              type: 'income',
+              category: 'daily_payment',
+              amount: dailyRate,
+              description: `${worker.name} - kunlik to'lov (${currentDate.toLocaleDateString('uz-UZ')})`,
+              apprenticeId: worker._id,
+              createdBy: master._id,
+              paymentMethod: 'cash'
+            });
+            await transaction.save();
+            
+            totalAdded += dailyRate;
+            daysAdded++;
+            
+            // Keyingi kunga o'tish
+            currentDate.setDate(currentDate.getDate() + 1);
+          }
 
           // Ishchi daromadini yangilash
-          worker.earnings += dailyRate;
-          worker.totalEarnings += dailyRate;
+          worker.earnings += totalAdded;
+          worker.totalEarnings += totalAdded;
           worker.lastDailyPaymentDate = today;
           await worker.save();
 
-          console.log(`✅ ${worker.name} - ${dailyRate.toLocaleString()} so'm qo'shildi`);
+          console.log(`✅ ${worker.name} - ${daysAdded} kun, ${totalAdded.toLocaleString()} so'm qo'shildi`);
           successCount++;
         } catch (error) {
           console.error(`❌ ${worker.name} uchun to'lov qo'shishda xatolik:`, error);
@@ -146,7 +164,7 @@ export const addDailyPaymentManually = async (userId: string) => {
       description: `${worker.name} - kunlik to'lov (${today.toLocaleDateString('uz-UZ')})`,
       apprenticeId: worker._id,
       createdBy: master._id,
-      date: today
+      paymentMethod: 'cash'
     });
     await transaction.save();
 
