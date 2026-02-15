@@ -248,21 +248,29 @@ const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, ca
       alert(t('Xizmat nomini kiriting', language));
       return;
     }
-    if (newServiceItem.quantity <= 0) {
+    
+    // Qiymatlarni to'g'ri number'ga aylantirish
+    const quantity = Number(newServiceItem.quantity) || 1;
+    const price = Number(newServiceItem.price) || 0;
+    
+    if (quantity <= 0) {
       alert(t("Xizmat sonini to'g'ri kiriting (1 dan katta bo'lishi kerak)", language));
       return;
     }
-    if (newServiceItem.price <= 0) {
+    if (price <= 0) {
       alert(t("Xizmat narxini to'g'ri kiriting (0 dan katta bo'lishi kerak)", language));
       return;
     }
     
     const newServiceData = {
       name: String(newServiceItem.name).trim(),
-      price: Math.max(0, Number(newServiceItem.price)),
-      quantity: Math.max(1, Number(newServiceItem.quantity)),
-      category: newServiceItem.category
+      price: price,
+      quantity: quantity,
+      category: newServiceItem.category || 'labor'
     };
+    
+    console.log('Adding service item:', newServiceData); // Debug log
+    console.log('Total:', quantity * price); // Debug log
     
     setServiceItems([...serviceItems, newServiceData]);
     setNewServiceItem({ name: '', price: 0, quantity: 1, category: 'labor' });
@@ -384,7 +392,7 @@ const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, ca
     // Xitoy markalari
     'FAW', 'Foton', 'Howo', 'Shacman', 'Dongfeng', 'JAC', 'Beiben', 'Camc', 'Sinotruk',
     // Yevropa markalari
-    'Mercedes-Benz', 'MAN', 'Scania', 'Volvo', 'DAF', 'Iveco', 'Renault', 'Isuzu',
+    'Mercedes-Benz', 'MAN', 'Scania', 'Volvo', 'DAF', 'Iveco', 'Renault',
     // Amerika markalari
     'Freightliner', 'Kenworth', 'Peterbilt', 'Mack', 'International', 'Western Star',
     // Yaponiya markalari
@@ -932,7 +940,7 @@ const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, ca
                     <input
                       type="text"
                       value={newServiceItem.name}
-                      onChange={(e) => setNewServiceItem({ ...newServiceItem, name: e.target.value })}
+                      onChange={(e) => setNewServiceItem(prev => ({ ...prev, name: e.target.value }))}
                       className={`w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 transition-colors ${
                         isDarkMode
                           ? 'bg-gray-800 border-purple-700 text-white placeholder:text-gray-500 focus:ring-purple-500 focus:border-purple-500'
@@ -946,11 +954,11 @@ const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, ca
                       type="number"
                       min="0"
                       step="1000"
-                      value={newServiceItem.price || ''}
+                      value={newServiceItem.price === 0 ? '' : newServiceItem.price}
                       onChange={(e) => {
                         const value = e.target.value;
-                        const numValue = value === '' ? 0 : Math.max(0, Number(value));
-                        setNewServiceItem({ ...newServiceItem, price: numValue });
+                        const numValue = value === '' ? 0 : Number(value);
+                        setNewServiceItem(prev => ({ ...prev, price: numValue }));
                       }}
                       className={`w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 transition-colors ${
                         isDarkMode
@@ -965,8 +973,8 @@ const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, ca
                       value={newServiceItem.quantity}
                       onChange={(e) => {
                         const value = e.target.value;
-                        const numValue = value === '' ? 1 : Math.max(1, Number(value));
-                        setNewServiceItem({ ...newServiceItem, quantity: numValue });
+                        const numValue = value === '' ? 1 : Number(value);
+                        setNewServiceItem(prev => ({ ...prev, quantity: numValue }));
                       }}
                       className={`w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 transition-colors ${
                         isDarkMode
@@ -1181,7 +1189,12 @@ const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, ca
 
               {/* Vazifalar ro'yxati - faqat online rejimda */}
               {isOnline ? (
-                <TasksSection carId={car._id} language={language} />
+                <TasksSection 
+                  carId={car._id} 
+                  language={language} 
+                  isDarkMode={isDarkMode}
+                  localServiceItems={serviceItems}
+                />
               ) : (
                 <div className={`border rounded-lg p-4 ${
                   isDarkMode
@@ -1367,7 +1380,12 @@ const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, ca
 };
 
 // TasksSection component - vazifalarni ko'rsatish va tahrirlash
-const TasksSection: React.FC<{ carId: string; language: 'latin' | 'cyrillic' }> = ({ carId, language }) => {
+const TasksSection: React.FC<{ 
+  carId: string; 
+  language: 'latin' | 'cyrillic'; 
+  isDarkMode: boolean;
+  localServiceItems?: ServiceItem[]; // 3-stepdan kelgan yangi xizmatlar
+}> = ({ carId, language, isDarkMode, localServiceItems = [] }) => {
   const { isOnline } = useBackendStatus();
   
   // Hook'larni doimo chaqirish, lekin offline bo'lsa yoki temp ID bo'lsa natijalarni ignore qilish
@@ -1378,7 +1396,10 @@ const TasksSection: React.FC<{ carId: string; language: 'latin' | 'cyrillic' }> 
   const createTaskMutation = useCreateTask();
   
   const tasks = isOnline && shouldFetchTasks ? (tasksData?.tasks || []) : [];
-  const apprentices = isOnline ? (apprenticesData?.users || []) : [];
+  // Faqat foizlik shogirtlarni filtrlash (kunlik ishchilar emas)
+  const apprentices = isOnline 
+    ? (apprenticesData?.users || []).filter((u: any) => u.role === 'apprentice' && u.paymentType !== 'daily')
+    : [];
   
   // Mashina xizmatlarini yuklash
   const [carServices, setCarServices] = React.useState<any[]>([]);
@@ -1392,15 +1413,73 @@ const TasksSection: React.FC<{ carId: string; language: 'latin' | 'cyrillic' }> 
     const loadServices = async () => {
       try {
         const response = await api.get(`/cars/${carId}/services`);
-        setCarServices(response.data.services || []);
+        const backendServices = response.data.services || [];
+        
+        console.log('🔵 Backend xizmatlar:', backendServices);
+        console.log('🟢 Local xizmatlar (3-stepdan):', localServiceItems);
+        
+        // Backend xizmatlar va local xizmatlarni birlashtirish
+        // Local xizmatlarni backend formatiga o'tkazish
+        const localServicesFormatted = localServiceItems
+          .filter(item => {
+            // Faqat narxi 0 dan katta bo'lgan xizmatlarni olish
+            const totalPrice = item.price * item.quantity;
+            return totalPrice > 0;
+          })
+          .map((item, index) => ({
+            _id: `local_${index}`, // Vaqtinchalik ID
+            name: item.name,
+            items: [{
+              name: item.name,
+              price: item.price,
+              quantity: item.quantity
+            }],
+            totalPrice: item.price * item.quantity,
+            isLocal: true // Local ekanligini belgilash
+          }));
+        
+        console.log('🟡 Formatlangan local xizmatlar:', localServicesFormatted);
+        
+        // Backend xizmatlarni ham filtrlash (0 so'mlik xizmatlarni olib tashlash)
+        const filteredBackendServices = backendServices.filter((service: any) => {
+          const totalPrice = service.totalPrice || 
+            (service.items && service.items.length > 0
+              ? service.items.reduce((sum: number, item: any) => sum + ((item.quantity || 1) * (item.price || 0)), 0)
+              : 0);
+          return totalPrice > 0;
+        });
+        
+        // Backend va local xizmatlarni birlashtirish
+        const allServices = [...filteredBackendServices, ...localServicesFormatted];
+        console.log('🟣 Barcha xizmatlar (backend + local, 0 so\'mliksiz):', allServices);
+        
+        setCarServices(allServices);
       } catch (error) {
         console.error('Error loading services:', error);
-        setCarServices([]);
+        // Xatolik bo'lsa ham local xizmatlarni ko'rsatish
+        const localServicesFormatted = localServiceItems
+          .filter(item => {
+            const totalPrice = item.price * item.quantity;
+            return totalPrice > 0;
+          })
+          .map((item, index) => ({
+            _id: `local_${index}`,
+            name: item.name,
+            items: [{
+              name: item.name,
+              price: item.price,
+              quantity: item.quantity
+            }],
+            totalPrice: item.price * item.quantity,
+            isLocal: true
+          }));
+        console.log('⚠️ Xatolik, faqat local xizmatlar:', localServicesFormatted);
+        setCarServices(localServicesFormatted);
       }
     };
     
     loadServices();
-  }, [carId, isOnline]);
+  }, [carId, isOnline, localServiceItems]);
   
   const [editingTaskId, setEditingTaskId] = React.useState<string | null>(null);
   const [editingTask, setEditingTask] = React.useState<any>(null);
@@ -1457,12 +1536,27 @@ const TasksSection: React.FC<{ carId: string; language: 'latin' | 'cyrillic' }> 
   const handleEditServiceSelect = (serviceId: string) => {
     const selectedService = carServices.find(s => s._id === serviceId);
     if (selectedService) {
+      // Xizmatning jami narxini olish (totalPrice yoki items'dan hisoblash)
+      let totalPayment = selectedService.totalPrice || 0;
+      
+      // Agar totalPrice bo'lmasa, items'dan hisoblash
+      if (!totalPayment && selectedService.items && selectedService.items.length > 0) {
+        totalPayment = selectedService.items.reduce((sum: number, item: any) => {
+          return sum + ((item.quantity || 1) * (item.price || 0));
+        }, 0);
+      }
+      
+      // Xizmat nomini olish (birinchi item'dan yoki xizmat nomidan)
+      const serviceName = selectedService.items && selectedService.items.length > 0
+        ? selectedService.items[0].name
+        : selectedService.name || '';
+      
       setEditingTask({
         ...editingTask,
         service: serviceId,
-        title: selectedService.name,
+        title: serviceName,
         description: selectedService.description || '',
-        payment: selectedService.price || 0
+        payment: totalPayment
       });
     }
   };
@@ -1477,13 +1571,24 @@ const TasksSection: React.FC<{ carId: string; language: 'latin' | 'cyrillic' }> 
         percentage: assignment.percentage || 50
       }));
 
+      // Task data tayyorlash - description'ni olib tashlash
+      const taskData: any = {
+        title: editingTask.title,
+        dueDate: editingTask.dueDate,
+        priority: editingTask.priority,
+        estimatedHours: editingTask.estimatedHours,
+        payment: editingTask.payment,
+        assignments: formattedAssignments
+      };
+
+      // Service faqat mavjud va local emas bo'lsa qo'shish
+      if (editingTask.service && !editingTask.service.startsWith('local_')) {
+        taskData.service = editingTask.service;
+      }
+
       await updateTaskMutation.mutateAsync({
         id: editingTaskId,
-        data: {
-          ...editingTask,
-          service: editingTask.service || undefined, // Xizmat ID (agar tanlangan bo'lsa)
-          assignments: formattedAssignments
-        }
+        data: taskData
       });
       setEditingTaskId(null);
       setEditingTask(null);
@@ -1523,11 +1628,34 @@ const TasksSection: React.FC<{ carId: string; language: 'latin' | 'cyrillic' }> 
           percentage: assignment.percentage || 50
         }));
 
-      await createTaskMutation.mutateAsync({
-        ...newTask,
+      // Task data tayyorlash - description'ni olib tashlash
+      const taskData: any = {
+        title: newTask.title,
         car: carId,
+        priority: newTask.priority,
+        estimatedHours: newTask.estimatedHours,
+        payment: newTask.payment,
         assignments: formattedAssignments
-      });
+      };
+
+      // DueDate faqat mavjud va to'g'ri formatda bo'lsa qo'shish
+      if (newTask.dueDate && newTask.dueDate.trim()) {
+        taskData.dueDate = newTask.dueDate;
+      } else {
+        // Agar dueDate bo'lmasa, bugundan 7 kun keyingi sanani qo'yish
+        const defaultDate = new Date();
+        defaultDate.setDate(defaultDate.getDate() + 7);
+        taskData.dueDate = defaultDate.toISOString().split('T')[0];
+      }
+
+      // Service faqat mavjud va local emas bo'lsa qo'shish
+      if (newTask.service && !newTask.service.startsWith('local_')) {
+        taskData.service = newTask.service;
+      }
+
+      console.log('📤 Vazifa yaratish uchun yuborilayotgan ma\'lumot:', taskData);
+
+      await createTaskMutation.mutateAsync(taskData);
       setIsAddingNew(false);
       setNewTask({
         title: '',
@@ -1541,6 +1669,9 @@ const TasksSection: React.FC<{ carId: string; language: 'latin' | 'cyrillic' }> 
       });
     } catch (error) {
       console.error('Error creating task:', error);
+      if (error instanceof Error) {
+        console.error('Error message:', error.message);
+      }
     }
   };
 
@@ -1548,12 +1679,27 @@ const TasksSection: React.FC<{ carId: string; language: 'latin' | 'cyrillic' }> 
   const handleServiceSelect = (serviceId: string) => {
     const selectedService = carServices.find(s => s._id === serviceId);
     if (selectedService) {
+      // Xizmatning jami narxini olish (totalPrice yoki items'dan hisoblash)
+      let totalPayment = selectedService.totalPrice || 0;
+      
+      // Agar totalPrice bo'lmasa, items'dan hisoblash
+      if (!totalPayment && selectedService.items && selectedService.items.length > 0) {
+        totalPayment = selectedService.items.reduce((sum: number, item: any) => {
+          return sum + ((item.quantity || 1) * (item.price || 0));
+        }, 0);
+      }
+      
+      // Xizmat nomini olish (birinchi item'dan yoki xizmat nomidan)
+      const serviceName = selectedService.items && selectedService.items.length > 0
+        ? selectedService.items[0].name
+        : selectedService.name || '';
+      
       setNewTask({
         ...newTask,
         service: serviceId,
-        title: selectedService.name,
+        title: serviceName,
         description: selectedService.description || '',
-        payment: selectedService.price || 0
+        payment: totalPayment
       });
     }
   };
@@ -1616,7 +1762,11 @@ const TasksSection: React.FC<{ carId: string; language: 'latin' | 'cyrillic' }> 
       {!isAddingNew && (
         <button
           onClick={() => setIsAddingNew(true)}
-          className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-orange-50 text-orange-600 hover:bg-orange-100 rounded-lg transition-all border border-orange-200"
+          className={`w-full flex items-center justify-center space-x-2 px-4 py-2 rounded-lg transition-all border ${
+            isDarkMode
+              ? 'bg-red-900/20 text-red-400 hover:bg-red-900/30 border-red-900/50'
+              : 'bg-red-50 text-red-600 hover:bg-red-100 border-red-200'
+          }`}
         >
           <Plus className="h-4 w-4" />
           <span className="text-sm font-medium">{t('Yangi vazifa qo\'shish', language)}</span>
@@ -1625,8 +1775,14 @@ const TasksSection: React.FC<{ carId: string; language: 'latin' | 'cyrillic' }> 
 
       {/* Yangi vazifa qo'shish formasi */}
       {isAddingNew && (
-        <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg p-3 border border-orange-200">
-          <h4 className="text-sm font-semibold text-gray-900 mb-3">{t('Yangi vazifa', language)}</h4>
+        <div className={`rounded-lg p-3 border ${
+          isDarkMode
+            ? 'bg-gradient-to-r from-gray-800 to-gray-900 border-red-900/50'
+            : 'bg-gradient-to-r from-red-50 to-gray-50 border-red-200'
+        }`}>
+          <h4 className={`text-sm font-semibold mb-3 ${
+            isDarkMode ? 'text-red-400' : 'text-gray-900'
+          }`}>{t('Yangi vazifa', language)}</h4>
           <div className="space-y-2">
             {/* Xizmat tanlash */}
             {carServices.length > 0 && (() => {
@@ -1639,21 +1795,27 @@ const TasksSection: React.FC<{ carId: string; language: 'latin' | 'cyrillic' }> 
                     return task.service;
                   }
                   return task.service._id || task.service;
-                });
+                })
+                .filter(Boolean); // null/undefined larni olib tashlash
               
-              console.log('🔍 Berilgan xizmatlar:', assignedServiceIds);
-              console.log('📋 Barcha xizmatlar:', carServices.map((s: any) => s._id));
+              console.log('🔍 Berilgan xizmatlar ID lari:', assignedServiceIds);
+              console.log('📋 Barcha xizmatlar:', carServices.map((s: any) => ({ id: s._id, name: s.name, isLocal: s.isLocal })));
+              console.log('📝 Barcha vazifalar:', tasks.map((t: any) => ({ id: t._id, title: t.title, service: t.service })));
               
               // Berilmagan xizmatlarni filtrlash
               const availableServices = carServices.filter(
                 (service: any) => !assignedServiceIds.includes(service._id)
               );
               
-              console.log('✅ Mavjud xizmatlar:', availableServices.map((s: any) => s._id));
+              console.log('✅ Mavjud xizmatlar (berilmagan):', availableServices.map((s: any) => ({ id: s._id, name: s.name })));
               
               if (availableServices.length === 0) {
                 return (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2 text-xs text-yellow-700">
+                  <div className={`rounded-lg p-2 text-xs border ${
+                    isDarkMode
+                      ? 'bg-yellow-900/40 border-yellow-700 text-yellow-300'
+                      : 'bg-yellow-50 border-yellow-200 text-yellow-700'
+                  }`}>
                     {t('Barcha xizmatlar allaqachon berilgan', language)}
                   </div>
                 );
@@ -1661,20 +1823,39 @@ const TasksSection: React.FC<{ carId: string; language: 'latin' | 'cyrillic' }> 
               
               return (
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                  <label className={`block text-xs font-medium mb-1 ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                  }`}>
                     {t('Xizmat tanlash (ixtiyoriy)', language)}
                   </label>
                   <select
                     value={newTask.service}
                     onChange={(e) => handleServiceSelect(e.target.value)}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 bg-white"
+                    className={`w-full px-3 py-2 text-sm rounded-lg focus:ring-2 ${
+                      isDarkMode
+                        ? 'bg-gray-800 border border-gray-700 text-white focus:ring-red-500'
+                        : 'bg-white border border-gray-300 text-gray-900 focus:ring-red-500'
+                    }`}
                   >
                     <option value="">{t('Xizmat tanlang yoki qo\'lda kiriting', language)}</option>
-                    {availableServices.map((service: any) => (
-                      <option key={service._id} value={service._id}>
-                        {service.name} - {service.price?.toLocaleString()} {t("so'm", language)}
-                      </option>
-                    ))}
+                    {availableServices.map((service: any) => {
+                      // Xizmatning jami narxini hisoblash
+                      const totalPrice = service.totalPrice || 
+                        (service.items && service.items.length > 0
+                          ? service.items.reduce((sum: number, item: any) => sum + ((item.quantity || 1) * (item.price || 0)), 0)
+                          : 0);
+                      
+                      // Xizmat nomini olish
+                      const serviceName = service.items && service.items.length > 0
+                        ? service.items[0].name
+                        : service.name || '';
+                      
+                      return (
+                        <option key={service._id} value={service._id}>
+                          {serviceName} - {totalPrice.toLocaleString()} {t("so'm", language)}
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
               );
@@ -1685,38 +1866,51 @@ const TasksSection: React.FC<{ carId: string; language: 'latin' | 'cyrillic' }> 
               value={newTask.title}
               onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
               placeholder={t('Vazifa nomi', language)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
-            />
-            <textarea
-              value={newTask.description}
-              onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
-              placeholder={t('Tavsif', language)}
-              rows={2}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+              className={`w-full px-3 py-2 text-sm rounded-lg focus:ring-2 ${
+                isDarkMode
+                  ? 'bg-gray-800 border border-gray-700 text-white placeholder:text-gray-500 focus:ring-red-500'
+                  : 'bg-white border border-gray-300 text-gray-900 placeholder:text-gray-400 focus:ring-red-500'
+              }`}
             />
             <div className="grid grid-cols-2 gap-2">
               <input
                 type="date"
                 value={newTask.dueDate}
                 onChange={(e) => setNewTask({ ...newTask, dueDate: e.target.value })}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                className={`w-full px-3 py-2 text-sm rounded-lg focus:ring-2 ${
+                  isDarkMode
+                    ? 'bg-gray-800 border border-gray-700 text-white focus:ring-red-500'
+                    : 'bg-white border border-gray-300 text-gray-900 focus:ring-red-500'
+                }`}
               />
-              <div className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 font-medium text-gray-700">
+              <div className={`w-full px-3 py-2 text-sm rounded-lg font-medium ${
+                isDarkMode
+                  ? 'bg-gray-900 border border-gray-700 text-gray-300'
+                  : 'bg-gray-50 border border-gray-200 text-gray-700'
+              }`}>
                 {newTask.payment ? newTask.payment.toLocaleString() : 0} {t("so'm", language)}
               </div>
             </div>
             
             {/* Shogirdlar */}
-            <div className="space-y-2 bg-blue-50 rounded-lg p-3 border border-blue-200">
+            <div className={`space-y-2 rounded-lg p-3 border ${
+              isDarkMode
+                ? 'bg-gray-800/50 border-red-900/50'
+                : 'bg-red-50 border-red-200'
+            }`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <Users className="h-4 w-4 text-blue-600" />
-                  <span className="text-sm font-semibold text-blue-700">{t('Shogirdlar', language)}</span>
+                  <Users className={`h-4 w-4 ${isDarkMode ? 'text-red-400' : 'text-red-600'}`} />
+                  <span className={`text-sm font-semibold ${isDarkMode ? 'text-red-400' : 'text-red-700'}`}>{t('Shogirdlar', language)}</span>
                 </div>
                 <button
                   type="button"
                   onClick={() => handleAddApprentice(newTask, setNewTask)}
-                  className="flex items-center space-x-1 px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs font-medium"
+                  className={`flex items-center space-x-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                    isDarkMode
+                      ? 'bg-red-600 text-white hover:bg-red-700'
+                      : 'bg-red-600 text-white hover:bg-red-700'
+                  }`}
                 >
                   <Plus className="h-3 w-3" />
                   <span>{t('Qo\'shish', language)}</span>
@@ -1724,17 +1918,27 @@ const TasksSection: React.FC<{ carId: string; language: 'latin' | 'cyrillic' }> 
               </div>
               
               {newTask.assignments.length === 0 ? (
-                <div className="text-center py-3 text-xs text-gray-500">
+                <div className={`text-center py-3 text-xs ${
+                  isDarkMode ? 'text-gray-500' : 'text-gray-500'
+                }`}>
                   {t('Shogird qo\'shing', language)}
                 </div>
               ) : (
                 newTask.assignments.map((assignment: any, index: number) => (
-                  <div key={index} className="flex items-center space-x-2 bg-white rounded-lg p-2 border border-blue-200">
+                  <div key={index} className={`flex items-center space-x-2 rounded-lg p-2 border ${
+                    isDarkMode
+                      ? 'bg-gray-900 border-red-900/50'
+                      : 'bg-white border-red-200'
+                  }`}>
                     <div className="flex-1">
                       <select
                         value={assignment.apprenticeId}
                         onChange={(e) => handleUpdateApprentice(newTask, setNewTask, index, 'apprenticeId', e.target.value)}
-                        className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                        className={`w-full px-2 py-1.5 text-sm rounded focus:ring-2 ${
+                          isDarkMode
+                            ? 'bg-gray-800 border border-gray-700 text-white focus:ring-red-500'
+                            : 'bg-white border border-gray-300 text-gray-900 focus:ring-red-500'
+                        }`}
                       >
                         <option value="">{t('Shogird tanlang', language)}</option>
                         {apprentices.map((app: any) => (
@@ -1744,13 +1948,21 @@ const TasksSection: React.FC<{ carId: string; language: 'latin' | 'cyrillic' }> 
                         ))}
                       </select>
                     </div>
-                    <div className="w-16 px-2 py-1.5 text-xs border border-gray-200 rounded bg-gray-50 text-center font-medium text-gray-700">
+                    <div className={`w-16 px-2 py-1.5 text-xs rounded text-center font-medium ${
+                      isDarkMode
+                        ? 'bg-gray-900 border border-gray-700 text-gray-300'
+                        : 'bg-gray-50 border border-gray-200 text-gray-700'
+                    }`}>
                       {assignment.percentage || 0}%
                     </div>
                     <button
                       type="button"
                       onClick={() => handleRemoveApprentice(newTask, setNewTask, index)}
-                      className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
+                      className={`p-1.5 rounded transition-colors ${
+                        isDarkMode
+                          ? 'text-red-400 hover:bg-red-900/30'
+                          : 'text-red-600 hover:bg-red-50'
+                      }`}
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -1762,7 +1974,11 @@ const TasksSection: React.FC<{ carId: string; language: 'latin' | 'cyrillic' }> 
             <div className="flex items-center space-x-2 pt-2">
               <button
                 onClick={handleAddNewTask}
-                className="flex-1 px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm font-medium"
+                className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isDarkMode
+                    ? 'bg-red-600 text-white hover:bg-red-700'
+                    : 'bg-red-600 text-white hover:bg-red-700'
+                }`}
               >
                 {t('Saqlash', language)}
               </button>
@@ -1780,7 +1996,11 @@ const TasksSection: React.FC<{ carId: string; language: 'latin' | 'cyrillic' }> 
                     assignments: []
                   });
                 }}
-                className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm font-medium"
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isDarkMode
+                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
               >
                 {t('Bekor qilish', language)}
               </button>
@@ -1791,14 +2011,26 @@ const TasksSection: React.FC<{ carId: string; language: 'latin' | 'cyrillic' }> 
 
       {/* Vazifalar ro'yxati */}
       {tasks.length === 0 ? (
-        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-center">
-          <AlertCircle className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-          <p className="text-sm text-gray-600">{t('Vazifalar yo\'q', language)}</p>
+        <div className={`rounded-lg p-4 border text-center ${
+          isDarkMode
+            ? 'bg-gray-800/50 border-red-900/50'
+            : 'bg-gray-50 border-gray-200'
+        }`}>
+          <AlertCircle className={`h-8 w-8 mx-auto mb-2 ${
+            isDarkMode ? 'text-gray-500' : 'text-gray-400'
+          }`} />
+          <p className={`text-sm ${
+            isDarkMode ? 'text-gray-400' : 'text-gray-600'
+          }`}>{t('Vazifalar yo\'q', language)}</p>
         </div>
       ) : (
         <div className="space-y-2">
           {tasks.map((task: any) => (
-            <div key={task._id} className="bg-white rounded-lg p-3 border border-gray-200">
+            <div key={task._id} className={`rounded-lg p-3 border ${
+              isDarkMode
+                ? 'bg-gray-800 border-red-900/50'
+                : 'bg-white border-gray-200'
+            }`}>
               {editingTaskId === task._id ? (
                 // Tahrirlash rejimi
                 <div className="space-y-2">
@@ -1813,20 +2045,26 @@ const TasksSection: React.FC<{ carId: string; language: 'latin' | 'cyrillic' }> 
                           return t.service;
                         }
                         return t.service._id || t.service;
-                      });
+                      })
+                      .filter(Boolean); // null/undefined larni olib tashlash
                     
-                    console.log('🔍 Tahrirlash - Berilgan xizmatlar:', assignedServiceIds);
+                    console.log('🔍 Tahrirlash - Berilgan xizmatlar ID lari:', assignedServiceIds);
+                    console.log('📋 Tahrirlash - Barcha xizmatlar:', carServices.map((s: any) => ({ id: s._id, name: s.name })));
                     
                     // Berilmagan xizmatlar
                     const availableServices = carServices.filter(
                       (service: any) => !assignedServiceIds.includes(service._id)
                     );
                     
-                    console.log('✅ Tahrirlash - Mavjud xizmatlar:', availableServices.map((s: any) => s._id));
+                    console.log('✅ Tahrirlash - Mavjud xizmatlar:', availableServices.map((s: any) => ({ id: s._id, name: s.name })));
                     
                     if (availableServices.length === 0 && !editingTask.service) {
                       return (
-                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2 text-xs text-yellow-700">
+                        <div className={`rounded-lg p-2 text-xs border ${
+                          isDarkMode
+                            ? 'bg-yellow-900/40 border-yellow-700 text-yellow-300'
+                            : 'bg-yellow-50 border-yellow-200 text-yellow-700'
+                        }`}>
                           {t('Barcha xizmatlar allaqachon berilgan', language)}
                         </div>
                       );
@@ -1843,11 +2081,24 @@ const TasksSection: React.FC<{ carId: string; language: 'latin' | 'cyrillic' }> 
                           className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white"
                         >
                           <option value="">{t('Xizmat tanlang yoki qo\'lda kiriting', language)}</option>
-                          {availableServices.map((service: any) => (
-                            <option key={service._id} value={service._id}>
-                              {service.name} - {service.price?.toLocaleString()} {t("so'm", language)}
-                            </option>
-                          ))}
+                          {availableServices.map((service: any) => {
+                            // Xizmatning jami narxini hisoblash
+                            const totalPrice = service.totalPrice || 
+                              (service.items && service.items.length > 0
+                                ? service.items.reduce((sum: number, item: any) => sum + ((item.quantity || 1) * (item.price || 0)), 0)
+                                : 0);
+                            
+                            // Xizmat nomini olish
+                            const serviceName = service.items && service.items.length > 0
+                              ? service.items[0].name
+                              : service.name || '';
+                            
+                            return (
+                              <option key={service._id} value={service._id}>
+                                {serviceName} - {totalPrice.toLocaleString()} {t("so'm", language)}
+                              </option>
+                            );
+                          })}
                         </select>
                       </div>
                     );
@@ -1858,13 +2109,6 @@ const TasksSection: React.FC<{ carId: string; language: 'latin' | 'cyrillic' }> 
                     value={editingTask.title}
                     onChange={(e) => setEditingTask({ ...editingTask, title: e.target.value })}
                     placeholder={t('Vazifa nomi', language)}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg"
-                  />
-                  <textarea
-                    value={editingTask.description}
-                    onChange={(e) => setEditingTask({ ...editingTask, description: e.target.value })}
-                    placeholder={t('Tavsif', language)}
-                    rows={2}
                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg"
                   />
                   <div className="grid grid-cols-2 gap-2">

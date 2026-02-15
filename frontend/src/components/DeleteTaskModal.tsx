@@ -8,7 +8,7 @@ import toast from 'react-hot-toast';
 interface DeleteTaskModalProps {
   isOpen: boolean;
   onClose: () => void;
-  task: any;
+  task: string | any; // Task ID (string) yoki task obyekti
 }
 
 const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({ isOpen, onClose, task }) => {
@@ -24,7 +24,16 @@ const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({ isOpen, onClose, task
 
   const handleDelete = async () => {
     try {
-      await deleteTaskMutation.mutateAsync(task._id);
+      // Agar task string bo'lsa (ID), to'g'ridan-to'g'ri ishlatamiz
+      // Agar task obyekt bo'lsa, task._id ishlatamiz
+      const taskId = typeof task === 'string' ? task : task?._id;
+      
+      if (!taskId) {
+        toast.error(t('Vazifa topilmadi', language));
+        return;
+      }
+      
+      await deleteTaskMutation.mutateAsync(taskId);
       toast.success(t('Vazifa o\'chirildi', language));
       onClose();
     } catch (error: any) {

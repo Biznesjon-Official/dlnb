@@ -146,7 +146,7 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
   
   // Vazifalar (Step 4)
   const [tasks, setTasks] = useState<TaskItem[]>([]);
-  const [carServices, setCarServices] = useState<any[]>([]);
+  const [_carServices, setCarServices] = useState<any[]>([]); // _ prefixi - ishlatilmayotgan o'zgaruvchi
   const [loadingServices, setLoadingServices] = useState(false);
   const [isCreatingTasks, setIsCreatingTasks] = useState(false);
 
@@ -154,11 +154,13 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
   const createTaskMutation = useCreateTask();
   const { data: usersData, isLoading: usersLoading } = useUsers();
   
-  // Faqat shogirtlarni filtrlash
+  // Faqat foizlik shogirtlarni filtrlash (kunlik ishchilar emas)
   const apprentices = React.useMemo(() => {
     const users = usersData?.users || [];
-    const filtered = users.filter((u: any) => u.role === 'apprentice');
-    console.log('👥 Shogirtlar:', filtered);
+    const filtered = users.filter((u: any) => 
+      u.role === 'apprentice' && u.paymentType !== 'daily'
+    );
+    console.log('👥 Foizlik shogirtlar:', filtered);
     return filtered;
   }, [usersData]);
   
@@ -425,17 +427,7 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
   const updateTask = (taskId: string, field: keyof TaskItem, value: any) => {
     setTasks(tasks.map(task => {
       if (task.id === taskId) {
-        const updatedTask = { ...task, [field]: value };
-        
-        if (field === 'service' && value) {
-          const selectedService = carServices.find(service => service._id === value);
-          if (selectedService) {
-            updatedTask.payment = selectedService.price;
-            updatedTask.title = selectedService.name;
-          }
-        }
-        
-        return updatedTask;
+        return { ...task, [field]: value };
       }
       return task;
     }));
@@ -560,8 +552,8 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
             title: task.title,
             description: task.description || task.title,
             car: carId,
-            // Faqat haqiqiy service ID bo'lsa yuborish (temp- bilan boshlanmasa)
-            service: task.service && !task.service.startsWith('temp-') ? task.service : undefined,
+            // CreateCarModal'da xizmatlar hali backend'ga saqlanmagan, shuning uchun service field'ini yubormaymiz
+            // service: undefined,
             priority: task.priority,
             dueDate: task.dueDate,
             estimatedHours: task.estimatedHours,
@@ -1850,7 +1842,7 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
                         </p>
                       </div>
                     </div>
-                  ) : carServices.length > 0 ? (
+                  ) : laborItems.length > 0 ? (
                     <div className={`mt-4 p-3 border rounded-lg max-w-md mx-auto ${
                       isDarkMode
                         ? 'bg-red-900/20 border-red-800'
@@ -1858,17 +1850,20 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
                     }`}>
                       <p className={`text-xs font-semibold mb-2 flex items-center gap-1.5 ${isDarkMode ? 'text-red-300' : 'text-orange-700'}`}>
                         <CheckCircle className="h-4 w-4" />
-                        {carServices.length} ta xizmat mavjud
+                        {laborItems.length} ta xizmat mavjud
                       </p>
                       <div className="text-xs text-blue-600 space-y-1">
-                        {carServices.slice(0, 3).map((service: any) => (
-                          <div key={service._id} className="flex items-center justify-between">
-                            <span>• {service.name}</span>
-                            <span className="font-semibold">{service.price.toLocaleString()} {t("so'm", language)}</span>
-                          </div>
-                        ))}
-                        {carServices.length > 3 && (
-                          <p className="text-blue-500 font-medium">+{carServices.length - 3} ta yana...</p>
+                        {laborItems.slice(0, 3).map((item: Part, idx: number) => {
+                          const totalPrice = (item.quantity || 1) * (item.price || 0);
+                          return (
+                            <div key={idx} className="flex items-center justify-between">
+                              <span>• {item.name} ({item.quantity} ta)</span>
+                              <span className="font-semibold">{totalPrice.toLocaleString()} {t("so'm", language)}</span>
+                            </div>
+                          );
+                        })}
+                        {laborItems.length > 3 && (
+                          <p className="text-blue-500 font-medium">+{laborItems.length - 3} ta yana...</p>
                         )}
                       </div>
                     </div>
@@ -1886,20 +1881,34 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
               ) : (
                 <div className="space-y-4">
                   {tasks.map((task, index) => (
-                    <div key={task.id} className="border-2 border-cyan-300 rounded-xl p-4 space-y-3 bg-gradient-to-br from-white via-cyan-50 to-blue-50 shadow-sm hover:shadow-md transition-shadow">
+                    <div key={task.id} className={`rounded-xl p-4 space-y-3 shadow-lg hover:shadow-xl transition-all ${
+                      isDarkMode
+                        ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 border-2 border-red-900/50'
+                        : 'bg-gradient-to-br from-white via-red-50 to-gray-50 border-2 border-red-200'
+                    }`}>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <div className="p-1.5 bg-gradient-to-br from-cyan-600 to-blue-500 rounded-lg">
+                          <div className={`p-1.5 rounded-lg ${
+                            isDarkMode
+                              ? 'bg-gradient-to-br from-red-600 to-red-800'
+                              : 'bg-gradient-to-br from-red-600 to-red-700'
+                          }`}>
                             <FileText className="h-4 w-4 text-white" />
                           </div>
-                          <span className="text-sm font-bold text-cyan-700">
+                          <span className={`text-sm font-bold ${
+                            isDarkMode ? 'text-red-400' : 'text-red-700'
+                          }`}>
                             {t('Vazifa', language)} #{index + 1}
                           </span>
                         </div>
                         <button
                           type="button"
                           onClick={() => removeTask(task.id)}
-                          className="text-red-600 hover:text-red-800 p-2 hover:bg-red-100 rounded-lg transition-all transform hover:scale-110"
+                          className={`p-2 rounded-lg transition-all transform hover:scale-110 ${
+                            isDarkMode
+                              ? 'text-red-400 hover:bg-red-900/30'
+                              : 'text-red-600 hover:bg-red-100'
+                          }`}
                           title={t("Vazifani o'chirish", language)}
                         >
                           <Trash2 className="h-4 w-4" />
@@ -1907,39 +1916,86 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
                       </div>
 
                       {/* Xizmat tanlash */}
-                      {carServices.length > 0 ? (
+                      {laborItems.length > 0 ? (
                         <div>
-                          <label className="block text-xs font-semibold text-gray-600 mb-1">
+                          <label className={`block text-xs font-semibold mb-1 ${
+                            isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                          }`}>
                             <Wrench className="h-3 w-3 inline mr-1" />
                             {t('Xizmat (ixtiyoriy)', language)}
                           </label>
                           <select
                             value={task.service}
-                            onChange={(e) => updateTask(task.id, 'service', e.target.value)}
-                            className="w-full px-3 py-2 text-sm border-2 border-cyan-300 rounded-lg focus:ring-2 focus:ring-cyan-500 bg-white hover:border-cyan-400 transition-colors"
+                            onChange={(e) => {
+                              const selectedItem = laborItems.find(item => item.name === e.target.value);
+                              console.log('🔍 Tanlangan xizmat:', selectedItem);
+                              console.log('📋 Barcha laborItems:', laborItems);
+                              if (selectedItem) {
+                                // Jami narxni hisoblash: quantity * price
+                                const totalPayment = (selectedItem.quantity || 1) * (selectedItem.price || 0);
+                                console.log('💰 Hisoblangan narx:', {
+                                  quantity: selectedItem.quantity,
+                                  price: selectedItem.price,
+                                  totalPayment
+                                });
+                                
+                                // Barcha ma'lumotlarni bir vaqtda yangilash
+                                setTasks(tasks.map(t => {
+                                  if (t.id === task.id) {
+                                    return {
+                                      ...t,
+                                      service: e.target.value,
+                                      title: selectedItem.name,
+                                      payment: totalPayment
+                                    };
+                                  }
+                                  return t;
+                                }));
+                              } else {
+                                updateTask(task.id, 'service', '');
+                              }
+                            }}
+                            className={`w-full px-3 py-2 text-sm rounded-lg focus:ring-2 transition-colors ${
+                              isDarkMode
+                                ? 'bg-gray-800 border-2 border-red-900/50 text-white focus:ring-red-500 focus:border-red-500'
+                                : 'bg-white border-2 border-red-200 text-gray-900 focus:ring-red-500 focus:border-red-400'
+                            }`}
                           >
                             <option value="">{t('Xizmat tanlanmagan', language)}</option>
-                            {carServices.map((service: any) => (
-                              <option key={service._id} value={service._id}>
-                                {service.name} - {service.price.toLocaleString()} {t("so'm", language)}
-                              </option>
-                            ))}
+                            {laborItems.map((item: Part, idx: number) => {
+                              const totalPrice = (item.quantity || 1) * (item.price || 0);
+                              return (
+                                <option key={idx} value={item.name}>
+                                  {item.name} ({item.quantity} ta) - {totalPrice.toLocaleString()} {t("so'm", language)}
+                                </option>
+                              );
+                            })}
                           </select>
-                          <p className="text-xs text-cyan-600 mt-1">
+                          <p className={`text-xs mt-1 ${
+                            isDarkMode ? 'text-red-400' : 'text-red-600'
+                          }`}>
                             💡 {t('Xizmat tanlasangiz, narx avtomatik to\'ldiriladi', language)}
                           </p>
                         </div>
                       ) : (
-                        <div className="p-3 bg-amber-50 border-2 border-amber-200 rounded-lg">
-                          <p className="text-xs text-amber-700 font-medium">
-                            ⏳ {t("Xizmatlar yuklanmoqda...", language)}
+                        <div className={`p-3 rounded-lg border-2 ${
+                          isDarkMode
+                            ? 'bg-red-900/20 border-red-800'
+                            : 'bg-red-50 border-red-200'
+                        }`}>
+                          <p className={`text-xs font-medium ${
+                            isDarkMode ? 'text-red-400' : 'text-red-700'
+                          }`}>
+                            ⚠️ {t("3-stepda xizmat qo'shing", language)}
                           </p>
                         </div>
                       )}
 
                       {/* Vazifa nomi */}
                       <div>
-                        <label className="block text-xs font-semibold text-gray-600 mb-1">
+                        <label className={`block text-xs font-semibold mb-1 ${
+                          isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                        }`}>
                           {t('Vazifa nomi', language)} *
                         </label>
                         <input
@@ -1947,21 +2003,31 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
                           value={task.title}
                           onChange={(e) => updateTask(task.id, 'title', e.target.value)}
                           placeholder={t("Masalan: Dvigatel ta'mirlash", language)}
-                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 bg-white"
+                          className={`w-full px-3 py-2 text-sm rounded-lg focus:ring-2 transition-colors ${
+                            isDarkMode
+                              ? 'bg-gray-800 border border-gray-700 text-white placeholder:text-gray-500 focus:ring-red-500 focus:border-red-500'
+                              : 'bg-white border border-gray-300 text-gray-900 placeholder:text-gray-400 focus:ring-red-500 focus:border-red-400'
+                          }`}
                         />
                       </div>
 
                       {/* Shogirdlar */}
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                          <label className="block text-xs font-semibold text-gray-600">
+                          <label className={`block text-xs font-semibold ${
+                            isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                          }`}>
                             <User className="h-3 w-3 inline mr-1" />
                             {t('Shogirdlar', language)}
                           </label>
                           <button
                             type="button"
                             onClick={() => addApprentice(task.id)}
-                            className="px-2 py-1 text-xs bg-cyan-600 text-white rounded hover:bg-cyan-700 flex items-center gap-1"
+                            className={`px-2 py-1 text-xs rounded flex items-center gap-1 transition-colors ${
+                              isDarkMode
+                                ? 'bg-red-600 text-white hover:bg-red-700'
+                                : 'bg-red-600 text-white hover:bg-red-700'
+                            }`}
                           >
                             <Plus className="h-3 w-3" />
                             {t("Shogird qo'shish", language)}
@@ -1969,9 +2035,17 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
                         </div>
 
                         {task.assignments.length === 0 ? (
-                          <div className="text-center py-4 bg-gradient-to-br from-gray-50 to-blue-50 rounded-lg border-2 border-dashed border-blue-300">
-                            <User className="h-8 w-8 text-blue-400 mx-auto mb-2" />
-                            <p className="text-xs text-gray-600 font-medium">{t("Shogird qo'shing", language)}</p>
+                          <div className={`text-center py-4 rounded-lg border-2 border-dashed ${
+                            isDarkMode
+                              ? 'bg-gray-800/50 border-red-900/50'
+                              : 'bg-gray-50 border-red-300'
+                          }`}>
+                            <User className={`h-8 w-8 mx-auto mb-2 ${
+                              isDarkMode ? 'text-red-400' : 'text-red-400'
+                            }`} />
+                            <p className={`text-xs font-medium ${
+                              isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                            }`}>{t("Shogird qo'shing", language)}</p>
                           </div>
                         ) : (
                           <div className="space-y-2">
@@ -1981,18 +2055,32 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
                               const masterShare = allocatedAmount - earning;
 
                               return (
-                                <div key={assignment.id} className="p-3 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border-2 border-blue-200 shadow-sm">
+                                <div key={assignment.id} className={`p-3 rounded-lg border-2 shadow-sm ${
+                                  isDarkMode
+                                    ? 'bg-gradient-to-br from-gray-800 to-gray-900 border-red-900/50'
+                                    : 'bg-gradient-to-br from-red-50 to-gray-50 border-red-200'
+                                }`}>
                                   <div className="flex items-center justify-between mb-2">
                                     <div className="flex items-center gap-2">
-                                      <div className="p-1 bg-gradient-to-br from-blue-600 to-indigo-500 rounded">
+                                      <div className={`p-1 rounded ${
+                                        isDarkMode
+                                          ? 'bg-gradient-to-br from-red-600 to-red-800'
+                                          : 'bg-gradient-to-br from-red-600 to-red-700'
+                                      }`}>
                                         <User className="h-3 w-3 text-white" />
                                       </div>
-                                      <span className="text-xs font-bold text-blue-700">{t('Shogird', language)} #{idx + 1}</span>
+                                      <span className={`text-xs font-bold ${
+                                        isDarkMode ? 'text-red-400' : 'text-red-700'
+                                      }`}>{t('Shogird', language)} #{idx + 1}</span>
                                     </div>
                                     <button
                                       type="button"
                                       onClick={() => removeApprentice(task.id, assignment.id)}
-                                      className="text-red-600 hover:text-red-800 p-1.5 hover:bg-red-100 rounded transition-all"
+                                      className={`p-1.5 rounded transition-all ${
+                                        isDarkMode
+                                          ? 'text-red-400 hover:bg-red-900/30'
+                                          : 'text-red-600 hover:bg-red-100'
+                                      }`}
                                     >
                                       <Trash2 className="h-3 w-3" />
                                     </button>
@@ -2003,7 +2091,11 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
                                       <select
                                         value={assignment.apprenticeId}
                                         onChange={(e) => updateApprentice(task.id, assignment.id, 'apprenticeId', e.target.value)}
-                                        className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 bg-white"
+                                        className={`w-full px-2 py-1 text-xs rounded focus:ring-1 ${
+                                          isDarkMode
+                                            ? 'bg-gray-800 border border-gray-700 text-white focus:ring-red-500'
+                                            : 'bg-white border border-gray-300 text-gray-900 focus:ring-red-500'
+                                        }`}
                                         disabled={usersLoading}
                                       >
                                         <option value="">
@@ -2023,7 +2115,11 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
                                         value={assignment.percentage}
                                         readOnly
                                         disabled
-                                        className="w-full px-2 py-1 text-xs border border-gray-300 rounded bg-gray-100 text-gray-600 cursor-not-allowed"
+                                        className={`w-full px-2 py-1 text-xs rounded cursor-not-allowed ${
+                                          isDarkMode
+                                            ? 'bg-gray-900 border border-gray-700 text-gray-500'
+                                            : 'bg-gray-100 border border-gray-300 text-gray-600'
+                                        }`}
                                         placeholder={t("Foiz %", language)}
                                         title={t("Ustoz tomonidan belgilangan foiz", language)}
                                       />
@@ -2031,18 +2127,20 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
                                   </div>
 
                                   {task.payment > 0 && assignment.percentage > 0 && (
-                                    <div className="mt-2 p-2 bg-white rounded text-xs space-y-1">
+                                    <div className={`mt-2 p-2 rounded text-xs space-y-1 ${
+                                      isDarkMode ? 'bg-gray-900/50' : 'bg-white'
+                                    }`}>
                                       <div className="flex justify-between">
-                                        <span className="text-gray-600">{t('Ajratilgan:', language)}</span>
-                                        <span className="font-bold">{allocatedAmount.toLocaleString()} {t("so'm", language)}</span>
+                                        <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>{t('Ajratilgan:', language)}</span>
+                                        <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{allocatedAmount.toLocaleString()} {t("so'm", language)}</span>
                                       </div>
                                       <div className="flex justify-between">
-                                        <span className="text-green-600">{t('Shogird', language)} ({assignment.percentage}%):</span>
-                                        <span className="font-bold text-green-700">{earning.toLocaleString()} {t("so'm", language)}</span>
+                                        <span className={isDarkMode ? 'text-green-400' : 'text-green-600'}>{t('Shogird', language)} ({assignment.percentage}%):</span>
+                                        <span className={`font-bold ${isDarkMode ? 'text-green-400' : 'text-green-700'}`}>{earning.toLocaleString()} {t("so'm", language)}</span>
                                       </div>
                                       <div className="flex justify-between">
-                                        <span className="text-blue-600">{t('Ustoz:', language)}</span>
-                                        <span className="font-bold text-blue-700">{masterShare.toLocaleString()} {t("so'm", language)}</span>
+                                        <span className={isDarkMode ? 'text-red-400' : 'text-red-600'}>{t('Ustoz:', language)}</span>
+                                        <span className={`font-bold ${isDarkMode ? 'text-red-400' : 'text-red-700'}`}>{masterShare.toLocaleString()} {t("so'm", language)}</span>
                                       </div>
                                     </div>
                                   )}
@@ -2056,14 +2154,20 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
                       {/* Qo'shimcha ma'lumotlar */}
                       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                         <div>
-                          <label className="block text-xs font-semibold text-gray-600 mb-1">
+                          <label className={`block text-xs font-semibold mb-1 ${
+                            isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                          }`}>
                             <AlertTriangle className="h-3 w-3 inline mr-1" />
                             {t('Muhimlik', language)}
                           </label>
                           <select
                             value={task.priority}
                             onChange={(e) => updateTask(task.id, 'priority', e.target.value)}
-                            className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 bg-white"
+                            className={`w-full px-2 py-1 text-xs rounded focus:ring-1 ${
+                              isDarkMode
+                                ? 'bg-gray-800 border border-gray-700 text-white focus:ring-red-500'
+                                : 'bg-white border border-gray-300 text-gray-900 focus:ring-red-500'
+                            }`}
                           >
                             <option value="low">{t('Past', language)}</option>
                             <option value="medium">{t("O'rta", language)}</option>
@@ -2073,7 +2177,9 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
                         </div>
 
                         <div>
-                          <label className="block text-xs font-semibold text-gray-600 mb-1">
+                          <label className={`block text-xs font-semibold mb-1 ${
+                            isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                          }`}>
                             <Calendar className="h-3 w-3 inline mr-1" />
                             {t('Muddat', language)}
                           </label>
@@ -2082,12 +2188,18 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
                             value={task.dueDate}
                             onChange={(e) => updateTask(task.id, 'dueDate', e.target.value)}
                             min={new Date().toISOString().split('T')[0]}
-                            className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                            className={`w-full px-2 py-1 text-xs rounded focus:ring-1 ${
+                              isDarkMode
+                                ? 'bg-gray-800 border border-gray-700 text-white focus:ring-red-500'
+                                : 'bg-white border border-gray-300 text-gray-900 focus:ring-red-500'
+                            }`}
                           />
                         </div>
 
                         <div>
-                          <label className="block text-xs font-semibold text-gray-600 mb-1">
+                          <label className={`block text-xs font-semibold mb-1 ${
+                            isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                          }`}>
                             <Clock className="h-3 w-3 inline mr-1" />
                             {t('Soat', language)}
                           </label>
@@ -2097,13 +2209,17 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
                             onChange={(e) => updateTask(task.id, 'estimatedHours', Number(e.target.value))}
                             min="0.5"
                             step="0.5"
-                            className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                            className={`w-full px-2 py-1 text-xs rounded focus:ring-1 ${
+                              isDarkMode
+                                ? 'bg-gray-800 border border-gray-700 text-white focus:ring-red-500'
+                                : 'bg-white border border-gray-300 text-gray-900 focus:ring-red-500'
+                            }`}
                           />
                         </div>
 
                         <div>
                           <label className={`block text-xs font-semibold mb-1 flex items-center gap-1 ${
-                            isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                            isDarkMode ? 'text-gray-300' : 'text-gray-700'
                           }`}>
                             <DollarSign className="h-3 w-3" />
                             {t("To'lov", language)}
@@ -2113,7 +2229,11 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
                             value={task.payment}
                             onChange={(e) => updateTask(task.id, 'payment', Number(e.target.value))}
                             min="0"
-                            className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                            className={`w-full px-2 py-1 text-xs rounded focus:ring-1 ${
+                              isDarkMode
+                                ? 'bg-gray-800 border border-gray-700 text-white focus:ring-red-500'
+                                : 'bg-white border border-gray-300 text-gray-900 focus:ring-red-500'
+                            }`}
                             placeholder="0"
                           />
                         </div>
