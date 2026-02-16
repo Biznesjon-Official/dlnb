@@ -16,8 +16,8 @@ export default defineConfig({
         name: 'Dalnoboy Shop',
         short_name: 'Dalnoboy',
         description: 'Dalnoboy Shop - Avtomobil servislari uchun professional boshqaruv tizimi',
-        theme_color: '#2563eb',
-        background_color: '#ffffff',
+        theme_color: '#dc2626',
+        background_color: '#111827',
         display: 'standalone',
         orientation: 'portrait-primary',
         scope: '/',
@@ -46,6 +46,18 @@ export default defineConfig({
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable'
+          },
+          {
+            src: '/dlnb.png',
+            sizes: '144x144',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/dlnb.png',
+            sizes: '96x96',
+            type: 'image/png',
+            purpose: 'any'
           }
         ]
       },

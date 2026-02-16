@@ -1,8 +1,9 @@
-const CACHE_NAME = 'dalnoboy-v5';
+const CACHE_NAME = 'dalnoboy-v6';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/dlnb.png'
+  '/dlnb.png',
+  '/manifest.webmanifest'
 ];
 
 // Install event - cache static assets
