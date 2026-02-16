@@ -117,7 +117,7 @@ const CarCard: React.FC<CarCardProps> = ({
   const statusConfig = getStatusConfig(car.status);
 
   return (
-    <div className={`group relative overflow-hidden rounded-xl sm:rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border ${
+    <div className={`group relative overflow-hidden rounded-xl sm:rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border flex flex-col ${
       isDarkMode
         ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 border-red-900/30 hover:border-red-700'
         : 'bg-white border-gray-200 hover:border-orange-300'
@@ -204,7 +204,7 @@ const CarCard: React.FC<CarCardProps> = ({
       </div>
 
       {/* Stats Grid */}
-      <div className="p-4 sm:p-6 space-y-4">
+      <div className="p-4 sm:p-6 space-y-4 flex-1">
         <div className="grid grid-cols-3 gap-3 sm:gap-4">
           {/* Total Amount */}
           <div className={`p-3 sm:p-4 rounded-xl ${
@@ -314,79 +314,85 @@ const CarCard: React.FC<CarCardProps> = ({
       </div>
 
       {/* Action Buttons */}
-      <div className={`p-4 sm:p-6 border-t ${
+      <div className={`p-4 sm:p-6 border-t mt-auto ${
         isDarkMode ? 'border-red-900/30 bg-gray-800/30' : 'border-gray-100 bg-gray-50'
       }`}>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
-          <button
-            onClick={() => onView(car)}
-            className={`inline-flex items-center justify-center px-3 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md ${
-              isDarkMode
-                ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                : 'bg-blue-500 hover:bg-blue-600 text-white'
-            }`}
-          >
-            <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" />
-            {t("Ko'rish", language)}
-          </button>
-
-          <button
-            onClick={() => onEdit(car)}
-            className={`inline-flex items-center justify-center px-3 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md ${
-              isDarkMode
-                ? 'bg-amber-600 hover:bg-amber-700 text-white'
-                : 'bg-amber-500 hover:bg-amber-600 text-white'
-            }`}
-          >
-            <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" />
-            {t('Tahrirlash', language)}
-          </button>
-
+        <div className="flex items-center gap-2">
+          {/* To'lov button - katta */}
           <button
             onClick={() => onPayment(car)}
-            className={`inline-flex items-center justify-center px-3 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md ${
+            className={`flex-1 inline-flex items-center justify-center px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md ${
               isDarkMode
-                ? 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white'
-                : 'bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white'
+                ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white'
+                : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white'
             }`}
           >
-            <DollarSign className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" />
-            {t("To'lov", language)}
+            <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-1.5" />
+            <span className="hidden xs:inline">{t("To'lov", language)}</span>
+            <span className="xs:hidden">{t("To'lov", language)}</span>
           </button>
 
+          {/* SMS button - katta */}
+          {car.ownerPhone && (
+            <a
+              href={`sms:${car.ownerPhone}?body=${encodeURIComponent(getSmsMessage(car))}`}
+              className={`flex-1 inline-flex items-center justify-center px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md ${
+                isDarkMode
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white'
+                  : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white'
+              }`}
+              onClick={(e) => {
+                if (!/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+                  e.preventDefault();
+                  toast.error(t('SMS yuborish faqat mobil qurilmalarda ishlaydi', language));
+                }
+              }}
+            >
+              <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-1.5" />
+              <span className="hidden xs:inline">{t("SMS", language)}</span>
+              <span className="xs:hidden">{t("SMS", language)}</span>
+            </a>
+          )}
+
+          {/* Ko'rish button - icon only */}
+          <button
+            onClick={() => onView(car)}
+            className={`inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md ${
+              isDarkMode
+                ? 'bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 text-white border border-red-900/30'
+                : 'bg-blue-500 hover:bg-blue-600 text-white'
+            }`}
+            title={t("Ko'rish", language)}
+          >
+            <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
+          </button>
+
+          {/* Tahrirlash button - icon only */}
+          <button
+            onClick={() => onEdit(car)}
+            className={`inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md ${
+              isDarkMode
+                ? 'bg-gradient-to-r from-red-700 to-red-800 hover:from-red-600 hover:to-red-700 text-white'
+                : 'bg-amber-500 hover:bg-amber-600 text-white'
+            }`}
+            title={t('Tahrirlash', language)}
+          >
+            <Edit className="h-4 w-4 sm:h-5 sm:w-5" />
+          </button>
+
+          {/* O'chirish button - icon only */}
           <button
             onClick={() => onDelete(car)}
-            className={`inline-flex items-center justify-center px-3 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md ${
+            className={`inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md ${
               isDarkMode
-                ? 'bg-red-600 hover:bg-red-700 text-white'
+                ? 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white'
                 : 'bg-red-500 hover:bg-red-600 text-white'
             }`}
+            title={t("O'chirish", language)}
           >
-            <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" />
-            {t("O'chirish", language)}
+            <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />
           </button>
         </div>
-
-        {/* SMS Button - Full Width */}
-        {car.ownerPhone && (
-          <a
-            href={`sms:${car.ownerPhone}?body=${encodeURIComponent(getSmsMessage(car))}`}
-            className={`mt-2 sm:mt-3 w-full inline-flex items-center justify-center px-4 py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md ${
-              isDarkMode
-                ? 'bg-purple-600 hover:bg-purple-700 text-white'
-                : 'bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white'
-            }`}
-            onClick={(e) => {
-              if (!/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-                e.preventDefault();
-                toast.error(t('SMS yuborish faqat mobil qurilmalarda ishlaydi', language));
-              }
-            }}
-          >
-            <MessageSquare className="h-4 w-4 mr-2" />
-            {t("SMS yuborish", language)}
-          </a>
-        )}
       </div>
     </div>
   );

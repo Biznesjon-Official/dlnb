@@ -115,7 +115,6 @@ export const createTask = async (req: AuthRequest, res: Response) => {
 
     const taskData: any = {
       title,
-      description,
       assignedBy: req.user!._id,
       car,
       service,
@@ -125,6 +124,11 @@ export const createTask = async (req: AuthRequest, res: Response) => {
       estimatedHours,
       payment: payment || 0
     };
+
+    // Description ixtiyoriy - faqat mavjud bo'lsa qo'shish
+    if (description && description.trim()) {
+      taskData.description = description;
+    }
 
     // Yangi tizim: Ko'p shogirdlar
     if (assignments && Array.isArray(assignments) && assignments.length > 0) {
@@ -350,7 +354,10 @@ export const updateTask = async (req: AuthRequest, res: Response) => {
 
     // Update basic fields
     if (title) task.title = title;
-    if (description) task.description = description;
+    if (description !== undefined) {
+      // Description ixtiyoriy - bo'sh string bo'lsa ham yangilash
+      task.description = description;
+    }
     if (car) task.car = car;
     if (service) task.service = service;
     if (priority) task.priority = priority;
@@ -584,43 +591,8 @@ export const approveTask = async (req: AuthRequest, res: Response) => {
       task.approvedAt = new Date();
       console.log(`✅ Vazifa tasdiqlandi: ${task.title}`);
       
-      const User = require('../models/User').default;
-      
-      // Yangi tizim: Ko'p shogirdlar
-      if (task.assignments && task.assignments.length > 0) {
-        console.log('💰 Ko\'p shogirdli tizim - Pul qo\'shilmoqda...');
-        // Har bir shogirdga o'z ulushini qo'shish
-        for (const assignment of task.assignments) {
-          console.log(`  → Shogird ${assignment.apprentice} ga ${assignment.earning} so'm qo'shilmoqda`);
-          const updatedUser = await User.findByIdAndUpdate(
-            assignment.apprentice,
-            { 
-              $inc: { 
-                earnings: assignment.earning
-              } 
-            },
-            { new: true }
-          );
-          console.log(`  ✅ Yangilandi! Joriy oylik: ${updatedUser?.earnings}, Jami: ${updatedUser?.totalEarnings}`);
-        }
-      } 
-      // Eski tizim: Bitta shogird
-      else if (task.assignedTo && task.apprenticeEarning) {
-        console.log('💰 Bitta shogirdli tizim - Pul qo\'shilmoqda...');
-        console.log(`  → Shogird ${task.assignedTo} ga ${task.apprenticeEarning} so'm qo'shilmoqda`);
-        const updatedUser = await User.findByIdAndUpdate(
-          task.assignedTo,
-          { 
-            $inc: { 
-              earnings: task.apprenticeEarning
-            } 
-          },
-          { new: true }
-        );
-        console.log(`  ✅ Yangilandi! Joriy oylik: ${updatedUser?.earnings}, Jami: ${updatedUser?.totalEarnings}`);
-      } else {
-        console.log('⚠️ Hech qanday shogird topilmadi yoki earning 0!');
-      }
+      // ⚠️ PUL QO'SHILMAYDI - Allaqachon createTask da qo'shilgan!
+      console.log('ℹ️ Pul allaqachon vazifa yaratilganda qo\'shilgan, qayta qo\'shilmaydi.');
 
       // Barcha vazifalar va xizmatlar tasdiqlangan yoki yo'qligini tekshirish
       if (task.car) {

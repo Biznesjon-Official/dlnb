@@ -3,6 +3,39 @@
 
 ---
 
+## 🎯 PROMPT BAHOLASH QOIDALARI (MAJBURIY!)
+
+**MUHIM**: Har bir prompt olganingizda, uni baholash MAJBURIY!
+
+### Baholash Formati:
+```
+📊 PROMPT BAHOSI: X/10
+
+✅ Yaxshi tomonlar:
+- [...]
+
+❌ Kamchiliklar:
+- [...]
+
+💡 Yaxshilash uchun tavsiya:
+- [...]
+```
+
+### Baholash Mezonlari:
+1. **Aniq maqsad** (2 ball) - Nima qilish kerak aniq ko'rsatilgan
+2. **Fayl/modul ko'rsatilgan** (2 ball) - Qaysi faylda ishlash kerak
+3. **Texnik detallar** (2 ball) - Qanday qilish kerak tushuntirilgan
+4. **Kutilgan natija** (2 ball) - Qanday natija bo'lishi kerak
+5. **Cheklovlar** (2 ball) - Nima qilmaslik kerak
+
+### Baholash Qoidalari:
+- ❌ Rahmdillik qilmaslik - to'g'ri baho berish
+- ❌ Maqtamaslik - faqat faktlar
+- ✅ Har doim yaxshilash tavsiyasi berish
+- ✅ Konkret misollar bilan tushuntirish
+
+---
+
 ## � LOYIHA HAQIDA UMUMIY MA'LUMOT
 
 **Loyiha nomi**: Dalnoboy Shop  
@@ -690,13 +723,14 @@ updateCar(id, data); // Returns immediately
 - **Aktiv holatlar**: Qizil gradient bilan (`bg-gradient-to-r from-red-600 via-red-700 to-gray-900`)
 
 **Light Mode (Yorug' rejim):**
-- **Asosiy fon**: Oq va och kulrang (`bg-white`, `from-slate-50 via-blue-50 to-indigo-50`)
+- **Asosiy fon**: Och qizil va pushti gradientlar (`from-rose-50 via-pink-50 to-white`)
 - **Kartalar**: Oq (`bg-white`)
-- **Aktsent ranglar**: Ko'k va indigo gradientlar (`from-blue-500 to-indigo-600`)
-- **Matn**: Qora va to'q kulrang (`text-gray-900`, `text-gray-700`)
-- **Chegaralar**: Och kulrang (`border-gray-200`, `border-gray-100`)
-- **Hover effektlar**: Ko'k va indigo gradientlar
-- **Aktiv holatlar**: Ko'k gradient bilan (`bg-gradient-to-r from-blue-500 to-indigo-600`)
+- **Aktsent ranglar**: Och qizil va pushti gradientlar (`from-rose-500 to-pink-600`)
+- **Matn**: Qora va to'q kulrang (`text-gray-900`, `text-gray-700`, `text-gray-600`)
+- **Chegaralar**: Och qizil va pushti (`border-rose-200`, `border-pink-200`)
+- **Hover effektlar**: Och qizil va pushti gradientlar (`from-rose-600 to-pink-700`)
+- **Aktiv holatlar**: Och qizil gradient bilan (`bg-gradient-to-r from-rose-500 to-pink-600`)
+- **Sidebar**: Och qizil gradient fon (`from-rose-50 to-white border-rose-200`)
 
 **Logo va Branding:**
 - Logo fayli: `public/dlnb.png`

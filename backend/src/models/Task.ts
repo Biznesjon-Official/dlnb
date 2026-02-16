@@ -73,7 +73,7 @@ const taskSchema = new Schema<ITask>({
   },
   description: {
     type: String,
-    required: true,
+    required: false, // Ixtiyoriy
     trim: true
   },
   assignedTo: {
@@ -118,7 +118,7 @@ const taskSchema = new Schema<ITask>({
   },
   dueDate: {
     type: Date,
-    required: true
+    required: false // Ixtiyoriy qilindi
   },
   completedAt: {
     type: Date

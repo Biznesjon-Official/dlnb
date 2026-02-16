@@ -3,14 +3,14 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useCarsNew } from '@/hooks/useCarsNew';
 import { useBackendStatus } from '@/hooks/useBackendStatus';
 import { useDebts } from '@/hooks/useDebts';
-import { useTasks, useApproveTask } from '@/hooks/useTasks';
+import { useTasks } from '@/hooks/useTasks';
 import CreateCarModal from '@/components/CreateCarModal';
 import ViewCarModal from '@/components/ViewCarModal';
 import EditCarStepModal from '@/components/EditCarStepModal';
 import DeleteCarModal from '@/components/DeleteCarModal';
 import RestoreCarModal from '@/components/RestoreCarModal';
 import CarPaymentModalHybrid from '@/components/CarPaymentModalHybrid';
-import {Plus,Search, Car as CarIcon, Eye, Edit, Trash2, Phone, Package2, Filter, CheckCircle, RotateCcw, DollarSign, Users, ClipboardList, X, XCircle, MessageSquare} from 'lucide-react';
+import {Plus,Search, Car as CarIcon, Eye, Edit, Trash2, Phone, Package2, Filter, CheckCircle, RotateCcw, DollarSign, Users, ClipboardList, XCircle, MessageSquare} from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { Car } from '@/types';
 import { t } from '@/lib/transliteration';
@@ -30,15 +30,6 @@ const Cars: React.FC = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isRestoreModalOpen, setIsRestoreModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  
-  // State for task approval modal
-  const [showApprovalModal, setShowApprovalModal] = useState(false);
-  const [selectedTask, setSelectedTask] = useState<any>(null);
-  const [rejectionReason, setRejectionReason] = useState('');
-  const [isApprovingTask, setIsApprovingTask] = useState(false);
-  
-  // Tasks hook
-  const approveTaskMutation = useApproveTask();
 
   // localStorage'dan tilni o'qish
   const language = React.useMemo<'latin' | 'cyrillic'>(() => {
@@ -236,44 +227,13 @@ const Cars: React.FC = () => {
     setSelectedCar(car);
     setIsRestoreModalOpen(true);
   };
-  
-  // Handle task approval
-  const handleApproveTask = (task: any) => {
-    setSelectedTask(task);
-    setShowApprovalModal(true);
-  };
-
-  const confirmApproval = async (approved: boolean) => {
-    if (selectedTask) {
-      try {
-        setIsApprovingTask(true);
-        
-        await approveTaskMutation.mutateAsync({
-          id: selectedTask._id,
-          approved: approved,
-          rejectionReason: approved ? undefined : rejectionReason,
-        });
-        
-        setShowApprovalModal(false);
-        setSelectedTask(null);
-        setRejectionReason('');
-      } catch (error) {
-        console.error('Task approval error:', error);
-      } finally {
-        setIsApprovingTask(false);
-      }
-    }
-  };
 
   const closeAllModals = () => {
     setIsViewModalOpen(false);
     setIsEditModalOpen(false);
     setIsDeleteModalOpen(false);
     setIsRestoreModalOpen(false);
-    setShowApprovalModal(false);
     setSelectedCar(null);
-    setSelectedTask(null);
-    setRejectionReason('');
   };
 
   // Unused function - commented out
@@ -1257,7 +1217,7 @@ const Cars: React.FC = () => {
               // Backend dan kelgan totalEstimate ni ishlatish, agar mavjud bo'lsa
               const displayTotal = car.totalEstimate || calculatedTotal;
               
-              return <CarCard key={car._id} car={car} displayTotal={displayTotal} language={language} isDarkMode={isDarkMode} onView={handleViewCar} onEdit={handleEditCar} onDelete={handleDeleteCar} onApproveTask={handleApproveTask} onPayment={handlePaymentCar} getSmsMessage={getSmsMessage} />;
+              return <CarCard key={car._id} car={car} displayTotal={displayTotal} language={language} isDarkMode={isDarkMode} onView={handleViewCar} onEdit={handleEditCar} onDelete={handleDeleteCar} onPayment={handlePaymentCar} getSmsMessage={getSmsMessage} />;
             })}
           </div>
         )}
@@ -1330,101 +1290,6 @@ const Cars: React.FC = () => {
           />
         </>
       )}
-      
-      {/* Task Approval Modal - Outside of CarCard */}
-      {showApprovalModal && selectedTask && (
-        <div 
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[10000] p-4"
-          onClick={() => setShowApprovalModal(false)}
-        >
-          <div 
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-scale-in"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="relative bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 px-6 py-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="bg-white/20 backdrop-blur-sm p-2 rounded-xl">
-                    <CheckCircle className="h-5 w-5 text-white" />
-                  </div>
-                  <h3 className="text-lg font-bold text-white">{t('Vazifani tasdiqlash', language)}</h3>
-                </div>
-                <button
-                  onClick={() => setShowApprovalModal(false)}
-                  className="text-white/80 hover:text-white p-1"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-
-            {/* Content */}
-            <div className="p-6 space-y-4">
-              <div className="bg-blue-50 p-4 rounded-xl">
-                <h4 className="font-bold text-gray-900 mb-2">{selectedTask.title}</h4>
-                <p className="text-sm text-gray-600 mb-3">{selectedTask.description}</p>
-                <div className="space-y-2">
-                  {selectedTask.assignments && selectedTask.assignments.length > 0 && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="font-semibold">{t('Shogirdlar:', language)}</span>
-                      <div className="flex flex-wrap gap-1">
-                        {selectedTask.assignments.map((assignment: any, idx: number) => (
-                          <span key={idx} className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-md text-xs font-medium">
-                            {assignment.apprentice?.name}
-                            {assignment.percentage && ` (${assignment.percentage}%)`}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {selectedTask.payment && selectedTask.payment > 0 && (
-                    <div className="flex items-center gap-2 text-sm bg-green-50 p-2 rounded-lg">
-                      <DollarSign className="h-4 w-4 text-green-600" />
-                      <span className="font-semibold text-green-800">
-                        {t("To'lov:", language)} {formatCurrency(selectedTask.payment, language)}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <label className="block text-sm font-semibold text-gray-700">
-                  {t('Rad etish sababi (ixtiyoriy):', language)}
-                </label>
-                <textarea
-                  value={rejectionReason}
-                  onChange={(e) => setRejectionReason(e.target.value)}
-                  placeholder={t("Agar rad etsangiz, sababini yozing...", language)}
-                  className="w-full px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                  rows={3}
-                />
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="flex gap-3 p-6 border-t border-gray-200">
-              <button
-                onClick={() => confirmApproval(false)}
-                disabled={isApprovingTask}
-                className="flex-1 px-4 py-2.5 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-              >
-                <XCircle className="h-4 w-4" />
-                {isApprovingTask ? t('Saqlanmoqda...', language) : t('Rad etish', language)}
-              </button>
-              <button
-                onClick={() => confirmApproval(true)}
-                disabled={isApprovingTask}
-                className="flex-1 px-4 py-2.5 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-              >
-                <CheckCircle className="h-4 w-4" />
-                {isApprovingTask ? t('Saqlanmoqda...', language) : t('Tasdiqlash', language)}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
@@ -1438,10 +1303,9 @@ const CarCard: React.FC<{
   onView: (car: Car) => void;
   onEdit: (car: Car) => void;
   onDelete: (car: Car) => void;
-  onApproveTask: (task: any) => void;
   onPayment: (car: Car) => void;
   getSmsMessage: (car: Car) => string;
-}> = ({ car, displayTotal, language, isDarkMode, onView, onEdit, onDelete, onApproveTask, onPayment, getSmsMessage }) => {
+}> = ({ car, displayTotal, language, isDarkMode, onView, onEdit, onDelete, onPayment, getSmsMessage }) => {
   // Fetch tasks for this car ONLY
   const { data: tasksData } = useTasks({ car: car._id });
   const tasks = tasksData?.tasks || [];
@@ -1572,19 +1436,10 @@ const CarCard: React.FC<{
         {/* Tasks Section - NEW */}
         {tasks.length > 0 && (
           <div 
-            onClick={(e) => {
-              const completedTask = tasks.find((t: any) => t.status === 'completed');
-              if (completedTask) {
-                e.stopPropagation();
-                onApproveTask(completedTask);
-              }
-            }}
             className={`rounded-lg sm:rounded-xl p-2.5 sm:p-4 border ${
               isDarkMode
                 ? 'bg-gradient-to-r from-yellow-900/30 to-amber-900/30 border-yellow-900/30'
                 : 'bg-gradient-to-r from-orange-50 to-amber-50 border-orange-100'
-            } ${
-              tasks.some((t: any) => t.status === 'completed') ? 'cursor-pointer hover:border-green-300 hover:shadow-md transition-all' : ''
             }`}
           >
             <div className="flex items-center justify-between mb-2">
@@ -1596,16 +1451,6 @@ const CarCard: React.FC<{
                 {tasks.length}
               </span>
             </div>
-            
-            {/* Hint for completed tasks */}
-            {tasks.some((t: any) => t.status === 'completed') && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-2 mb-2">
-                <p className="text-xs text-green-700 font-medium flex items-center gap-1.5">
-                  <CheckCircle className="h-3 w-3" />
-                  {t('Tugallangan vazifalar ustiga bosing', language)}
-                </p>
-              </div>
-            )}
             
             {/* Apprentices */}
             {apprentices.length > 0 && (
@@ -1649,14 +1494,20 @@ const CarCard: React.FC<{
       {/* Card Footer - Action Buttons */}
       <div className="px-3 sm:px-6 pb-3 sm:pb-6">
         {/* Desktop: Bir qatorda barcha tugmalar */}
-        <div className="hidden sm:flex items-center gap-1.5 pt-4 border-t border-gray-100">
+        <div className={`hidden sm:flex items-center gap-1.5 pt-4 border-t ${
+          isDarkMode ? 'border-red-900/30' : 'border-gray-100'
+        }`}>
           {/* Payment Button - Show if car has remaining balance */}
           {(() => {
             const remaining = displayTotal - (car.paidAmount || 0);
             return remaining > 0 && (
               <button 
                 onClick={() => onPayment(car)}
-                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg transition-all duration-200 font-medium group"
+                className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg transition-all duration-200 font-medium group ${
+                  isDarkMode
+                    ? 'bg-green-600 text-white hover:bg-green-700'
+                    : 'bg-green-50 text-green-600 hover:bg-green-100'
+                }`}
                 title={t("To'lov", language)}
               >
                 <DollarSign className="h-3.5 w-3.5 group-hover:scale-110 transition-transform" />
@@ -1669,7 +1520,11 @@ const CarCard: React.FC<{
           {car.ownerPhone && (
             <a 
               href={`sms:${car.ownerPhone}?body=${encodeURIComponent(getSmsMessage(car))}`}
-              className="px-3 py-2 bg-purple-50 text-purple-600 hover:bg-purple-100 hover:text-purple-700 rounded-lg transition-all duration-200 group flex items-center gap-1.5"
+              className={`px-3 py-2 rounded-lg transition-all duration-200 group flex items-center gap-1.5 ${
+                isDarkMode
+                  ? 'bg-purple-600 text-white hover:bg-purple-700'
+                  : 'bg-purple-50 text-purple-600 hover:bg-purple-100 hover:text-purple-700'
+              }`}
               title={t("SMS yuborish", language)}
               onClick={(e) => {
                 if (!/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
@@ -1685,21 +1540,33 @@ const CarCard: React.FC<{
           
           <button 
             onClick={() => onView(car)}
-            className="p-2 bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700 rounded-lg transition-all duration-200 group"
+            className={`p-2 rounded-lg transition-all duration-200 group ${
+              isDarkMode
+                ? 'bg-gray-700 text-white hover:bg-gray-600 border border-red-900/30'
+                : 'bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700'
+            }`}
             title={t("Ko'rish", language)}
           >
             <Eye className="h-3.5 w-3.5 group-hover:scale-110 transition-transform" />
           </button>
           <button 
             onClick={() => onEdit(car)}
-            className="p-2 bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-lg transition-all duration-200"
+            className={`p-2 rounded-lg transition-all duration-200 ${
+              isDarkMode
+                ? 'bg-red-700 text-white hover:bg-red-600'
+                : 'bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+            }`}
             title={t("Tahrirlash", language)}
           >
             <Edit className="h-3.5 w-3.5" />
           </button>
           <button 
             onClick={() => onDelete(car)}
-            className="p-2 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 rounded-lg transition-all duration-200"
+            className={`p-2 rounded-lg transition-all duration-200 ${
+              isDarkMode
+                ? 'bg-red-600 text-white hover:bg-red-700'
+                : 'bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700'
+            }`}
             title={t("O'chirish", language)}
           >
             <Trash2 className="h-3.5 w-3.5" />
@@ -1707,7 +1574,9 @@ const CarCard: React.FC<{
         </div>
 
         {/* Mobile: Ikki qatorda tugmalar */}
-        <div className="sm:hidden space-y-2 pt-2 border-t border-gray-100">
+        <div className={`sm:hidden space-y-2 pt-2 border-t ${
+          isDarkMode ? 'border-red-900/30' : 'border-gray-100'
+        }`}>
           {/* Birinchi qator: Asosiy tugmalar */}
           <div className="flex items-center gap-2">
             {(() => {
@@ -1715,7 +1584,11 @@ const CarCard: React.FC<{
               return remaining > 0 && (
                 <button 
                   onClick={() => onPayment(car)}
-                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg transition-all duration-200 font-medium"
+                  className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg transition-all duration-200 font-medium ${
+                    isDarkMode
+                      ? 'bg-green-600 text-white hover:bg-green-700'
+                      : 'bg-green-50 text-green-600 hover:bg-green-100'
+                  }`}
                   title={t("To'lov", language)}
                 >
                   <DollarSign className="h-3.5 w-3.5" />
@@ -1727,7 +1600,11 @@ const CarCard: React.FC<{
             {car.ownerPhone && (
               <a 
                 href={`sms:${car.ownerPhone}?body=${encodeURIComponent(getSmsMessage(car))}`}
-                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-purple-50 text-purple-600 hover:bg-purple-100 rounded-lg transition-all duration-200 font-medium"
+                className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg transition-all duration-200 font-medium ${
+                  isDarkMode
+                    ? 'bg-purple-600 text-white hover:bg-purple-700'
+                    : 'bg-purple-50 text-purple-600 hover:bg-purple-100'
+                }`}
                 title={t("SMS yuborish", language)}
                 onClick={(e) => {
                   if (!/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
@@ -1743,7 +1620,11 @@ const CarCard: React.FC<{
             
             <button 
               onClick={() => onView(car)}
-              className="p-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition-all duration-200"
+              className={`p-2 rounded-lg transition-all duration-200 ${
+                isDarkMode
+                  ? 'bg-gray-700 text-white hover:bg-gray-600 border border-red-900/30'
+                  : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+              }`}
               title={t("Ko'rish", language)}
             >
               <Eye className="h-3.5 w-3.5" />
@@ -1754,7 +1635,11 @@ const CarCard: React.FC<{
           <div className="flex items-center gap-2">
             <button 
               onClick={() => onEdit(car)}
-              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-gray-50 text-gray-600 hover:bg-gray-100 rounded-lg transition-all duration-200 font-medium"
+              className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg transition-all duration-200 font-medium ${
+                isDarkMode
+                  ? 'bg-red-700 text-white hover:bg-red-600'
+                  : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+              }`}
               title={t("Tahrirlash", language)}
             >
               <Edit className="h-3.5 w-3.5" />
@@ -1763,7 +1648,11 @@ const CarCard: React.FC<{
             
             <button 
               onClick={() => onDelete(car)}
-              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-all duration-200 font-medium"
+              className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg transition-all duration-200 font-medium ${
+                isDarkMode
+                  ? 'bg-red-600 text-white hover:bg-red-700'
+                  : 'bg-red-50 text-red-600 hover:bg-red-100'
+              }`}
               title={t("O'chirish", language)}
             >
               <Trash2 className="h-3.5 w-3.5" />

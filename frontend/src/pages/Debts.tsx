@@ -122,28 +122,46 @@ const Debts: React.FC = () => {
             <div className="p-8 space-y-6">
               {/* Amount Summary Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-5 border border-orange-100">
+                <div className={`rounded-2xl p-5 border ${
+                  isDarkMode
+                    ? 'bg-gradient-to-br from-gray-800 to-gray-900 border-red-900/30'
+                    : 'bg-gradient-to-br from-rose-50 to-pink-50 border-rose-100'
+                }`}>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-semibold text-orange-600 uppercase tracking-wide">{t('Umumiy summa', language)}</span>
-                    <DollarSign className="h-5 w-5 text-orange-500" />
+                    <span className={`text-xs font-semibold uppercase tracking-wide ${
+                      isDarkMode ? 'text-red-400' : 'text-rose-600'
+                    }`}>{t('Umumiy summa', language)}</span>
+                    <DollarSign className={`h-5 w-5 ${isDarkMode ? 'text-red-500' : 'text-rose-500'}`} />
                   </div>
-                  <p className="text-2xl font-bold text-gray-900">{formatCurrency(debt.amount)}</p>
+                  <p className={`text-2xl font-bold ${isDarkMode ? 'text-gray-200' : 'text-gray-900'}`}>{formatCurrency(debt.amount)}</p>
                 </div>
 
-                <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl p-5 border border-orange-100">
+                <div className={`rounded-2xl p-5 border ${
+                  isDarkMode
+                    ? 'bg-gradient-to-br from-gray-800 to-gray-900 border-red-900/30'
+                    : 'bg-gradient-to-br from-rose-50 to-pink-50 border-rose-100'
+                }`}>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-semibold text-orange-600 uppercase tracking-wide">{t("To'langan", language)}</span>
-                    <TrendingUp className="h-5 w-5 text-orange-500" />
+                    <span className={`text-xs font-semibold uppercase tracking-wide ${
+                      isDarkMode ? 'text-red-400' : 'text-rose-600'
+                    }`}>{t("To'langan", language)}</span>
+                    <TrendingUp className={`h-5 w-5 ${isDarkMode ? 'text-red-500' : 'text-rose-500'}`} />
                   </div>
-                  <p className="text-2xl font-bold text-orange-600">{formatCurrency(debt.paidAmount)}</p>
+                  <p className={`text-2xl font-bold ${isDarkMode ? 'text-green-400' : 'text-rose-600'}`}>{formatCurrency(debt.paidAmount)}</p>
                 </div>
 
-                <div className="bg-gradient-to-br from-red-50 to-pink-50 rounded-2xl p-5 border border-red-100">
+                <div className={`rounded-2xl p-5 border ${
+                  isDarkMode
+                    ? 'bg-gradient-to-br from-gray-800 to-gray-900 border-red-900/30'
+                    : 'bg-gradient-to-br from-pink-50 to-rose-50 border-pink-100'
+                }`}>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-semibold text-red-600 uppercase tracking-wide">{t('Qolgan', language)}</span>
-                    <TrendingDown className="h-5 w-5 text-red-500" />
+                    <span className={`text-xs font-semibold uppercase tracking-wide ${
+                      isDarkMode ? 'text-red-400' : 'text-pink-600'
+                    }`}>{t('Qolgan', language)}</span>
+                    <TrendingDown className={`h-5 w-5 ${isDarkMode ? 'text-red-500' : 'text-pink-500'}`} />
                   </div>
-                  <p className="text-2xl font-bold text-red-600">{formatCurrency(remainingAmount)}</p>
+                  <p className={`text-2xl font-bold ${isDarkMode ? 'text-red-400' : 'text-pink-600'}`}>{formatCurrency(remainingAmount)}</p>
                 </div>
               </div>
 

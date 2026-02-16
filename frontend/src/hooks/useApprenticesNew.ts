@@ -10,32 +10,16 @@ import toast from 'react-hot-toast';
 import { User } from '@/types';
 
 export function useApprenticesNew() {
-  // ⚡ INSTANT LOADING: Initial state'ni localStorage'dan olish (0ms)
-  const [apprentices, setApprentices] = useState<User[]>(() => {
-    try {
-      const cached = localStorage.getItem('apprentices_cache');
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        // Cache 5 daqiqa amal qiladi
-        if (Date.now() - parsed.timestamp < 5 * 60 * 1000) {
-          return parsed.data || [];
-        }
-      }
-    } catch (err) {
-      console.error('Failed to load apprentices from localStorage:', err);
-    }
-    return [];
-  });
+  // ⚡ INSTANT LOADING: Initial state bo'sh array
+  const [apprentices, setApprentices] = useState<User[]>([]);
   
-  const [loading, setLoading] = useState(false); // Always false - instant loading
+  const [loading, setLoading] = useState(true); // Initial load uchun true
   const [error, setError] = useState<string | null>(null);
 
-  // Load apprentices - ULTRA OPTIMIZED (instant loading, no spinner)
+  // Load apprentices - ULTRA OPTIMIZED
   const loadApprentices = useCallback(async (silent = false) => {
     try {
-      // Agar cache bo'lmasa va silent emas bo'lsa - loading ko'rsatish
-      const hasCache = localStorage.getItem('apprentices_cache');
-      if (!silent && !hasCache) {
+      if (!silent) {
         setLoading(true);
       }
       setError(null);
@@ -60,29 +44,26 @@ export function useApprenticesNew() {
       console.error('Failed to load apprentices:', err);
       setError(err.message);
       // Xatolik bo'lsa, cache'dan yuklash
-      if (!silent) {
-        try {
-          const cached = localStorage.getItem('apprentices_cache');
-          if (cached) {
-            const parsed = JSON.parse(cached);
-            setApprentices(parsed.data || []);
-          }
-        } catch (cacheErr) {
-          console.error('Failed to load from cache:', cacheErr);
+      try {
+        const cached = localStorage.getItem('apprentices_cache');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          setApprentices(parsed.data || []);
         }
+      } catch (cacheErr) {
+        console.error('Failed to load from cache:', cacheErr);
       }
     } finally {
+      // Har doim loading'ni false qilish
       setLoading(false);
     }
   }, []);
 
   // Initial load
   useEffect(() => {
-    // Agar cache bo'lsa, silent yuklash (loading ko'rsatmaslik)
-    // Agar cache bo'lmasa, loading ko'rsatish
-    const hasCache = localStorage.getItem('apprentices_cache');
-    loadApprentices(!!hasCache); // silent = true if cache exists
-  }, [loadApprentices]);
+    loadApprentices(false); // Har doim loading true bilan boshlash
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Faqat mount'da ishga tushsin
 
   // Refresh
   const refresh = useCallback(async () => {

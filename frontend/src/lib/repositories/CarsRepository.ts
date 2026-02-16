@@ -190,7 +190,7 @@ export class CarsRepository extends BaseRepository<Car> {
         console.log(`⚡ Server'dan ${allCars.length} mashina ${duration}ms da yuklandi`);
         
         // ⚡ FIX: Faqat FAOL mashinalarni filter qilish
-        // Faol mashina: isDeleted !== true, status !== completed/delivered, paymentStatus !== paid
+        // Faol mashina: isDeleted !== true, status !== completed/delivered, paidAmount === 0
         const activeCars = allCars.filter((car: Car) => {
           // O'chirilgan mashinalar chiqmasin
           if (car.isDeleted === true) return false;
@@ -198,8 +198,8 @@ export class CarsRepository extends BaseRepository<Car> {
           // To'liq tugallangan mashinalar chiqmasin
           if (car.status === 'completed' || car.status === 'delivered') return false;
           
-          // To'liq to'langan mashinalar chiqmasin
-          if (car.paymentStatus === 'paid') return false;
+          // ⚡ YANGI QOIDA: Biror to'lov qilingan mashinalar chiqmasin
+          if ((car.paidAmount || 0) > 0) return false;
           
           // Qolgan barcha mashinalar faol
           return true;
@@ -226,7 +226,7 @@ export class CarsRepository extends BaseRepository<Car> {
           car.isDeleted !== true && 
           car.status !== 'completed' && 
           car.status !== 'delivered' &&
-          car.paymentStatus !== 'paid'
+          (car.paidAmount || 0) === 0 // ⚡ YANGI: Faqat to'lov qilinmagan
         );
         console.log('Offline: Active cars from IndexedDB:', activeCars.length);
         return activeCars;
@@ -238,7 +238,7 @@ export class CarsRepository extends BaseRepository<Car> {
         car.isDeleted !== true && 
         car.status !== 'completed' && 
         car.status !== 'delivered' &&
-        car.paymentStatus !== 'paid'
+        (car.paidAmount || 0) === 0 // ⚡ YANGI: Faqat to'lov qilinmagan
       );
       console.log('Offline mode: Active cars from IndexedDB:', activeCars.length);
       return activeCars;
@@ -270,25 +270,23 @@ export class CarsRepository extends BaseRepository<Car> {
         console.error('Failed to fetch archived cars from server:', error);
         // Fallback to IndexedDB
         const allCars = await this.storage.getAll<Car>(this.config.collection);
-        // Arxivlangan: isDeleted, completed, delivered, paid yoki partial
+        // Arxivlangan: isDeleted, completed, delivered yoki biror to'lov qilingan
         return allCars.filter(car => 
           car.isDeleted === true || 
           car.status === 'completed' || 
           car.status === 'delivered' || 
-          car.paymentStatus === 'paid' ||
-          car.paymentStatus === 'partial'
+          (car.paidAmount || 0) > 0 // ⚡ YANGI: Biror to'lov qilingan
         );
       }
     } else {
       // Offline: IndexedDB'dan barcha mashinalarni olish va arxivlanganlarni filter qilish
       const allCars = await this.storage.getAll<Car>(this.config.collection);
-      // Arxivlangan: isDeleted, completed, delivered, paid yoki partial
+      // Arxivlangan: isDeleted, completed, delivered yoki biror to'lov qilingan
       return allCars.filter(car => 
         car.isDeleted === true || 
         car.status === 'completed' || 
         car.status === 'delivered' || 
-        car.paymentStatus === 'paid' ||
-        car.paymentStatus === 'partial'
+        (car.paidAmount || 0) > 0 // ⚡ YANGI: Biror to'lov qilingan
       );
     }
   }

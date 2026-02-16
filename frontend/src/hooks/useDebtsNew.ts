@@ -46,44 +46,17 @@ interface DebtSummary {
 }
 
 export function useDebtsNew(filters?: { type?: string; status?: string }) {
-  // ⚡ INSTANT LOADING: Initial state'ni localStorage'dan olish (0ms)
-  const [debts, setDebts] = useState<Debt[]>(() => {
-    try {
-      const cached = localStorage.getItem('debts_cache');
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        // Cache 5 daqiqa amal qiladi
-        if (Date.now() - parsed.timestamp < 5 * 60 * 1000) {
-          return parsed.data || [];
-        }
-      }
-    } catch (err) {
-      console.error('Failed to load debts from localStorage:', err);
-    }
-    return [];
-  });
+  // ⚡ INSTANT LOADING: Initial state bo'sh array
+  const [debts, setDebts] = useState<Debt[]>([]);
 
-  const [summary, setSummary] = useState<DebtSummary>(() => {
-    try {
-      const cached = localStorage.getItem('debts_summary_cache');
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (Date.now() - parsed.timestamp < 5 * 60 * 1000) {
-          return parsed.data;
-        }
-      }
-    } catch (err) {
-      console.error('Failed to load summary from localStorage:', err);
-    }
-    return {
-      receivables: { total: 0, remaining: 0, count: 0 },
-      payables: { total: 0, remaining: 0, count: 0 },
-      netPosition: 0
-    };
+  const [summary, setSummary] = useState<DebtSummary>({
+    receivables: { total: 0, remaining: 0, count: 0 },
+    payables: { total: 0, remaining: 0, count: 0 },
+    netPosition: 0
   });
   
-  const [loading, setLoading] = useState(false);
-  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Initial load uchun true
+  const [summaryLoading, setSummaryLoading] = useState(true); // Initial load uchun true
   const [error, setError] = useState<string | null>(null);
 
   // Load debts - ULTRA OPTIMIZED
@@ -119,21 +92,18 @@ export function useDebtsNew(filters?: { type?: string; status?: string }) {
       console.error('Failed to load debts:', err);
       setError(err.message);
       // Xatolik bo'lsa, cache'dan yuklash
-      if (!silent) {
-        try {
-          const cached = localStorage.getItem('debts_cache');
-          if (cached) {
-            const parsed = JSON.parse(cached);
-            setDebts(parsed.data || []);
-          }
-        } catch (cacheErr) {
-          console.error('Failed to load from cache:', cacheErr);
+      try {
+        const cached = localStorage.getItem('debts_cache');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          setDebts(parsed.data || []);
         }
+      } catch (cacheErr) {
+        console.error('Failed to load from cache:', cacheErr);
       }
     } finally {
-      if (!silent) {
-        setLoading(false);
-      }
+      // Har doim loading'ni false qilish
+      setLoading(false);
     }
   }, [filters]);
 
@@ -161,32 +131,35 @@ export function useDebtsNew(filters?: { type?: string; status?: string }) {
     } catch (err: any) {
       console.error('Failed to load summary:', err);
       // Xatolik bo'lsa, cache'dan yuklash
-      if (!silent) {
-        try {
-          const cached = localStorage.getItem('debts_summary_cache');
-          if (cached) {
-            const parsed = JSON.parse(cached);
-            setSummary(parsed.data);
-          }
-        } catch (cacheErr) {
-          console.error('Failed to load summary from cache:', cacheErr);
+      try {
+        const cached = localStorage.getItem('debts_summary_cache');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          setSummary(parsed.data);
         }
+      } catch (cacheErr) {
+        console.error('Failed to load summary from cache:', cacheErr);
       }
     } finally {
-      if (!silent) {
-        setSummaryLoading(false);
-      }
+      // Har doim loading'ni false qilish
+      setSummaryLoading(false);
     }
   }, []);
 
   // Initial load
   useEffect(() => {
-    const hasCache = localStorage.getItem('debts_cache');
-    loadDebts(!!hasCache);
-    
-    const hasSummaryCache = localStorage.getItem('debts_summary_cache');
-    loadSummary(!!hasSummaryCache);
-  }, [loadDebts, loadSummary]);
+    loadDebts(false); // Har doim loading true bilan boshlash
+    loadSummary(false); // Har doim loading true bilan boshlash
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Faqat mount'da ishga tushsin
+
+  // Filters o'zgarganda qayta yuklash
+  useEffect(() => {
+    if (filters?.type || filters?.status) {
+      loadDebts(true); // Silent reload
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters?.type, filters?.status]);
 
   // Refresh
   const refresh = useCallback(async () => {

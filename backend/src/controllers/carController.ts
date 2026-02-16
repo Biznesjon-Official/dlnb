@@ -188,10 +188,14 @@ export const getCars = async (req: AuthRequest, res: Response) => {
     };
     
     // ⚡ SIMPLIFIED FILTER: Sodda va tez (index ishlatadi)
+    // ⚡ YANGI QOIDA: Faqat to'lov qilinmagan mashinalar (paidAmount === 0)
     const filter: any = { 
       isDeleted: false,
       status: { $in: ['pending', 'in-progress'] },
-      paymentStatus: { $in: ['pending', 'partial'] }
+      $or: [
+        { paidAmount: { $exists: false } }, // paidAmount yo'q
+        { paidAmount: 0 }                   // yoki 0 ga teng
+      ]
     };
     
     if (status) filter.status = status;
@@ -663,13 +667,13 @@ export const getClientParts = async (req: AuthRequest, res: Response) => {
 export const getArchivedCars = async (req: AuthRequest, res: Response) => {
   try {
     const { search } = req.query;
+    // ⚡ YANGI QOIDA: Arxivlangan mashinalar - biror to'lov qilingan yoki o'chirilgan
     const filter: any = { 
       $or: [
         { isDeleted: true },
         { status: 'completed' },
         { status: 'delivered' },
-        { paymentStatus: 'paid' },
-        { paymentStatus: 'partial' }
+        { paidAmount: { $gt: 0 } } // ⚡ Biror to'lov qilingan
       ]
     };
     

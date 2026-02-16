@@ -157,12 +157,12 @@ export function useCarsNew() {
       updatePendingCount();
     };
     
-    // ⚡ OPTIMISTIC UPDATE: To'liq to'langan mashina DARHOL yo'qoladi
-    const handleCarFullyPaid = (event: any) => {
+    // ⚡ OPTIMISTIC UPDATE: To'lov qilingan mashina DARHOL yo'qoladi (to'liq yoki qisman farqi yo'q)
+    const handleCarPaymentAdded = (event: any) => {
       const carId = event.detail?.carId;
       if (!carId) return;
       
-      console.log('⚡ OPTIMISTIC: Mashina to\'liq to\'landi - DARHOL olib tashlanmoqda:', carId);
+      console.log('⚡ OPTIMISTIC: Mashinaga to\'lov qilindi - DARHOL olib tashlanmoqda:', carId);
       
       // INSTANT: Mashinani faol ro'yxatdan olib tashlash (0ms)
       setCars(prev => {
@@ -199,13 +199,13 @@ export function useCarsNew() {
     };
     
     window.addEventListener('cars-refresh', handleCarsRefresh);
-    window.addEventListener('car-fully-paid', handleCarFullyPaid as EventListener);
+    window.addEventListener('car-payment-added', handleCarPaymentAdded as EventListener);
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', handleFocus);
     
     return () => {
       window.removeEventListener('cars-refresh', handleCarsRefresh);
-      window.removeEventListener('car-fully-paid', handleCarFullyPaid as EventListener);
+      window.removeEventListener('car-payment-added', handleCarPaymentAdded as EventListener);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
     };

@@ -22,6 +22,7 @@ import EditSparePartModal from '@/components/EditSparePartModal';
 import DeleteSparePartModal from '@/components/DeleteSparePartModal';
 import ViewSparePartModal from '@/components/ViewSparePartModal';
 import SellSparePartModal from '@/components/SellSparePartModal';
+import WarehouseSkeleton from '@/components/WarehouseSkeleton';
 import { useTheme } from '@/contexts/ThemeContext';
 
 // Debounce hook
@@ -795,21 +796,9 @@ const MasterWarehouse: React.FC = memo(() => {
               </h3>
 
               <div className="pr-2">
-              {/* Loading overlay - faqat birinchi yuklanishda */}
+              {/* Skeleton loader - faqat birinchi yuklanishda */}
               {isLoading && !spareParts.length ? (
-                <div className="text-center py-12">
-                  <div className="relative mx-auto w-16 h-16 mb-4">
-                    <div className={`absolute inset-0 border-4 rounded-full ${
-                      isDarkMode ? 'border-gray-700' : 'border-purple-200'
-                    }`}></div>
-                    <div className={`absolute inset-0 border-4 rounded-full border-t-transparent animate-spin ${
-                      isDarkMode ? 'border-red-600' : 'border-purple-600'
-                    }`}></div>
-                  </div>
-                  <p className={`text-base font-medium ${
-                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                  }`}>{t('Yuklanmoqda...', language)}</p>
-                </div>
+                <WarehouseSkeleton />
               ) : filteredParts.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="relative inline-block mb-4">

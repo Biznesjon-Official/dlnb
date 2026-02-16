@@ -25,24 +25,10 @@ interface Booking {
 }
 
 export function useBookingsNew() {
-  // ⚡ INSTANT LOADING: Initial state'ni localStorage'dan olish (0ms)
-  const [bookings, setBookings] = useState<Booking[]>(() => {
-    try {
-      const cached = localStorage.getItem('bookings_cache');
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        // Cache 5 daqiqa amal qiladi
-        if (Date.now() - parsed.timestamp < 5 * 60 * 1000) {
-          return parsed.data || [];
-        }
-      }
-    } catch (err) {
-      console.error('Failed to load bookings from localStorage:', err);
-    }
-    return [];
-  });
+  // ⚡ INSTANT LOADING: Initial state bo'sh array
+  const [bookings, setBookings] = useState<Booking[]>([]);
   
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Initial load uchun true
   const [error, setError] = useState<string | null>(null);
 
   // Load bookings - ULTRA OPTIMIZED
@@ -73,29 +59,26 @@ export function useBookingsNew() {
       console.error('Failed to load bookings:', err);
       setError(err.message);
       // Xatolik bo'lsa, cache'dan yuklash
-      if (!silent) {
-        try {
-          const cached = localStorage.getItem('bookings_cache');
-          if (cached) {
-            const parsed = JSON.parse(cached);
-            setBookings(parsed.data || []);
-          }
-        } catch (cacheErr) {
-          console.error('Failed to load from cache:', cacheErr);
+      try {
+        const cached = localStorage.getItem('bookings_cache');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          setBookings(parsed.data || []);
         }
+      } catch (cacheErr) {
+        console.error('Failed to load from cache:', cacheErr);
       }
     } finally {
-      if (!silent) {
-        setLoading(false);
-      }
+      // Har doim loading'ni false qilish
+      setLoading(false);
     }
   }, []);
 
   // Initial load
   useEffect(() => {
-    const hasCache = localStorage.getItem('bookings_cache');
-    loadBookings(!!hasCache);
-  }, [loadBookings]);
+    loadBookings(false); // Har doim loading true bilan boshlash
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Faqat mount'da ishga tushsin
 
   // Refresh
   const refresh = useCallback(async () => {

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Car, Package, Plus, Trash2, ChevronRight, Wrench, Box, Briefcase, FileText, User, Calendar, Clock, AlertTriangle, Warehouse, Truck, CheckCircle, DollarSign } from 'lucide-react';
+import { X, Car, Package, Plus, Trash2, ChevronRight, Wrench, Box, Briefcase, FileText, User, Users, AlertTriangle, Warehouse, Truck, CheckCircle } from 'lucide-react';
 import { useCarsNew } from '@/hooks/useCarsNew';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { useUsers } from '@/hooks/useUsers';
@@ -478,7 +478,7 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
     // Vazifalar validatsiyasi (agar qo'shilgan bo'lsa)
     if (tasks.length > 0) {
       for (const task of tasks) {
-        if (!task.title || !task.dueDate || task.assignments.length === 0) {
+        if (!task.title || task.assignments.length === 0) {
           alert(`Vazifa "${task.title || 'Noma\'lum'}" uchun barcha majburiy maydonlarni to'ldiring`);
           return;
         }
@@ -555,10 +555,14 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
             // CreateCarModal'da xizmatlar hali backend'ga saqlanmagan, shuning uchun service field'ini yubormaymiz
             // service: undefined,
             priority: task.priority,
-            dueDate: task.dueDate,
             estimatedHours: task.estimatedHours,
             payment: task.payment
           };
+          
+          // dueDate ixtiyoriy - faqat mavjud bo'lsa yuborish
+          if (task.dueDate) {
+            taskData.dueDate = task.dueDate;
+          }
           
           // Assignments formatini to'g'rilash
           if (task.assignments && task.assignments.length > 0) {
@@ -1743,358 +1747,300 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
               )}
             </>
           ) : currentStep === 4 ? (
-            // QISM 4: Vazifalar
+            // QISM 4: Vazifalar - YANGI DIZAYN
             <>
-              {/* Ixtiyoriy xabar */}
-              <div className={`border-l-4 p-3 mb-3 rounded-lg ${
+              {/* Ixtiyoriy xabar - Ixcham */}
+              <div className={`flex items-center gap-2 p-2 mb-3 rounded-lg border ${
                 isDarkMode
-                  ? 'bg-red-900/20 border-red-600'
-                  : 'bg-orange-50 border-orange-500'
+                  ? 'bg-blue-900/20 border-blue-700'
+                  : 'bg-blue-50 border-blue-200'
               }`}>
-                <div className="flex items-start">
-                  <div className="flex-shrink-0">
-                    <svg className={`h-5 w-5 ${isDarkMode ? 'text-red-400' : 'text-orange-500'}`} fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <div className="ml-3">
-                    <p className={`text-sm font-medium ${isDarkMode ? 'text-red-300' : 'text-orange-700'}`}>
-                      {t('Bu qism ixtiyoriy', language)}
-                    </p>
-                    <p className={`text-xs mt-1 ${isDarkMode ? 'text-red-400' : 'text-orange-600'}`}>
-                      {t('Vazifa qo\'shmasangiz ham mashinani saqlashingiz mumkin', language)}
-                    </p>
-                  </div>
-                </div>
+                <svg className={`h-4 w-4 flex-shrink-0 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+                <p className={`text-xs ${isDarkMode ? 'text-blue-300' : 'text-blue-700'}`}>
+                  {t('Vazifa qo\'shmasangiz ham saqlashingiz mumkin', language)}
+                </p>
               </div>
 
-              {/* Vazifalar qo'shish */}
-              <div className={`rounded-xl p-4 mb-3 shadow-sm border-2 ${
-                isDarkMode
-                  ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 border-red-900/30'
-                  : 'bg-gradient-to-br from-orange-50 via-orange-100 to-orange-50 border-orange-200'
-              }`}>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className={`p-2 rounded-lg shadow-md ${
-                    isDarkMode
-                      ? 'bg-gradient-to-br from-red-600 to-red-800'
-                      : 'bg-gradient-to-br from-orange-600 to-orange-500'
-                  }`}>
-                    <FileText className="h-5 w-5 text-white" />
-                  </div>
-                  <div>
-                    <h4 className={`font-bold text-lg ${isDarkMode ? 'text-red-400' : 'text-orange-900'}`}>
-                      {t("Vazifalar (ixtiyoriy)", language)}
-                    </h4>
-                    <p className={`text-sm ${isDarkMode ? 'text-red-300' : 'text-orange-600'}`}>
-                      {t("Shogirdlarga vazifa topshirish", language)}
-                    </p>
-                  </div>
+              {/* Vazifa qo'shish tugmasi - Katta va aniq */}
+              <button
+                type="button"
+                onClick={addTask}
+                className={`w-full px-4 py-4 mb-4 text-white rounded-xl font-bold flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] ${
+                  isDarkMode
+                    ? 'bg-gradient-to-r from-red-600 via-red-700 to-red-800 hover:from-red-700 hover:via-red-800 hover:to-red-900'
+                    : 'bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-600 hover:from-blue-700 hover:via-blue-800 hover:to-indigo-700'
+                }`}
+              >
+                <div className="bg-white/20 p-2 rounded-lg">
+                  <Plus className="h-6 w-6" />
                 </div>
-
-                <button
-                  type="button"
-                  onClick={addTask}
-                  className={`w-full px-4 py-3 text-white rounded-lg font-bold flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] ${
-                    isDarkMode
-                      ? 'bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900'
-                      : 'bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600'
-                  }`}
-                >
-                  <Plus className="h-5 w-5" />
-                  {t("Vazifa qo'shish", language)}
-                </button>
-              </div>
+                <span className="text-lg">{t("Yangi vazifa qo'shish", language)}</span>
+              </button>
 
               {tasks.length === 0 ? (
-                <div className={`text-center py-10 border-2 border-dashed rounded-xl ${
+                // Bo'sh holat - Sodda va tushunarli
+                <div className={`text-center py-12 border-2 border-dashed rounded-xl ${
                   isDarkMode
-                    ? 'border-red-900/30 bg-gradient-to-br from-gray-800 to-gray-900'
-                    : 'border-orange-300 bg-gradient-to-br from-orange-50 to-orange-100'
+                    ? 'border-gray-700 bg-gray-800/50'
+                    : 'border-gray-300 bg-gray-50'
                 }`}>
-                  <div className={`inline-block p-4 rounded-full mb-4 ${
+                  <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 ${
                     isDarkMode
                       ? 'bg-gradient-to-br from-red-900/50 to-red-800/50'
-                      : 'bg-gradient-to-br from-orange-100 to-orange-200'
+                      : 'bg-gradient-to-br from-blue-100 to-indigo-100'
                   }`}>
-                    <FileText className={`h-12 w-12 ${isDarkMode ? 'text-red-400' : 'text-orange-600'}`} />
+                    <FileText className={`h-8 w-8 ${isDarkMode ? 'text-red-400' : 'text-blue-600'}`} />
                   </div>
-                  <p className={`text-sm font-semibold mb-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
-                    {t("Vazifalar qo'shilmagan", language)}
+                  <p className={`text-sm font-semibold mb-1 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
+                    {t("Hali vazifa yo'q", language)}
                   </p>
-                  <p className={`text-xs mb-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                    {t("Bu qadam ixtiyoriy - o'tkazib yuborishingiz mumkin", language)}
+                  <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    {t("Yuqoridagi tugmani bosib vazifa qo'shing", language)}
                   </p>
                   
-                  {/* Xizmatlar haqida ma'lumot */}
+                  {/* Xizmatlar haqida ma'lumot - Ixcham */}
                   {loadingServices ? (
-                    <div className={`mt-4 p-4 border-2 rounded-lg max-w-md mx-auto ${
-                      isDarkMode
-                        ? 'bg-red-900/20 border-red-700'
-                        : 'bg-orange-50 border-orange-300'
-                    }`}>
-                      <div className="flex items-center justify-center gap-3">
-                        <div className={`animate-spin rounded-full h-5 w-5 border-b-2 ${
-                          isDarkMode ? 'border-red-400' : 'border-orange-600'
+                    <div className="mt-6">
+                      <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg ${
+                        isDarkMode ? 'bg-gray-700' : 'bg-white border border-gray-200'
+                      }`}>
+                        <div className={`animate-spin rounded-full h-4 w-4 border-b-2 ${
+                          isDarkMode ? 'border-red-400' : 'border-blue-600'
                         }`}></div>
-                        <p className={`text-sm font-semibold ${isDarkMode ? 'text-red-300' : 'text-orange-700'}`}>
+                        <span className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                           {t("Xizmatlar yuklanmoqda...", language)}
-                        </p>
+                        </span>
                       </div>
                     </div>
                   ) : laborItems.length > 0 ? (
-                    <div className={`mt-4 p-3 border rounded-lg max-w-md mx-auto ${
+                    <div className={`mt-6 p-3 rounded-lg max-w-sm mx-auto ${
                       isDarkMode
-                        ? 'bg-red-900/20 border-red-800'
-                        : 'bg-orange-50 border-orange-200'
+                        ? 'bg-green-900/20 border border-green-800'
+                        : 'bg-green-50 border border-green-200'
                     }`}>
-                      <p className={`text-xs font-semibold mb-2 flex items-center gap-1.5 ${isDarkMode ? 'text-red-300' : 'text-orange-700'}`}>
-                        <CheckCircle className="h-4 w-4" />
-                        {laborItems.length} ta xizmat mavjud
-                      </p>
-                      <div className="text-xs text-blue-600 space-y-1">
-                        {laborItems.slice(0, 3).map((item: Part, idx: number) => {
-                          const totalPrice = (item.quantity || 1) * (item.price || 0);
-                          return (
-                            <div key={idx} className="flex items-center justify-between">
-                              <span>• {item.name} ({item.quantity} ta)</span>
-                              <span className="font-semibold">{totalPrice.toLocaleString()} {t("so'm", language)}</span>
-                            </div>
-                          );
-                        })}
-                        {laborItems.length > 3 && (
-                          <p className="text-blue-500 font-medium">+{laborItems.length - 3} ta yana...</p>
+                      <div className="flex items-center gap-2 mb-2">
+                        <CheckCircle className={`h-4 w-4 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`} />
+                        <span className={`text-xs font-semibold ${isDarkMode ? 'text-green-300' : 'text-green-700'}`}>
+                          {laborItems.length} ta xizmat tayyor
+                        </span>
+                      </div>
+                      <div className="space-y-1">
+                        {laborItems.slice(0, 2).map((item: Part, idx: number) => (
+                          <div key={idx} className={`text-xs flex items-center justify-between ${
+                            isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                          }`}>
+                            <span>• {item.name}</span>
+                            <span className="font-semibold">{((item.quantity || 1) * (item.price || 0)).toLocaleString()} {t("so'm", language)}</span>
+                          </div>
+                        ))}
+                        {laborItems.length > 2 && (
+                          <p className={`text-xs font-medium ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>
+                            +{laborItems.length - 2} ta yana...
+                          </p>
                         )}
                       </div>
                     </div>
-                  ) : (
-                    <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg max-w-md mx-auto">
-                      <p className="text-xs text-amber-700">
-                        ⚠️ {t("Bu mashina uchun xizmatlar topilmadi", language)}
-                      </p>
-                      <p className="text-xs text-amber-600 mt-1">
-                        {t("Zapchastlar va ish haqi qo'shilganmi tekshiring", language)}
-                      </p>
-                    </div>
-                  )}
+                  ) : null}
                 </div>
               ) : (
-                <div className="space-y-4">
+                // Vazifalar ro'yxati - YANGI DIZAYN
+                <div className="space-y-3">
                   {tasks.map((task, index) => (
-                    <div key={task.id} className={`rounded-xl p-4 space-y-3 shadow-lg hover:shadow-xl transition-all ${
+                    <div key={task.id} className={`rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all border-2 ${
                       isDarkMode
-                        ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 border-2 border-red-900/50'
-                        : 'bg-gradient-to-br from-white via-red-50 to-gray-50 border-2 border-red-200'
+                        ? 'bg-gradient-to-br from-gray-800 to-gray-900 border-red-900/50'
+                        : 'bg-white border-blue-200'
                     }`}>
-                      <div className="flex items-center justify-between">
+                      {/* Header - Vazifa nomi va o'chirish */}
+                      <div className={`px-4 py-3 flex items-center justify-between ${
+                        isDarkMode
+                          ? 'bg-gradient-to-r from-red-600 via-red-700 to-red-800'
+                          : 'bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-600'
+                      }`}>
                         <div className="flex items-center gap-2">
-                          <div className={`p-1.5 rounded-lg ${
-                            isDarkMode
-                              ? 'bg-gradient-to-br from-red-600 to-red-800'
-                              : 'bg-gradient-to-br from-red-600 to-red-700'
-                          }`}>
+                          <div className="bg-white/20 p-1.5 rounded-lg">
                             <FileText className="h-4 w-4 text-white" />
                           </div>
-                          <span className={`text-sm font-bold ${
-                            isDarkMode ? 'text-red-400' : 'text-red-700'
-                          }`}>
+                          <span className="text-sm font-bold text-white">
                             {t('Vazifa', language)} #{index + 1}
                           </span>
                         </div>
                         <button
                           type="button"
                           onClick={() => removeTask(task.id)}
-                          className={`p-2 rounded-lg transition-all transform hover:scale-110 ${
-                            isDarkMode
-                              ? 'text-red-400 hover:bg-red-900/30'
-                              : 'text-red-600 hover:bg-red-100'
-                          }`}
+                          className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-all"
                           title={t("Vazifani o'chirish", language)}
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-4 w-4 text-white" />
                         </button>
                       </div>
 
-                      {/* Xizmat tanlash */}
-                      {laborItems.length > 0 ? (
-                        <div>
-                          <label className={`block text-xs font-semibold mb-1 ${
-                            isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                          }`}>
-                            <Wrench className="h-3 w-3 inline mr-1" />
-                            {t('Xizmat (ixtiyoriy)', language)}
-                          </label>
-                          <select
-                            value={task.service}
-                            onChange={(e) => {
-                              const selectedItem = laborItems.find(item => item.name === e.target.value);
-                              console.log('🔍 Tanlangan xizmat:', selectedItem);
-                              console.log('📋 Barcha laborItems:', laborItems);
-                              if (selectedItem) {
-                                // Jami narxni hisoblash: quantity * price
-                                const totalPayment = (selectedItem.quantity || 1) * (selectedItem.price || 0);
-                                console.log('💰 Hisoblangan narx:', {
-                                  quantity: selectedItem.quantity,
-                                  price: selectedItem.price,
-                                  totalPayment
-                                });
-                                
-                                // Barcha ma'lumotlarni bir vaqtda yangilash
-                                setTasks(tasks.map(t => {
-                                  if (t.id === task.id) {
-                                    return {
-                                      ...t,
-                                      service: e.target.value,
-                                      title: selectedItem.name,
-                                      payment: totalPayment
-                                    };
-                                  }
-                                  return t;
-                                }));
-                              } else {
-                                updateTask(task.id, 'service', '');
-                              }
-                            }}
-                            className={`w-full px-3 py-2 text-sm rounded-lg focus:ring-2 transition-colors ${
-                              isDarkMode
-                                ? 'bg-gray-800 border-2 border-red-900/50 text-white focus:ring-red-500 focus:border-red-500'
-                                : 'bg-white border-2 border-red-200 text-gray-900 focus:ring-red-500 focus:border-red-400'
-                            }`}
-                          >
-                            <option value="">{t('Xizmat tanlanmagan', language)}</option>
-                            {laborItems.map((item: Part, idx: number) => {
-                              const totalPrice = (item.quantity || 1) * (item.price || 0);
-                              return (
-                                <option key={idx} value={item.name}>
-                                  {item.name} ({item.quantity} ta) - {totalPrice.toLocaleString()} {t("so'm", language)}
-                                </option>
-                              );
-                            })}
-                          </select>
-                          <p className={`text-xs mt-1 ${
-                            isDarkMode ? 'text-red-400' : 'text-red-600'
-                          }`}>
-                            💡 {t('Xizmat tanlasangiz, narx avtomatik to\'ldiriladi', language)}
-                          </p>
-                        </div>
-                      ) : (
-                        <div className={`p-3 rounded-lg border-2 ${
-                          isDarkMode
-                            ? 'bg-red-900/20 border-red-800'
-                            : 'bg-red-50 border-red-200'
-                        }`}>
-                          <p className={`text-xs font-medium ${
-                            isDarkMode ? 'text-red-400' : 'text-red-700'
-                          }`}>
-                            ⚠️ {t("3-stepda xizmat qo'shing", language)}
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Vazifa nomi */}
-                      <div>
-                        <label className={`block text-xs font-semibold mb-1 ${
-                          isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                        }`}>
-                          {t('Vazifa nomi', language)} *
-                        </label>
-                        <input
-                          type="text"
-                          value={task.title}
-                          onChange={(e) => updateTask(task.id, 'title', e.target.value)}
-                          placeholder={t("Masalan: Dvigatel ta'mirlash", language)}
-                          className={`w-full px-3 py-2 text-sm rounded-lg focus:ring-2 transition-colors ${
+                      {/* Content */}
+                      <div className="p-4 space-y-3">
+                        {/* 1. Xizmat tanlash - Birinchi va eng muhim */}
+                        {laborItems.length > 0 ? (
+                          <div className={`p-3 rounded-lg border-2 ${
                             isDarkMode
-                              ? 'bg-gray-800 border border-gray-700 text-white placeholder:text-gray-500 focus:ring-red-500 focus:border-red-500'
-                              : 'bg-white border border-gray-300 text-gray-900 placeholder:text-gray-400 focus:ring-red-500 focus:border-red-400'
-                          }`}
-                        />
-                      </div>
-
-                      {/* Shogirdlar */}
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <label className={`block text-xs font-semibold ${
-                            isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                              ? 'bg-blue-900/20 border-blue-800'
+                              : 'bg-blue-50 border-blue-200'
                           }`}>
-                            <User className="h-3 w-3 inline mr-1" />
-                            {t('Shogirdlar', language)}
-                          </label>
-                          <button
-                            type="button"
-                            onClick={() => addApprentice(task.id)}
-                            className={`px-2 py-1 text-xs rounded flex items-center gap-1 transition-colors ${
-                              isDarkMode
-                                ? 'bg-red-600 text-white hover:bg-red-700'
-                                : 'bg-red-600 text-white hover:bg-red-700'
-                            }`}
-                          >
-                            <Plus className="h-3 w-3" />
-                            {t("Shogird qo'shish", language)}
-                          </button>
-                        </div>
-
-                        {task.assignments.length === 0 ? (
-                          <div className={`text-center py-4 rounded-lg border-2 border-dashed ${
-                            isDarkMode
-                              ? 'bg-gray-800/50 border-red-900/50'
-                              : 'bg-gray-50 border-red-300'
-                          }`}>
-                            <User className={`h-8 w-8 mx-auto mb-2 ${
-                              isDarkMode ? 'text-red-400' : 'text-red-400'
-                            }`} />
-                            <p className={`text-xs font-medium ${
-                              isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                            }`}>{t("Shogird qo'shing", language)}</p>
+                            <label className={`block text-xs font-bold mb-2 flex items-center gap-1 ${
+                              isDarkMode ? 'text-blue-300' : 'text-blue-700'
+                            }`}>
+                              <Wrench className="h-3 w-3" />
+                              {t('1. Xizmat tanlang', language)}
+                            </label>
+                            <select
+                              value={task.service}
+                              onChange={(e) => {
+                                const selectedItem = laborItems.find(item => item.name === e.target.value);
+                                if (selectedItem) {
+                                  const totalPayment = (selectedItem.quantity || 1) * (selectedItem.price || 0);
+                                  setTasks(tasks.map(t => {
+                                    if (t.id === task.id) {
+                                      return {
+                                        ...t,
+                                        service: e.target.value,
+                                        title: selectedItem.name,
+                                        payment: totalPayment
+                                      };
+                                    }
+                                    return t;
+                                  }));
+                                } else {
+                                  updateTask(task.id, 'service', '');
+                                }
+                              }}
+                              className={`w-full px-3 py-2.5 text-sm rounded-lg font-medium focus:ring-2 transition-colors ${
+                                isDarkMode
+                                  ? 'bg-gray-800 border-2 border-blue-700 text-white focus:ring-blue-500'
+                                  : 'bg-white border-2 border-blue-300 text-gray-900 focus:ring-blue-500'
+                              }`}
+                            >
+                              <option value="">{t('Xizmat tanlang...', language)}</option>
+                              {laborItems.map((item: Part, idx: number) => {
+                                const totalPrice = (item.quantity || 1) * (item.price || 0);
+                                return (
+                                  <option key={idx} value={item.name}>
+                                    {item.name} - {totalPrice.toLocaleString()} {t("so'm", language)}
+                                  </option>
+                                );
+                              })}
+                            </select>
+                            {task.service && (
+                              <div className={`mt-2 flex items-center gap-2 text-xs ${
+                                isDarkMode ? 'text-green-400' : 'text-green-600'
+                              }`}>
+                                <CheckCircle className="h-3 w-3" />
+                                <span className="font-medium">{t('Narx avtomatik to\'ldirildi', language)}</span>
+                              </div>
+                            )}
                           </div>
                         ) : (
-                          <div className="space-y-2">
-                            {task.assignments.map((assignment, idx) => {
-                              const allocatedAmount = task.payment / task.assignments.length;
-                              const earning = (allocatedAmount * assignment.percentage) / 100;
-                              const masterShare = allocatedAmount - earning;
+                          <div className={`p-3 rounded-lg border-2 ${
+                            isDarkMode
+                              ? 'bg-amber-900/20 border-amber-800'
+                              : 'bg-amber-50 border-amber-200'
+                          }`}>
+                            <p className={`text-xs font-medium flex items-center gap-1 ${
+                              isDarkMode ? 'text-amber-400' : 'text-amber-700'
+                            }`}>
+                              <AlertTriangle className="h-3 w-3" />
+                              {t("3-stepda xizmat qo'shing", language)}
+                            </p>
+                          </div>
+                        )}
 
-                              return (
-                                <div key={assignment.id} className={`p-3 rounded-lg border-2 shadow-sm ${
-                                  isDarkMode
-                                    ? 'bg-gradient-to-br from-gray-800 to-gray-900 border-red-900/50'
-                                    : 'bg-gradient-to-br from-red-50 to-gray-50 border-red-200'
-                                }`}>
-                                  <div className="flex items-center justify-between mb-2">
-                                    <div className="flex items-center gap-2">
+                        {/* 2. Vazifa nomi */}
+                        <div>
+                          <label className={`block text-xs font-bold mb-1.5 ${
+                            isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                          }`}>
+                            {t('2. Vazifa nomi', language)} *
+                          </label>
+                          <input
+                            type="text"
+                            value={task.title}
+                            onChange={(e) => updateTask(task.id, 'title', e.target.value)}
+                            placeholder={t("Masalan: Dvigatel ta'mirlash", language)}
+                            className={`w-full px-3 py-2 text-sm rounded-lg focus:ring-2 transition-colors ${
+                              isDarkMode
+                                ? 'bg-gray-800 border border-gray-700 text-white placeholder:text-gray-500 focus:ring-red-500'
+                                : 'bg-white border border-gray-300 text-gray-900 placeholder:text-gray-400 focus:ring-blue-500'
+                            }`}
+                          />
+                        </div>
+
+                        {/* 3. Shogirdlar - Soddalashtirilgan */}
+                        <div className={`p-3 rounded-lg border-2 ${
+                          isDarkMode
+                            ? 'bg-purple-900/20 border-purple-800'
+                            : 'bg-purple-50 border-purple-200'
+                        }`}>
+                          <div className="flex items-center justify-between mb-2">
+                            <label className={`text-xs font-bold flex items-center gap-1 ${
+                              isDarkMode ? 'text-purple-300' : 'text-purple-700'
+                            }`}>
+                              <Users className="h-3 w-3" />
+                              {t('3. Shogirdlar', language)} ({task.assignments.length})
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => addApprentice(task.id)}
+                              className={`px-2 py-1 text-xs rounded-lg flex items-center gap-1 font-medium transition-all ${
+                                isDarkMode
+                                  ? 'bg-purple-600 text-white hover:bg-purple-700'
+                                  : 'bg-purple-600 text-white hover:bg-purple-700'
+                              }`}
+                            >
+                              <Plus className="h-3 w-3" />
+                              {t("Qo'shish", language)}
+                            </button>
+                          </div>
+
+                          {task.assignments.length === 0 ? (
+                            <div className={`text-center py-3 rounded-lg border border-dashed ${
+                              isDarkMode
+                                ? 'border-purple-700 bg-purple-900/10'
+                                : 'border-purple-300 bg-white'
+                            }`}>
+                              <User className={`h-6 w-6 mx-auto mb-1 ${
+                                isDarkMode ? 'text-purple-400' : 'text-purple-400'
+                              }`} />
+                              <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                                {t("Shogird qo'shing", language)}
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              {task.assignments.map((assignment) => {
+                                const allocatedAmount = task.payment / task.assignments.length;
+                                const earning = (allocatedAmount * assignment.percentage) / 100;
+                                const masterShare = allocatedAmount - earning;
+
+                                return (
+                                  <div key={assignment.id} className={`p-2 rounded-lg border ${
+                                    isDarkMode
+                                      ? 'bg-gray-800 border-purple-700'
+                                      : 'bg-white border-purple-200'
+                                  }`}>
+                                    <div className="flex items-center gap-2 mb-2">
                                       <div className={`p-1 rounded ${
                                         isDarkMode
-                                          ? 'bg-gradient-to-br from-red-600 to-red-800'
-                                          : 'bg-gradient-to-br from-red-600 to-red-700'
+                                          ? 'bg-purple-600'
+                                          : 'bg-purple-600'
                                       }`}>
                                         <User className="h-3 w-3 text-white" />
                                       </div>
-                                      <span className={`text-xs font-bold ${
-                                        isDarkMode ? 'text-red-400' : 'text-red-700'
-                                      }`}>{t('Shogird', language)} #{idx + 1}</span>
-                                    </div>
-                                    <button
-                                      type="button"
-                                      onClick={() => removeApprentice(task.id, assignment.id)}
-                                      className={`p-1.5 rounded transition-all ${
-                                        isDarkMode
-                                          ? 'text-red-400 hover:bg-red-900/30'
-                                          : 'text-red-600 hover:bg-red-100'
-                                      }`}
-                                    >
-                                      <Trash2 className="h-3 w-3" />
-                                    </button>
-                                  </div>
-
-                                  <div className="grid grid-cols-2 gap-2">
-                                    <div>
                                       <select
                                         value={assignment.apprenticeId}
                                         onChange={(e) => updateApprentice(task.id, assignment.id, 'apprenticeId', e.target.value)}
-                                        className={`w-full px-2 py-1 text-xs rounded focus:ring-1 ${
+                                        className={`flex-1 px-2 py-1 text-xs rounded focus:ring-1 ${
                                           isDarkMode
-                                            ? 'bg-gray-800 border border-gray-700 text-white focus:ring-red-500'
-                                            : 'bg-white border border-gray-300 text-gray-900 focus:ring-red-500'
+                                            ? 'bg-gray-900 border border-gray-700 text-white focus:ring-purple-500'
+                                            : 'bg-gray-50 border border-gray-300 text-gray-900 focus:ring-purple-500'
                                         }`}
                                         disabled={usersLoading}
                                       >
@@ -2107,135 +2053,43 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
                                           </option>
                                         ))}
                                       </select>
-                                    </div>
-
-                                    <div>
-                                      <input
-                                        type="number"
-                                        value={assignment.percentage}
-                                        readOnly
-                                        disabled
-                                        className={`w-full px-2 py-1 text-xs rounded cursor-not-allowed ${
+                                      <button
+                                        type="button"
+                                        onClick={() => removeApprentice(task.id, assignment.id)}
+                                        className={`p-1 rounded transition-all ${
                                           isDarkMode
-                                            ? 'bg-gray-900 border border-gray-700 text-gray-500'
-                                            : 'bg-gray-100 border border-gray-300 text-gray-600'
+                                            ? 'text-red-400 hover:bg-red-900/30'
+                                            : 'text-red-600 hover:bg-red-100'
                                         }`}
-                                        placeholder={t("Foiz %", language)}
-                                        title={t("Ustoz tomonidan belgilangan foiz", language)}
-                                      />
+                                      >
+                                        <Trash2 className="h-3 w-3" />
+                                      </button>
                                     </div>
+
+                                    {/* Hisob-kitob - Sodda va tushunarli */}
+                                    {task.payment > 0 && assignment.percentage > 0 && assignment.apprenticeId && (
+                                      <div className={`p-2 rounded text-xs space-y-1 ${
+                                        isDarkMode ? 'bg-gray-900/50' : 'bg-purple-50'
+                                      }`}>
+                                        <div className="flex justify-between">
+                                          <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>💰 {t('Ajratilgan:', language)}</span>
+                                          <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{allocatedAmount.toLocaleString()}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                          <span className={isDarkMode ? 'text-green-400' : 'text-green-600'}>👤 {t('Shogird', language)} ({assignment.percentage}%):</span>
+                                          <span className={`font-bold ${isDarkMode ? 'text-green-400' : 'text-green-700'}`}>{earning.toLocaleString()}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                          <span className={isDarkMode ? 'text-blue-400' : 'text-blue-600'}>👨‍🏫 {t('Ustoz:', language)}</span>
+                                          <span className={`font-bold ${isDarkMode ? 'text-blue-400' : 'text-blue-700'}`}>{masterShare.toLocaleString()}</span>
+                                        </div>
+                                      </div>
+                                    )}
                                   </div>
-
-                                  {task.payment > 0 && assignment.percentage > 0 && (
-                                    <div className={`mt-2 p-2 rounded text-xs space-y-1 ${
-                                      isDarkMode ? 'bg-gray-900/50' : 'bg-white'
-                                    }`}>
-                                      <div className="flex justify-between">
-                                        <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>{t('Ajratilgan:', language)}</span>
-                                        <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{allocatedAmount.toLocaleString()} {t("so'm", language)}</span>
-                                      </div>
-                                      <div className="flex justify-between">
-                                        <span className={isDarkMode ? 'text-green-400' : 'text-green-600'}>{t('Shogird', language)} ({assignment.percentage}%):</span>
-                                        <span className={`font-bold ${isDarkMode ? 'text-green-400' : 'text-green-700'}`}>{earning.toLocaleString()} {t("so'm", language)}</span>
-                                      </div>
-                                      <div className="flex justify-between">
-                                        <span className={isDarkMode ? 'text-red-400' : 'text-red-600'}>{t('Ustoz:', language)}</span>
-                                        <span className={`font-bold ${isDarkMode ? 'text-red-400' : 'text-red-700'}`}>{masterShare.toLocaleString()} {t("so'm", language)}</span>
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Qo'shimcha ma'lumotlar */}
-                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                        <div>
-                          <label className={`block text-xs font-semibold mb-1 ${
-                            isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                          }`}>
-                            <AlertTriangle className="h-3 w-3 inline mr-1" />
-                            {t('Muhimlik', language)}
-                          </label>
-                          <select
-                            value={task.priority}
-                            onChange={(e) => updateTask(task.id, 'priority', e.target.value)}
-                            className={`w-full px-2 py-1 text-xs rounded focus:ring-1 ${
-                              isDarkMode
-                                ? 'bg-gray-800 border border-gray-700 text-white focus:ring-red-500'
-                                : 'bg-white border border-gray-300 text-gray-900 focus:ring-red-500'
-                            }`}
-                          >
-                            <option value="low">{t('Past', language)}</option>
-                            <option value="medium">{t("O'rta", language)}</option>
-                            <option value="high">{t('Yuqori', language)}</option>
-                            <option value="urgent">{t('Shoshilinch', language)}</option>
-                          </select>
-                        </div>
-
-                        <div>
-                          <label className={`block text-xs font-semibold mb-1 ${
-                            isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                          }`}>
-                            <Calendar className="h-3 w-3 inline mr-1" />
-                            {t('Muddat', language)}
-                          </label>
-                          <input
-                            type="date"
-                            value={task.dueDate}
-                            onChange={(e) => updateTask(task.id, 'dueDate', e.target.value)}
-                            min={new Date().toISOString().split('T')[0]}
-                            className={`w-full px-2 py-1 text-xs rounded focus:ring-1 ${
-                              isDarkMode
-                                ? 'bg-gray-800 border border-gray-700 text-white focus:ring-red-500'
-                                : 'bg-white border border-gray-300 text-gray-900 focus:ring-red-500'
-                            }`}
-                          />
-                        </div>
-
-                        <div>
-                          <label className={`block text-xs font-semibold mb-1 ${
-                            isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                          }`}>
-                            <Clock className="h-3 w-3 inline mr-1" />
-                            {t('Soat', language)}
-                          </label>
-                          <input
-                            type="number"
-                            value={task.estimatedHours}
-                            onChange={(e) => updateTask(task.id, 'estimatedHours', Number(e.target.value))}
-                            min="0.5"
-                            step="0.5"
-                            className={`w-full px-2 py-1 text-xs rounded focus:ring-1 ${
-                              isDarkMode
-                                ? 'bg-gray-800 border border-gray-700 text-white focus:ring-red-500'
-                                : 'bg-white border border-gray-300 text-gray-900 focus:ring-red-500'
-                            }`}
-                          />
-                        </div>
-
-                        <div>
-                          <label className={`block text-xs font-semibold mb-1 flex items-center gap-1 ${
-                            isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                          }`}>
-                            <DollarSign className="h-3 w-3" />
-                            {t("To'lov", language)}
-                          </label>
-                          <input
-                            type="number"
-                            value={task.payment}
-                            onChange={(e) => updateTask(task.id, 'payment', Number(e.target.value))}
-                            min="0"
-                            className={`w-full px-2 py-1 text-xs rounded focus:ring-1 ${
-                              isDarkMode
-                                ? 'bg-gray-800 border border-gray-700 text-white focus:ring-red-500'
-                                : 'bg-white border border-gray-300 text-gray-900 focus:ring-red-500'
-                            }`}
-                            placeholder="0"
-                          />
+                                );
+                              })}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>

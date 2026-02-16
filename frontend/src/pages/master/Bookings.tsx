@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { Calendar, Phone, Car, Plus, Edit2, Trash2, Clock, Gift, Cake, PartyPopper, Sparkles } from 'lucide-react';
 import { t } from '@/lib/transliteration';
-import LoadingSpinner from '@/components/LoadingSpinner';
+import BookingsSkeleton from '@/components/BookingsSkeleton';
 import CreateBookingModal from '../../components/CreateBookingModal';
 import EditBookingModal from '../../components/EditBookingModal';
 import DeleteBookingModal from '../../components/DeleteBookingModal';
@@ -131,10 +131,6 @@ const Bookings: React.FC = () => {
     return `${day}/${month}/${year}`;
   };
 
-  if (isLoading) {
-    return <LoadingSpinner />;
-  }
-
   return (
     <div className={`min-h-screen p-4 sm:p-6 lg:p-8 ${
       isDarkMode 
@@ -201,7 +197,9 @@ const Bookings: React.FC = () => {
         </div>
 
       {/* Bookings List - Compact Card View */}
-      {sortedBookings.length === 0 ? (
+      {isLoading ? (
+        <BookingsSkeleton />
+      ) : sortedBookings.length === 0 ? (
         <div className={`rounded-xl shadow-sm border p-8 text-center ${
           isDarkMode
             ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 border-red-900/30'
@@ -235,7 +233,7 @@ const Bookings: React.FC = () => {
                 className={`group relative rounded-xl shadow-sm border-2 transition-all duration-200 hover:shadow-lg hover:-translate-y-1 flex flex-col ${
                   isBirthdaySoon 
                     ? isDarkMode
-                      ? 'border-yellow-600 bg-gradient-to-br from-yellow-900/40 via-gray-800 to-gray-900'
+                      ? 'border-red-600 bg-gradient-to-br from-red-900/40 via-gray-800 to-gray-900'
                       : 'border-yellow-400 bg-gradient-to-br from-yellow-50 to-white'
                     : isDarkMode
                       ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 border-red-900/30 hover:border-red-700'
@@ -247,10 +245,18 @@ const Bookings: React.FC = () => {
                   <div className="absolute -top-3 -right-3 z-10">
                     <div className="relative group/badge">
                       {/* Glow effect */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-500 rounded-full blur-lg animate-pulse opacity-75"></div>
+                      <div className={`absolute inset-0 rounded-full blur-lg animate-pulse opacity-75 ${
+                        isDarkMode
+                          ? 'bg-gradient-to-r from-red-600 via-red-700 to-gray-900'
+                          : 'bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-500'
+                      }`}></div>
                       
                       {/* Badge */}
-                      <div className="relative bg-gradient-to-br from-yellow-400 via-orange-400 to-pink-500 text-white rounded-full p-2.5 shadow-2xl transform group-hover/badge:scale-110 transition-all duration-300">
+                      <div className={`relative text-white rounded-full p-2.5 shadow-2xl transform group-hover/badge:scale-110 transition-all duration-300 ${
+                        isDarkMode
+                          ? 'bg-gradient-to-br from-red-600 via-red-700 to-gray-900'
+                          : 'bg-gradient-to-br from-yellow-400 via-orange-400 to-pink-500'
+                      }`}>
                         {daysUntilBirthday === 0 ? (
                           <PartyPopper className="h-5 w-5 animate-bounce" />
                         ) : daysUntilBirthday === 1 ? (
@@ -261,7 +267,9 @@ const Bookings: React.FC = () => {
                       </div>
                       
                       {/* Tooltip */}
-                      <div className="absolute top-full right-0 mt-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded-lg opacity-0 invisible group-hover/badge:opacity-100 group-hover/badge:visible transition-all duration-200 whitespace-nowrap shadow-xl">
+                      <div className={`absolute top-full right-0 mt-2 px-3 py-1.5 text-white text-xs rounded-lg opacity-0 invisible group-hover/badge:opacity-100 group-hover/badge:visible transition-all duration-200 whitespace-nowrap shadow-xl ${
+                        isDarkMode ? 'bg-gray-900' : 'bg-gray-900'
+                      }`}>
                         <div className="flex items-center gap-1.5">
                           {daysUntilBirthday === 0 ? (
                             <>
@@ -356,7 +364,9 @@ const Bookings: React.FC = () => {
                     <div className={`relative flex items-center gap-2 p-2 rounded-lg border overflow-hidden ${
                       booking.birthDate
                         ? isBirthdaySoon 
-                          ? 'bg-gradient-to-r from-yellow-100 via-orange-100 to-pink-100 border-yellow-300' 
+                          ? isDarkMode
+                            ? 'bg-gradient-to-r from-red-900/60 via-red-800/60 to-gray-800/60 border-red-700'
+                            : 'bg-gradient-to-r from-yellow-100 via-orange-100 to-pink-100 border-yellow-300'
                           : isDarkMode
                             ? 'bg-green-900/40 border-green-800'
                             : 'bg-green-50 border-green-100'
@@ -366,13 +376,19 @@ const Bookings: React.FC = () => {
                     }`}>
                       {/* Animated background for birthday soon */}
                       {booking.birthDate && isBirthdaySoon && (
-                        <div className="absolute inset-0 bg-gradient-to-r from-yellow-200/50 via-orange-200/50 to-pink-200/50 animate-pulse"></div>
+                        <div className={`absolute inset-0 animate-pulse ${
+                          isDarkMode
+                            ? 'bg-gradient-to-r from-red-800/50 via-red-700/50 to-gray-800/50'
+                            : 'bg-gradient-to-r from-yellow-200/50 via-orange-200/50 to-pink-200/50'
+                        }`}></div>
                       )}
                       
                       <div className={`relative z-10 flex items-center justify-center w-8 h-8 rounded-lg shadow-md ${
                         booking.birthDate
                           ? isBirthdaySoon 
-                            ? 'bg-gradient-to-br from-orange-400 to-pink-500' 
+                            ? isDarkMode
+                              ? 'bg-gradient-to-br from-red-600 to-red-700'
+                              : 'bg-gradient-to-br from-orange-400 to-pink-500'
                             : isDarkMode
                               ? 'bg-green-600'
                               : 'bg-green-500'
@@ -407,13 +423,21 @@ const Bookings: React.FC = () => {
                           <div className="flex items-center gap-1 mt-0.5">
                             {daysUntilBirthday === 0 ? (
                               <>
-                                <Sparkles className="h-3 w-3 text-pink-600" />
-                                <span className="text-xs font-bold text-pink-600">Bugun!</span>
+                                <Sparkles className={`h-3 w-3 ${
+                                  isDarkMode ? 'text-red-400' : 'text-pink-600'
+                                }`} />
+                                <span className={`text-xs font-bold ${
+                                  isDarkMode ? 'text-red-400' : 'text-pink-600'
+                                }`}>Bugun!</span>
                               </>
                             ) : (
                               <>
-                                <Clock className="h-3 w-3 text-orange-600" />
-                                <span className="text-xs font-bold text-orange-600">{daysUntilBirthday} kun qoldi</span>
+                                <Clock className={`h-3 w-3 ${
+                                  isDarkMode ? 'text-red-400' : 'text-orange-600'
+                                }`} />
+                                <span className={`text-xs font-bold ${
+                                  isDarkMode ? 'text-red-400' : 'text-orange-600'
+                                }`}>{daysUntilBirthday} kun qoldi</span>
                               </>
                             )}
                           </div>

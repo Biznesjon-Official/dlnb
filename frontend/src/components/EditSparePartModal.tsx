@@ -459,10 +459,10 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4">
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
       
-      <div className="relative bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[95vh] overflow-hidden mx-2">
-        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-3">
+      <div className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-xl shadow-2xl max-w-lg w-full max-h-[95vh] overflow-hidden mx-2 border border-red-900/30">
+        <div className="bg-gradient-to-r from-red-600 via-red-700 to-gray-900 px-4 py-3">
           <button onClick={onClose} className="absolute top-3 right-3 text-white/80 hover:text-white hover:bg-white/20 rounded-lg p-1 transition-colors">
             <X className="h-4 w-4" />
           </button>
@@ -479,7 +479,7 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
 
         <form onSubmit={handleSubmit} className="p-4 space-y-3 overflow-y-auto max-h-[calc(95vh-80px)] scrollbar-hide">
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">
+            <label className="block text-xs font-medium text-gray-200 mb-1">
               {t('Zapchast nomi', language)} *
             </label>
             <input
@@ -488,15 +488,15 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
               required
               value={formData.name}
               onChange={handleChange}
-              className={`w-full px-3 py-2 text-sm border-2 rounded-lg focus:outline-none transition-all ${
+              className={`w-full px-3 py-2 text-sm border-2 bg-gray-800 text-white rounded-lg focus:outline-none transition-all ${
                 errors.name 
-                  ? 'border-red-300 focus:border-red-500' 
-                  : 'border-gray-200 focus:border-purple-500'
+                  ? 'border-red-500 focus:border-red-400' 
+                  : 'border-red-900/30 focus:border-red-500'
               }`}
               placeholder={t('Masalan: Tormoz kolodkasi', language)}
             />
             {errors.name && (
-              <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+              <p className="mt-1 text-xs text-red-400 flex items-center gap-1">
                 <AlertCircle className="h-3 w-3" />
                 {errors.name}
               </p>
@@ -505,14 +505,14 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
 
           {/* Kategoriya tanlash */}
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">
+            <label className="block text-xs font-medium text-gray-200 mb-1">
               {t('Kategoriya', language)} *
             </label>
             <select
               name="category"
               value={formData.category}
               onChange={handleChange}
-              className="w-full px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:border-purple-500 transition-all"
+              className="w-full px-3 py-2 text-sm border-2 border-red-900/30 bg-gray-800 text-white rounded-lg focus:outline-none focus:border-red-500 transition-all"
             >
               <option value="zapchast">{t('Zapchast', language)}</option>
               <option value="balon">{t('Balon', language)}</option>
@@ -522,15 +522,15 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
 
           {/* Balon uchun qo'shimcha maydonlar */}
           {formData.category === 'balon' && (
-            <div className="space-y-3 bg-blue-50 border-2 border-blue-200 rounded-xl p-3">
-              <h3 className="text-xs font-bold text-blue-900 flex items-center gap-2">
+            <div className="space-y-3 bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 border-2 border-red-900/30 rounded-xl p-3">
+              <h3 className="text-xs font-bold text-red-400 flex items-center gap-2">
                 <Package className="h-3 w-3" />
                 {t('Balon ma\'lumotlari', language)}
               </h3>
               
               {/* 1-bosqich: Balon kategoriyasi */}
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-medium text-gray-200 mb-1">
                   {t('Balon turi', language)} *
                 </label>
                 <select
@@ -550,10 +550,10 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
                       });
                     }
                   }}
-                  className={`w-full px-3 py-2 text-sm border-2 rounded-lg focus:outline-none transition-all ${
+                  className={`w-full px-3 py-2 text-sm border-2 bg-gray-800 text-white rounded-lg focus:outline-none transition-all ${
                     errors.tireCategory 
-                      ? 'border-red-300 focus:border-red-500' 
-                      : 'border-gray-200 focus:border-purple-500'
+                      ? 'border-red-500 focus:border-red-400' 
+                      : 'border-red-900/30 focus:border-red-500'
                   }`}
                 >
                   <option value="">{t('Balon turini tanlang', language)}</option>
@@ -567,7 +567,7 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
                   <option value="R14">R14 - Kichik yuk (3 ta o'lcham)</option>
                 </select>
                 {errors.tireCategory && (
-                  <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+                  <p className="mt-1 text-xs text-red-400 flex items-center gap-1">
                     <AlertCircle className="h-3 w-3" />
                     {errors.tireCategory}
                   </p>
@@ -577,17 +577,17 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
               {/* 2-bosqich: Aniq o'lcham (faqat kategoriya tanlanganda) */}
               {formData.tireCategory && (
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                  <label className="block text-xs font-medium text-gray-200 mb-1">
                     {t('Aniq o\'lcham', language)} *
                   </label>
                   <select
                     name="tireSize"
                     value={formData.tireSize}
                     onChange={handleChange}
-                    className={`w-full px-3 py-2 text-sm border-2 rounded-lg focus:outline-none transition-all ${
+                    className={`w-full px-3 py-2 text-sm border-2 bg-gray-800 text-white rounded-lg focus:outline-none transition-all ${
                       errors.tireSize 
-                        ? 'border-red-300 focus:border-red-500' 
-                        : 'border-gray-200 focus:border-purple-500'
+                        ? 'border-red-500 focus:border-red-400' 
+                        : 'border-red-900/30 focus:border-red-500'
                     }`}
                   >
                     <option value="">{t('O\'lchamni tanlang', language)}</option>
@@ -596,7 +596,7 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
                     ))}
                   </select>
                   {errors.tireSize && (
-                    <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+                    <p className="mt-1 text-xs text-red-400 flex items-center gap-1">
                       <AlertCircle className="h-3 w-3" />
                       {errors.tireSize}
                     </p>
@@ -606,14 +606,14 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
 
               {/* Balon turi */}
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-medium text-gray-200 mb-1">
                   {t('Balon turi', language)}
                 </label>
                 <select
                   name="tireType"
                   value={formData.tireType}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:border-purple-500 transition-all"
+                  className="w-full px-3 py-2 text-sm border-2 border-red-900/30 bg-gray-800 text-white rounded-lg focus:outline-none focus:border-red-500 transition-all"
                 >
                   <option value="universal">{t('Universal', language)}</option>
                   <option value="yozgi">{t('Yozgi', language)}</option>
@@ -623,14 +623,14 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
 
               {/* Balon brendi - ENG OXIRIDA */}
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-medium text-gray-200 mb-1">
                   {t('Balon brendi', language)}
                 </label>
                 <select
                   name="tireBrand"
                   value={formData.tireBrand}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:border-purple-500 transition-all"
+                  className="w-full px-3 py-2 text-sm border-2 border-red-900/30 bg-gray-800 text-white rounded-lg focus:outline-none focus:border-red-500 transition-all"
                 >
                   <option value="">{t('Brend tanlang (ixtiyoriy)', language)}</option>
                   <optgroup label={t('Premium brendlar', language)}>
@@ -665,15 +665,15 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
 
           {/* Valyuta tanlash */}
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-xs font-medium text-gray-700">{t('Valyuta', language)}:</span>
-            <div className="flex bg-gray-100 rounded-lg p-0.5">
+            <span className="text-xs font-medium text-gray-200">{t('Valyuta', language)}:</span>
+            <div className="flex bg-gray-800 border border-red-900/30 rounded-lg p-0.5">
               <button
                 type="button"
                 onClick={() => setCurrency('UZS')}
                 className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${
                   currency === 'UZS'
-                    ? 'bg-white text-purple-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-sm'
+                    : 'text-gray-400 hover:text-gray-200'
                 }`}
               >
                 {t("So'm", language)}
@@ -683,15 +683,15 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
                 onClick={() => setCurrency('USD')}
                 className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${
                   currency === 'USD'
-                    ? 'bg-white text-purple-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-sm'
+                    : 'text-gray-400 hover:text-gray-200'
                 }`}
               >
                 USD
               </button>
             </div>
             {currency === 'USD' && (
-              <span className="text-[10px] text-gray-500">
+              <span className="text-[10px] text-gray-400">
                 (1 USD = {exchangeRate.toLocaleString()})
               </span>
             )}
@@ -699,7 +699,7 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-medium text-gray-200 mb-1">
                 {t("O'zini narxi", language)} ({currency === 'UZS' ? t("so'm", language) : 'USD'})
               </label>
               <input
@@ -708,15 +708,15 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
                 value={formData.costPriceDisplay}
                 onChange={handleChange}
                 autoComplete="off"
-                className={`w-full px-3 py-2 text-sm border-2 rounded-lg focus:outline-none transition-all ${
+                className={`w-full px-3 py-2 text-sm border-2 bg-gray-800 text-white rounded-lg focus:outline-none transition-all ${
                   errors.costPrice 
-                    ? 'border-red-300 focus:border-red-500' 
-                    : 'border-gray-200 focus:border-purple-500'
+                    ? 'border-red-500 focus:border-red-400' 
+                    : 'border-red-900/30 focus:border-red-500'
                 }`}
                 placeholder={currency === 'UZS' ? '800,000' : '62.50'}
               />
               {errors.costPrice && (
-                <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+                <p className="mt-1 text-xs text-red-400 flex items-center gap-1">
                   <AlertCircle className="h-3 w-3" />
                   {errors.costPrice}
                 </p>
@@ -724,7 +724,7 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-medium text-gray-200 mb-1">
                 {t('Sotish narxi', language)} ({currency === 'UZS' ? t("so'm", language) : 'USD'})
               </label>
               <input
@@ -733,15 +733,15 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
                 value={formData.sellingPriceDisplay}
                 onChange={handleChange}
                 autoComplete="off"
-                className={`w-full px-3 py-2 text-sm border-2 rounded-lg focus:outline-none transition-all ${
+                className={`w-full px-3 py-2 text-sm border-2 bg-gray-800 text-white rounded-lg focus:outline-none transition-all ${
                   errors.sellingPrice 
-                    ? 'border-red-300 focus:border-red-500' 
-                    : 'border-gray-200 focus:border-purple-500'
+                    ? 'border-red-500 focus:border-red-400' 
+                    : 'border-red-900/30 focus:border-red-500'
                 }`}
                 placeholder={currency === 'UZS' ? '1,000,000' : '78.13'}
               />
               {errors.sellingPrice && (
-                <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+                <p className="mt-1 text-xs text-red-400 flex items-center gap-1">
                   <AlertCircle className="h-3 w-3" />
                   {errors.sellingPrice}
                 </p>
@@ -750,9 +750,9 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
           </div>
 
           {formData.costPrice && formData.sellingPrice && Number(formData.sellingPrice) >= Number(formData.costPrice) && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-2">
+            <div className="bg-gradient-to-br from-green-900/30 via-green-800/20 to-green-900/30 border border-green-700/50 rounded-lg p-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-green-800">{t('Foyda', language)}:</span>
+                <span className="text-xs font-medium text-green-400">{t('Foyda', language)}:</span>
                 <div className="text-right">
                   {(() => {
                     const profit = Number(formData.sellingPrice) - Number(formData.costPrice);
@@ -761,11 +761,11 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
                       : profit.toFixed(0);
                     return (
                       <>
-                        <span className="text-sm font-bold text-green-600">
+                        <span className="text-sm font-bold text-green-300">
                           {formatNumber(profitStr)} {currency === 'UZS' ? t("so'm", language) : 'USD'}
                         </span>
                         {currency === 'USD' && (
-                          <div className="text-[10px] text-green-700 mt-0.5">
+                          <div className="text-[10px] text-green-400 mt-0.5">
                             ≈ {formatNumber(Math.round(profit * exchangeRate).toString())} {t("so'm", language)}
                           </div>
                         )}
@@ -779,7 +779,7 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-medium text-gray-200 mb-1">
                 {t('Miqdor', language)} *
               </label>
               <input
@@ -789,15 +789,15 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
                 min="0"
                 value={formData.quantity}
                 onChange={handleChange}
-                className={`w-full px-3 py-2 text-sm border-2 rounded-lg focus:outline-none transition-all ${
+                className={`w-full px-3 py-2 text-sm border-2 bg-gray-800 text-white rounded-lg focus:outline-none transition-all ${
                   errors.quantity 
-                    ? 'border-red-300 focus:border-red-500' 
-                    : 'border-gray-200 focus:border-purple-500'
+                    ? 'border-red-500 focus:border-red-400' 
+                    : 'border-red-900/30 focus:border-red-500'
                 }`}
                 placeholder="0"
               />
               {errors.quantity && (
-                <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+                <p className="mt-1 text-xs text-red-400 flex items-center gap-1">
                   <AlertCircle className="h-3 w-3" />
                   {errors.quantity}
                 </p>
@@ -806,17 +806,17 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
 
           </div>
 
-          <div className="flex items-center gap-2 pt-2 border-t border-gray-200">
+          <div className="flex items-center gap-2 pt-2 border-t border-red-900/30">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-3 py-2 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              className="flex-1 px-3 py-2 text-xs font-medium text-gray-300 bg-gray-800 border border-red-900/30 rounded-lg hover:bg-gray-700 transition-colors"
             >
               {t('Bekor qilish', language)}
             </button>
             <button
               type="submit"
-              className="flex-1 px-3 py-2 text-xs font-medium text-white bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all"
+              className="flex-1 px-3 py-2 text-xs font-medium text-white bg-gradient-to-r from-red-600 via-red-700 to-gray-900 rounded-lg hover:from-red-700 hover:via-red-800 hover:to-gray-800 transition-all shadow-lg shadow-red-900/30"
             >
               {t('Saqlash', language)}
             </button>

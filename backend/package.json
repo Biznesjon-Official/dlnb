@@ -38,6 +38,7 @@
     "delete-all-spare-parts": "ts-node src/scripts/deleteAllSpareParts.ts",
     "clear-warehouse": "ts-node src/scripts/clearWarehouse.ts",
     "reset-spare-part-sales": "ts-node src/scripts/resetSparePartSales.ts",
+    "clear-debts": "ts-node src/scripts/clearDebts.ts",
     "seed-cars": "ts-node src/scripts/seedCars.ts",
     "migrate:clientid": "ts-node src/scripts/addClientIdToExisting.ts",
     "create-second-master": "ts-node src/scripts/createSecondMaster.ts",

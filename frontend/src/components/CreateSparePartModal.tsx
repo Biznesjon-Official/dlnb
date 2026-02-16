@@ -376,12 +376,12 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-2">
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
       
       {/* IXCHAM MODAL - Scroll kerak emas */}
-      <div className="relative bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[92vh] overflow-hidden mx-2">
+      <div className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-xl shadow-2xl max-w-lg w-full max-h-[92vh] overflow-hidden mx-2 border border-red-900/30">
         {/* Header - IXCHAM */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-2.5">
+        <div className="bg-gradient-to-r from-red-600 via-red-700 to-gray-900 px-3 py-2.5">
           <button onClick={onClose} className="absolute top-2 right-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg p-1 transition-colors">
             <X className="h-4 w-4" />
           </button>
@@ -392,7 +392,7 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
             </div>
             <div>
               <h2 className="text-sm font-bold text-white">{t('Yangi zapchast', language)}</h2>
-              <p className="text-blue-100 text-[10px]">{t("Ma'lumotlarni kiriting", language)}</p>
+              <p className="text-red-100 text-[10px]">{t("Ma'lumotlarni kiriting", language)}</p>
             </div>
           </div>
         </div>
@@ -401,14 +401,14 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
         <form onSubmit={handleSubmit} className="p-2.5 space-y-2 max-h-[calc(92vh-70px)] overflow-y-auto [&_label]:text-[11px] [&_label]:mb-0.5 [&_input]:px-2 [&_input]:py-1.5 [&_input]:text-xs [&_select]:px-2 [&_select]:py-1.5 [&_select]:text-xs [&_.text-xs]:text-[10px] [&_.text-sm]:text-xs [&_.gap-2]:gap-1 [&_.space-y-4]:space-y-2 [&_.p-4]:p-2 [&_.p-3]:p-2 [&_.rounded-xl]:rounded-lg [&_.mb-2]:mb-0.5 [&_.mt-2]:mt-1">
           {/* Kategoriya tanlash */}
           <div>
-            <label className="block font-medium text-gray-700">
+            <label className="block font-medium text-gray-200">
               {t('Kategoriya', language)} *
             </label>
             <select
               name="category"
               value={formData.category}
               onChange={handleChange}
-              className="w-full border-2 border-gray-200 rounded-md focus:outline-none focus:border-blue-500 transition-all"
+              className="w-full border-2 border-red-900/30 bg-gray-800 text-white rounded-md focus:outline-none focus:border-red-500 transition-all"
             >
               <option value="zapchast">{t('Zapchast', language)}</option>
               <option value="balon">{t('Balon', language)}</option>
@@ -418,15 +418,15 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
 
           {/* Balon uchun qo'shimcha maydonlar - STEP BY STEP */}
           {formData.category === 'balon' && (
-            <div className="space-y-2.5 bg-blue-50 border-2 border-blue-200 rounded-lg p-2.5">
-              <h3 className="text-xs font-bold text-blue-900 flex items-center gap-1.5">
+            <div className="space-y-2.5 bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 border-2 border-red-900/30 rounded-lg p-2.5">
+              <h3 className="text-xs font-bold text-red-400 flex items-center gap-1.5">
                 <Package className="h-3.5 w-3.5" />
                 {t('Balon ma\'lumotlari', language)}
               </h3>
               
               {/* 1-QADAM: Balon kategoriyasi */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-200 mb-2">
                   {t('1-qadam: Balon turi', language)} *
                 </label>
                 <select
@@ -446,10 +446,10 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
                       });
                     }
                   }}
-                  className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 rounded-lg focus:outline-none transition-all text-sm sm:text-base ${
+                  className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 bg-gray-800 text-white rounded-lg focus:outline-none transition-all text-sm sm:text-base ${
                     errors.tireCategory 
-                      ? 'border-red-300 focus:border-red-500' 
-                      : 'border-gray-200 focus:border-blue-500'
+                      ? 'border-red-500 focus:border-red-400' 
+                      : 'border-red-900/30 focus:border-red-500'
                   }`}
                 >
                   <option value="">{t('Balon turini tanlang', language)}</option>
@@ -463,7 +463,7 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
                   <option value="R14">R14 - Kichik yuk (3 ta o'lcham)</option>
                 </select>
                 {errors.tireCategory && (
-                  <p className="mt-2 text-xs sm:text-sm text-red-600 flex items-center gap-2">
+                  <p className="mt-2 text-xs sm:text-sm text-red-400 flex items-center gap-2">
                     <AlertCircle className="h-3 w-3 sm:h-4 sm:w-4" />
                     {errors.tireCategory}
                   </p>
@@ -473,17 +473,17 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
               {/* 2-QADAM: Aniq o'lcham (faqat kategoriya tanlanganda) */}
               {formData.tireCategory && (
                 <div className="transition-all duration-300 ease-in-out">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-200 mb-2">
                     {t('2-qadam: Aniq o\'lcham', language)} *
                   </label>
                   <select
                     name="tireSize"
                     value={formData.tireSize}
                     onChange={handleChange}
-                    className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 rounded-lg focus:outline-none transition-all text-sm sm:text-base ${
+                    className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 bg-gray-800 text-white rounded-lg focus:outline-none transition-all text-sm sm:text-base ${
                       errors.tireSize 
-                        ? 'border-red-300 focus:border-red-500' 
-                        : 'border-gray-200 focus:border-blue-500'
+                        ? 'border-red-500 focus:border-red-400' 
+                        : 'border-red-900/30 focus:border-red-500'
                     }`}
                   >
                     <option value="">{t('O\'lchamni tanlang', language)}</option>
@@ -492,7 +492,7 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
                     ))}
                   </select>
                   {errors.tireSize && (
-                    <p className="mt-2 text-xs sm:text-sm text-red-600 flex items-center gap-2">
+                    <p className="mt-2 text-xs sm:text-sm text-red-400 flex items-center gap-2">
                       <AlertCircle className="h-3 w-3 sm:h-4 sm:w-4" />
                       {errors.tireSize}
                     </p>
@@ -503,14 +503,14 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
               {/* 3-QADAM: Balon mavsumi (faqat o'lcham tanlanganda) */}
               {formData.tireSize && (
                 <div className="transition-all duration-300 ease-in-out">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-200 mb-2">
                     {t('3-qadam: Balon mavsumi', language)} *
                   </label>
                   <select
                     name="tireType"
                     value={formData.tireType}
                     onChange={handleChange}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 transition-all text-sm sm:text-base"
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 border-red-900/30 bg-gray-800 text-white rounded-lg focus:outline-none focus:border-red-500 transition-all text-sm sm:text-base"
                   >
                     <option value="universal">{t('Universal', language)}</option>
                     <option value="yozgi">{t('Yozgi', language)}</option>
@@ -522,14 +522,14 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
               {/* 4-QADAM: Balon brendi (faqat mavsumi tanlanganda) */}
               {formData.tireSize && formData.tireType && (
                 <div className="transition-all duration-300 ease-in-out">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-200 mb-2">
                     {t('4-qadam: Balon brendi', language)} ({t('ixtiyoriy', language)})
                   </label>
                   
                   {/* Mavjud balon nomlari ko'rsatish */}
                   {existingTireNames.length > 0 && (
-                    <div className="mb-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
-                      <p className="text-xs font-semibold text-blue-700 mb-1.5">
+                    <div className="mb-2 p-2 bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 border border-red-900/30 rounded-lg">
+                      <p className="text-xs font-semibold text-red-400 mb-1.5">
                         💡 {t('Mavjud balonlar', language)} ({existingTireNames.length} ta):
                       </p>
                       <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
@@ -541,13 +541,13 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
                               // Nomni input'ga qo'yish
                               setFormData(prev => ({ ...prev, name: name }));
                             }}
-                            className="px-2 py-1 text-xs bg-white border border-blue-300 rounded-md hover:bg-blue-100 hover:border-blue-400 transition-colors text-blue-700 font-medium"
+                            className="px-2 py-1 text-xs bg-gray-800 border border-red-900/30 rounded-md hover:bg-gray-700 hover:border-red-500 transition-colors text-red-400 font-medium"
                           >
                             {name}
                           </button>
                         ))}
                         {existingTireNames.length > 10 && (
-                          <span className="px-2 py-1 text-xs text-blue-600 font-medium">
+                          <span className="px-2 py-1 text-xs text-red-400 font-medium">
                             +{existingTireNames.length - 10} ta
                           </span>
                         )}
@@ -559,7 +559,7 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
                     name="tireBrand"
                     value={formData.tireBrand}
                     onChange={handleChange}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 transition-all text-sm sm:text-base"
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 border-red-900/30 bg-gray-800 text-white rounded-lg focus:outline-none focus:border-red-500 transition-all text-sm sm:text-base"
                   >
                     <option value="">{t('Brend tanlang (ixtiyoriy)', language)}</option>
                     <optgroup label={t('Premium brendlar', language)}>
@@ -593,11 +593,11 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
 
               {/* Avtomatik yaratilgan nom ko'rsatish - faqat brend tanlangandan keyin */}
               {formData.tireSize && formData.tireType && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                  <p className="text-xs font-semibold text-green-700 mb-1">
+                <div className="bg-gradient-to-br from-green-900/30 via-green-800/20 to-green-900/30 border border-green-700/50 rounded-lg p-3">
+                  <p className="text-xs font-semibold text-green-400 mb-1">
                     {t('Avtomatik yaratilgan nom:', language)}
                   </p>
-                  <p className="text-sm font-bold text-green-900">
+                  <p className="text-sm font-bold text-green-300">
                     {generateTireName() || t('Ma\'lumotlar to\'liq emas', language)}
                   </p>
                 </div>
@@ -608,11 +608,11 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
           {/* Zapchast nomi - IXCHAM */}
           {formData.category !== 'balon' && (
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-medium text-gray-200 mb-1">
                 {formData.category === 'zapchast' ? t('Zapchast nomi', language) : t('Tovar nomi', language)} *
               </label>
               <div className="flex gap-2">
-                <div className="flex-shrink-0 px-3 py-2 text-sm bg-blue-50 border border-blue-200 rounded-lg font-medium text-blue-700">
+                <div className="flex-shrink-0 px-3 py-2 text-sm bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 border border-red-900/30 rounded-lg font-medium text-red-400">
                   {formData.category === 'zapchast' ? t('Zapchast', language) : t('Boshqa', language)}
                 </div>
                 <input
@@ -621,27 +621,27 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
                   required
                   value={formData.name}
                   onChange={handleChange}
-                  className={`flex-1 px-3 py-2 text-sm border rounded-lg focus:outline-none transition-all ${
+                  className={`flex-1 px-3 py-2 text-sm border bg-gray-800 text-white rounded-lg focus:outline-none transition-all ${
                     errors.name 
-                      ? 'border-red-300 focus:border-red-500' 
-                      : 'border-gray-200 focus:border-blue-500'
+                      ? 'border-red-500 focus:border-red-400' 
+                      : 'border-red-900/30 focus:border-red-500'
                   }`}
                   placeholder={formData.category === 'zapchast' ? t('Masalan: Tormoz kolodkasi', language) : t('Masalan: Yog\'', language)}
                 />
               </div>
               {errors.name && (
-                <p className="mt-1 text-[10px] text-red-600 flex items-center gap-1">
+                <p className="mt-1 text-[10px] text-red-400 flex items-center gap-1">
                   <AlertCircle className="h-2.5 w-2.5" />
                   {errors.name}
                 </p>
               )}
               {/* Avtomatik yaratilgan nom ko'rsatish */}
               {formData.name && (
-                <div className="mt-2 bg-green-50 border border-green-200 rounded-lg p-2">
-                  <p className="text-xs font-semibold text-green-700 mb-1">
+                <div className="mt-2 bg-gradient-to-br from-green-900/30 via-green-800/20 to-green-900/30 border border-green-700/50 rounded-lg p-2">
+                  <p className="text-xs font-semibold text-green-400 mb-1">
                     {t('Saqlanadigan nom:', language)}
                   </p>
-                  <p className="text-sm font-bold text-green-900">
+                  <p className="text-sm font-bold text-green-300">
                     {formData.category === 'zapchast' ? t('Zapchast', language) : t('Boshqa', language)} {formData.name}
                   </p>
                 </div>
@@ -654,15 +654,15 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
             <div className="transition-all duration-300 ease-in-out">
               {/* Valyuta */}
               <div className="flex items-center gap-1.5 mb-2">
-                <span className="text-xs font-medium text-gray-700">{t('Valyuta', language)}:</span>
-                <div className="flex bg-gray-100 rounded p-0.5">
+                <span className="text-xs font-medium text-gray-200">{t('Valyuta', language)}:</span>
+                <div className="flex bg-gray-800 border border-red-900/30 rounded p-0.5">
                   <button
                     type="button"
                     onClick={() => setCurrency('UZS')}
                     className={`px-2 py-1 rounded text-xs font-medium transition-all ${
                       currency === 'UZS'
-                        ? 'bg-white text-blue-600 shadow-sm'
-                        : 'text-gray-600'
+                        ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-sm'
+                        : 'text-gray-400'
                     }`}
                   >
                     {t("So'm", language)}
@@ -672,8 +672,8 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
                     onClick={() => setCurrency('USD')}
                     className={`px-2 py-1 rounded text-xs font-medium transition-all ${
                       currency === 'USD'
-                        ? 'bg-white text-blue-600 shadow-sm'
-                        : 'text-gray-600'
+                        ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-sm'
+                        : 'text-gray-400'
                     }`}
                   >
                     USD
@@ -684,7 +684,7 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
               <div className="grid grid-cols-2 gap-2">
                 {/* O'zini narxi */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                  <label className="block text-xs font-medium text-gray-200 mb-1">
                     {t("O'zini narxi", language)}
                   </label>
                   <input
@@ -693,10 +693,10 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
                     value={formData.costPriceDisplay}
                     onChange={handleChange}
                     autoComplete="off"
-                    className={`w-full px-2 py-1.5 text-sm border rounded-lg focus:outline-none transition-all ${
+                    className={`w-full px-2 py-1.5 text-sm border bg-gray-800 text-white rounded-lg focus:outline-none transition-all ${
                       errors.costPrice 
-                        ? 'border-red-300 focus:border-red-500' 
-                        : 'border-gray-200 focus:border-blue-500'
+                        ? 'border-red-500 focus:border-red-400' 
+                        : 'border-red-900/30 focus:border-red-500'
                     }`}
                     placeholder={currency === 'UZS' ? '800,000' : '62.50'}
                   />
@@ -704,7 +704,7 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
 
                 {/* Sotish narxi */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                  <label className="block text-xs font-medium text-gray-200 mb-1">
                     {t('Sotish narxi', language)}
                   </label>
                   <input
@@ -713,10 +713,10 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
                     value={formData.sellingPriceDisplay}
                     onChange={handleChange}
                     autoComplete="off"
-                    className={`w-full px-2 py-1.5 text-sm border rounded-lg focus:outline-none transition-all ${
+                    className={`w-full px-2 py-1.5 text-sm border bg-gray-800 text-white rounded-lg focus:outline-none transition-all ${
                       errors.sellingPrice 
-                        ? 'border-red-300 focus:border-red-500' 
-                        : 'border-gray-200 focus:border-blue-500'
+                        ? 'border-red-500 focus:border-red-400' 
+                        : 'border-red-900/30 focus:border-red-500'
                     }`}
                     placeholder={currency === 'UZS' ? '1,000,000' : '78.13'}
                   />
@@ -725,10 +725,10 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
 
               {/* Foyda */}
               {formData.costPrice && formData.sellingPrice && Number(formData.sellingPrice) >= Number(formData.costPrice) && (
-                <div className="bg-green-50 border border-green-200 rounded p-2 mt-2">
+                <div className="bg-gradient-to-br from-green-900/30 via-green-800/20 to-green-900/30 border border-green-700/50 rounded p-2 mt-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-green-800">{t('Foyda', language)}:</span>
-                    <span className="text-sm font-bold text-green-600">
+                    <span className="text-xs font-medium text-green-400">{t('Foyda', language)}:</span>
+                    <span className="text-sm font-bold text-green-300">
                       {formatNumber((Number(formData.sellingPrice) - Number(formData.costPrice)).toString())} {currency === 'UZS' ? t("so'm", language) : 'USD'}
                     </span>
                   </div>
@@ -740,7 +740,7 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
           {/* 6-QADAM: Miqdor - IXCHAM */}
           {(formData.costPrice || formData.sellingPrice) && (
             <div className="transition-all duration-300 ease-in-out">
-              <label className="block text-xs font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-medium text-gray-200 mb-1">
                 {t('Miqdor', language)} *
               </label>
               <input
@@ -750,15 +750,15 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
                 min="0"
                 value={formData.quantity}
                 onChange={handleChange}
-                className={`w-full px-2 py-1.5 text-sm border rounded-lg focus:outline-none transition-all ${
+                className={`w-full px-2 py-1.5 text-sm border bg-gray-800 text-white rounded-lg focus:outline-none transition-all ${
                   errors.quantity 
-                    ? 'border-red-300 focus:border-red-500' 
-                    : 'border-gray-200 focus:border-blue-500'
+                    ? 'border-red-500 focus:border-red-400' 
+                    : 'border-red-900/30 focus:border-red-500'
                 }`}
                 placeholder="0"
               />
               {errors.quantity && (
-                <p className="mt-1 text-[10px] text-red-600 flex items-center gap-1">
+                <p className="mt-1 text-[10px] text-red-400 flex items-center gap-1">
                   <AlertCircle className="h-2.5 w-2.5" />
                   {errors.quantity}
                 </p>
@@ -767,17 +767,17 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
           )}
 
           {/* Buttons - IXCHAM */}
-          <div className="flex items-center gap-2 pt-3 border-t border-gray-200">
+          <div className="flex items-center gap-2 pt-3 border-t border-red-900/30">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-3 py-2 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              className="flex-1 px-3 py-2 text-xs font-medium text-gray-300 bg-gray-800 border border-red-900/30 rounded-lg hover:bg-gray-700 transition-colors"
             >
               {t('Bekor qilish', language)}
             </button>
             <button
               type="submit"
-              className="flex-1 px-3 py-2 text-xs font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all"
+              className="flex-1 px-3 py-2 text-xs font-medium text-white bg-gradient-to-r from-red-600 via-red-700 to-gray-900 rounded-lg hover:from-red-700 hover:via-red-800 hover:to-gray-800 transition-all shadow-lg shadow-red-900/30"
             >
               {t('Saqlash', language)}
             </button>
