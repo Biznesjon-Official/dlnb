@@ -1,8 +1,9 @@
-const CACHE_NAME = 'dalnoboy-v6';
+const CACHE_NAME = 'dalnoboy-v7';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/dlnb.png',
+  '/icon-192x192.png',
+  '/icon-512x512.png',
   '/manifest.webmanifest'
 ];
 
