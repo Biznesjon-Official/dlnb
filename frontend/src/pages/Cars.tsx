@@ -10,6 +10,7 @@ import EditCarStepModal from '@/components/EditCarStepModal';
 import DeleteCarModal from '@/components/DeleteCarModal';
 import RestoreCarModal from '@/components/RestoreCarModal';
 import CarPaymentModalHybrid from '@/components/CarPaymentModalHybrid';
+import CarsSkeleton from '@/components/CarsSkeleton';
 import {Plus,Search, Car as CarIcon, Eye, Edit, Trash2, Phone, Package2, Filter, CheckCircle, RotateCcw, DollarSign, Users, ClipboardList, XCircle, MessageSquare} from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { Car } from '@/types';
@@ -464,40 +465,7 @@ const Cars: React.FC = () => {
         {/* Cars Grid */}
         {loading ? (
           // ⚡ SKELETON LOADER - Ma'lumotlar yuklanayotganda
-          <div className="space-y-4">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className={`rounded-lg sm:rounded-2xl shadow-lg border p-4 sm:p-6 animate-pulse ${
-                isDarkMode
-                  ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 border-red-900/30'
-                  : 'bg-white border-gray-100'
-              }`}>
-                <div className="flex items-center gap-4">
-                  <div className={`flex-shrink-0 h-12 w-12 rounded-xl ${
-                    isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
-                  }`}></div>
-                  <div className="flex-1 space-y-2">
-                    <div className={`h-4 rounded w-3/4 ${
-                      isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
-                    }`}></div>
-                    <div className={`h-3 rounded w-1/2 ${
-                      isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
-                    }`}></div>
-                  </div>
-                  <div className="flex gap-2">
-                    <div className={`h-8 w-8 rounded-lg ${
-                      isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
-                    }`}></div>
-                    <div className={`h-8 w-8 rounded-lg ${
-                      isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
-                    }`}></div>
-                    <div className={`h-8 w-8 rounded-lg ${
-                      isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
-                    }`}></div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <CarsSkeleton />
         ) : displayedCars.length === 0 ? (
           <div className={`rounded-lg sm:rounded-2xl shadow-lg border p-6 sm:p-16 text-center ${
             isDarkMode

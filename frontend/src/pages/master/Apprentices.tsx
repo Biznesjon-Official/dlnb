@@ -446,25 +446,45 @@ const Apprentices: React.FC = () => {
           </div>
         </div>
 
-        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-purple-50 to-purple-100 p-4 sm:p-6 border border-purple-200 hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1">
+        <div className={`relative overflow-hidden rounded-xl p-4 sm:p-6 border hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1 ${
+          isDarkMode
+            ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 border-red-900/30'
+            : 'bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200'
+        }`}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs sm:text-sm font-medium text-purple-600 mb-1">{t("Bu oy qo'shilgan", language)}</p>
-              <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-purple-900">{stats.thisMonth}</p>
+              <p className={`text-xs sm:text-sm font-medium mb-1 ${
+                isDarkMode ? 'text-red-400' : 'text-purple-600'
+              }`}>{t("Bu oy qo'shilgan", language)}</p>
+              <p className={`text-xl sm:text-2xl lg:text-3xl font-bold ${
+                isDarkMode ? 'text-gray-200' : 'text-purple-900'
+              }`}>{stats.thisMonth}</p>
             </div>
-            <div className="flex h-10 w-10 sm:h-12 sm:w-12 lg:h-14 lg:w-14 items-center justify-center rounded-xl bg-purple-500 shadow-lg">
+            <div className={`flex h-10 w-10 sm:h-12 sm:w-12 lg:h-14 lg:w-14 items-center justify-center rounded-xl shadow-lg ${
+              isDarkMode ? 'bg-red-600' : 'bg-purple-500'
+            }`}>
               <Calendar className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7 text-white" />
             </div>
           </div>
         </div>
 
-        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-orange-50 to-orange-100 p-4 sm:p-6 border border-orange-200 hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1">
+        <div className={`relative overflow-hidden rounded-xl p-4 sm:p-6 border hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1 ${
+          isDarkMode
+            ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 border-red-900/30'
+            : 'bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200'
+        }`}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs sm:text-sm font-medium text-orange-600 mb-1">{t("O'rtacha natija", language)}</p>
-              <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-orange-900">{stats.avgPerformance}%</p>
+              <p className={`text-xs sm:text-sm font-medium mb-1 ${
+                isDarkMode ? 'text-red-400' : 'text-orange-600'
+              }`}>{t("O'rtacha natija", language)}</p>
+              <p className={`text-xl sm:text-2xl lg:text-3xl font-bold ${
+                isDarkMode ? 'text-gray-200' : 'text-orange-900'
+              }`}>{stats.avgPerformance}%</p>
             </div>
-            <div className="flex h-10 w-10 sm:h-12 sm:w-12 lg:h-14 lg:w-14 items-center justify-center rounded-xl bg-orange-500 shadow-lg">
+            <div className={`flex h-10 w-10 sm:h-12 sm:w-12 lg:h-14 lg:w-14 items-center justify-center rounded-xl shadow-lg ${
+              isDarkMode ? 'bg-red-600' : 'bg-orange-500'
+            }`}>
               <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7 text-white" />
             </div>
           </div>
@@ -473,38 +493,39 @@ const Apprentices: React.FC = () => {
 
       {/* Apprentices Grid with Enhanced Cards */}
       {isFirstLoad ? (
-        <div className="flex flex-col items-center justify-center py-16 sm:py-20">
-          <div className="relative mb-6">
-            <div className="animate-spin rounded-full h-16 w-16 sm:h-20 sm:w-20 border-4 border-orange-200"></div>
-            <div className="animate-spin rounded-full h-16 w-16 sm:h-20 sm:w-20 border-4 border-orange-600 border-t-transparent absolute top-0 left-0"></div>
-          </div>
-          <div className="text-center">
-            <p className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">
-              {t("Shogirdlar yuklanmoqda", language)}
-            </p>
-            <p className="text-sm sm:text-base text-gray-600">
-              {t("Iltimos kuting...", language)}
-            </p>
-          </div>
-          {/* Skeleton loader */}
-          <div className="w-full max-w-6xl mt-8 grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 xl:grid-cols-3">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="bg-white rounded-xl border-2 border-gray-100 p-6 animate-pulse">
-                <div className="flex items-center space-x-4 mb-4">
-                  <div className="h-16 w-16 bg-gray-200 rounded-xl"></div>
-                  <div className="flex-1">
-                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                    <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <div className="h-3 bg-gray-200 rounded"></div>
-                  <div className="h-3 bg-gray-200 rounded w-5/6"></div>
-                  <div className="h-20 bg-gray-200 rounded"></div>
+        <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 xl:grid-cols-3">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className={`rounded-xl border-2 p-6 animate-pulse ${
+              isDarkMode 
+                ? 'bg-gray-800 border-gray-700' 
+                : 'bg-white border-gray-100'
+            }`}>
+              <div className="flex items-center space-x-4 mb-4">
+                <div className={`h-16 w-16 rounded-xl ${
+                  isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
+                }`}></div>
+                <div className="flex-1">
+                  <div className={`h-4 rounded w-3/4 mb-2 ${
+                    isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
+                  }`}></div>
+                  <div className={`h-3 rounded w-1/2 ${
+                    isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
+                  }`}></div>
                 </div>
               </div>
-            ))}
-          </div>
+              <div className="space-y-3">
+                <div className={`h-3 rounded ${
+                  isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
+                }`}></div>
+                <div className={`h-3 rounded w-5/6 ${
+                  isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
+                }`}></div>
+                <div className={`h-20 rounded ${
+                  isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
+                }`}></div>
+              </div>
+            </div>
+          ))}
         </div>
       ) : filteredApprentices.length === 0 ? (
         <div className="text-center py-12 sm:py-16 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-300 mx-4 sm:mx-0">

@@ -160,7 +160,6 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
     const filtered = users.filter((u: any) => 
       u.role === 'apprentice' && u.paymentType !== 'daily'
     );
-    console.log('👥 Foizlik shogirtlar:', filtered);
     return filtered;
   }, [usersData]);
   
@@ -206,7 +205,6 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
         try {
           // YANGI MASHINA QO'SHAYOTGANDA - faqat laborItems dan olish
           // createdCarId faqat mashina yaratilgandan KEYIN to'ldiriladi
-          console.log('� LaborItems dan xizmatlar olinmoqda');
           const currentLaborItems = items.filter(item => item.category === 'labor');
           const services = currentLaborItems.map((item, index) => ({
             _id: `temp-${index}`, // Vaqtinchalik ID
@@ -216,7 +214,6 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
             category: 'labor',
             quantity: 1
           }));
-          console.log('✅ Xizmatlar tayyor:', services);
           setCarServices(services);
         } catch (error: any) {
           console.error('❌ Xizmatlarni yuklashda xatolik:', error);
@@ -526,15 +523,12 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
       };
 
       // 1. Mashinani yaratish
-      console.log('📤 Mashina yaratilmoqda:', carData);
-      
       let carId: string;
       
       // To'g'ridan-to'g'ri API ga so'rov yuborish (optimistic update o'rniga)
       try {
         const response = await api.post('/cars', carData);
         carId = response.data.car._id;
-        console.log('✅ Mashina yaratildi, ID:', carId);
       } catch (err: any) {
         console.error('❌ Mashina yaratishda xatolik:', err);
         throw err;
@@ -570,8 +564,6 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
               apprenticeId: a.apprenticeId
             }));
           }
-          
-          console.log('📤 Vazifa yuborilmoqda:', taskData);
           
           await createTaskMutation.mutateAsync(taskData);
         }

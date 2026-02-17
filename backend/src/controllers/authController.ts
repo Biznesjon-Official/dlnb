@@ -7,22 +7,37 @@ export const register = async (req: Request, res: Response) => {
   try {
     const { name, email, username, password, phone, percentage, role, profileImage, profession, experience, paymentType, dailyRate } = req.body;
 
-    console.log('📝 Register request body:', { 
-      name, 
-      username, 
-      role, 
-      paymentType, 
-      percentage, 
-      dailyRate 
+    console.log('📝 Register request body:', {
+      name,
+      username,
+      role,
+      paymentType,
+      percentage,
+      dailyRate,
+      email,
+      phone
     });
 
-    const existingUser = await User.findOne({ username });
+    // Validation: name va username majburiy
+    if (!name || !name.trim()) {
+      return res.status(400).json({ message: 'Ism kiritilishi shart' });
+    }
+
+    if (!username || !username.trim()) {
+      return res.status(400).json({ message: 'Username kiritilishi shart' });
+    }
+
+    if (!password || password.length < 4) {
+      return res.status(400).json({ message: 'Parol kamida 4 ta belgidan iborat bo\'lishi kerak' });
+    }
+
+    const existingUser = await User.findOne({ username: username.trim().toLowerCase() });
     if (existingUser) {
       return res.status(400).json({ message: 'Bu username allaqachon band' });
     }
 
     if (email && email.trim()) {
-      const existingEmail = await User.findOne({ email: email.trim() });
+      const existingEmail = await User.findOne({ email: email.trim().toLowerCase() });
       if (existingEmail) {
         return res.status(400).json({ message: 'Bu email allaqachon band' });
       }
@@ -35,37 +50,43 @@ export const register = async (req: Request, res: Response) => {
       }
     }
 
-    const userData: any = { 
-      name, 
-      username, 
-      password, 
-      role 
+    const userData: any = {
+      name: name.trim(),
+      username: username.trim().toLowerCase(),
+      password,
+      role: role || 'apprentice'
     };
-    
+
+    // Email faqat mavjud bo'lsa qo'shish
     if (email && email.trim()) {
-      userData.email = email.trim();
+      userData.email = email.trim().toLowerCase();
     }
+
+    // Phone faqat mavjud bo'lsa qo'shish
     if (phone && phone.trim()) {
       userData.phone = phone.trim();
     }
+
     if (profileImage) userData.profileImage = profileImage;
     if (profession) userData.profession = profession;
     if (experience !== undefined) userData.experience = experience;
-    
+
     // To'lov turi bo'yicha
     if (paymentType) {
       userData.paymentType = paymentType;
       console.log('✅ PaymentType set to:', paymentType);
-      
+
       if (paymentType === 'percentage') {
         if (percentage !== undefined) {
           userData.percentage = percentage;
           console.log('✅ Percentage set to:', percentage);
         }
       } else if (paymentType === 'daily') {
-        if (dailyRate !== undefined) {
+        if (dailyRate !== undefined && dailyRate > 0) {
           userData.dailyRate = dailyRate;
           console.log('✅ DailyRate set to:', dailyRate);
+        } else {
+          return res.status(400).json({ message: 'Kunlik ish haqi kiritilishi shart' });
         }
       }
     } else {
@@ -120,6 +141,19 @@ export const register = async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     console.error('❌ Register error:', error);
+
+    // MongoDB validation xatoliklarini aniqroq ko'rsatish
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map((err: any) => err.message);
+      return res.status(400).json({ message: messages.join(', ') });
+    }
+
+    // Duplicate key xatoligi
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern)[0];
+      return res.status(400).json({ message: `Bu ${field} allaqachon band` });
+    }
+
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };

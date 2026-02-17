@@ -30,8 +30,6 @@ export function useCarsNew() {
   // Load cars - ULTRA FAST (1 soniyadan kam)
   const loadCars = useCallback(async (silent = false) => {
     try {
-      const startTime = Date.now();
-      
       // Show loading faqat initial load'da
       if (!silent) {
         setLoading(true);
@@ -47,17 +45,11 @@ export function useCarsNew() {
         const response = await api.get('/cars');
         const data = response.data.cars || [];
         
-        const duration = Date.now() - startTime;
-        console.log(`⚡ Loaded ${data.length} cars in ${duration}ms`);
-        
         setCars(data);
         setLoading(false);
       } else {
         // OFFLINE: IndexedDB'dan yuklash
         const data = await carsRepository.getActiveCars();
-        
-        const duration = Date.now() - startTime;
-        console.log(`📦 Loaded ${data.length} cars from IndexedDB in ${duration}ms`);
         
         setCars(data);
         setLoading(false);
@@ -149,11 +141,8 @@ export function useCarsNew() {
     
     // ⚡ Custom event listener (to'lov qo'shilganda) - INSTANT yangilash
     const handleCarsRefresh = () => {
-      console.log('🔄 Custom event: cars-refresh - INSTANT yangilanmoqda...');
       // INSTANT yangilash (0ms kutish yo'q!)
-      loadCars(true).then(() => {
-        console.log('✅ cars-refresh: Ma\'lumotlar yangilandi');
-      });
+      loadCars(true);
       updatePendingCount();
     };
     
@@ -162,39 +151,23 @@ export function useCarsNew() {
       const carId = event.detail?.carId;
       if (!carId) return;
       
-      console.log('⚡ OPTIMISTIC: Mashinaga to\'lov qilindi - DARHOL olib tashlanmoqda:', carId);
-      
       // INSTANT: Mashinani faol ro'yxatdan olib tashlash (0ms)
-      setCars(prev => {
-        const filtered = prev.filter(car => car._id !== carId);
-        console.log('📊 After optimistic remove:', {
-          before: prev.length,
-          after: filtered.length,
-          removedCarId: carId
-        });
-        return filtered;
-      });
+      setCars(prev => prev.filter(car => car._id !== carId));
     };
     
     // ⚡ Sahifaga qaytganda avtomatik refresh (visibility change)
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        console.log('👁️ Sahifa ko\'rinmoqda - INSTANT refresh...');
         // INSTANT refresh (0ms kutish yo'q!)
-        loadCars(true).then(() => {
-          console.log('✅ Visibility change: Ma\'lumotlar yangilandi');
-        });
+        loadCars(true);
         updatePendingCount();
       }
     };
     
     // ⚡ Focus event listener (sahifaga qaytganda)
     const handleFocus = () => {
-      console.log('🎯 Sahifa focus oldi - INSTANT refresh...');
       // INSTANT refresh (0ms kutish yo'q!)
-      loadCars(true).then(() => {
-        console.log('✅ Focus: Ma\'lumotlar yangilandi');
-      });
+      loadCars(true);
       updatePendingCount();
     };
     

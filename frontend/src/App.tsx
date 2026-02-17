@@ -283,17 +283,13 @@ function App() {
       try {
         // Faqat token mavjud bo'lsa sync qilish
         const token = localStorage.getItem('token');
-        if (!token) {
-          console.log('⏭️ Token yo\'q, sync qilinmadi');
-          return;
-        }
+        if (!token) return;
 
         const { usersRepository } = await import('@/lib/repositories/UsersRepository');
         // getAll() orqali userlarni olish va saqlash
         await usersRepository.getAll();
-        console.log('✅ Userlar offline uchun saqlandi');
       } catch (error) {
-        console.error('❌ Userlarni sync qilishda xatolik:', error);
+        // Silent error
       }
     };
 

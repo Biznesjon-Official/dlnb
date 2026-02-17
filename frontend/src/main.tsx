@@ -18,14 +18,12 @@ if ('serviceWorker' in navigator) {
   import('virtual:pwa-register').then(({ registerSW }) => {
     registerSW({
       onNeedRefresh() {
-        console.log('[PWA] New content available, please refresh.');
+        // Silent refresh notification
       },
       onOfflineReady() {
-        console.log('[PWA] App ready to work offline');
+        // Silent offline ready
       },
       onRegistered() {
-        console.log('[PWA] Service Worker registered successfully');
-        
         // Listen for SW messages
         if (navigator.serviceWorker) {
           navigator.serviceWorker.addEventListener('message', (event) => {
@@ -36,12 +34,12 @@ if ('serviceWorker' in navigator) {
           });
         }
       },
-      onRegisterError(error) {
-        console.error('[PWA] Service Worker registration failed:', error);
+      onRegisterError() {
+        // Silent error
       }
     });
-  }).catch((error) => {
-    console.warn('[PWA] Service Worker registration skipped:', error.message);
+  }).catch(() => {
+    // Silent skip
   });
 }
 

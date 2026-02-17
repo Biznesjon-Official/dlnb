@@ -84,11 +84,18 @@ export default defineConfig({
               }
             }
           }
-        ]
+        ],
+        navigateFallback: undefined,
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
+        // Workbox log'larini butunlay o'chirish
+        mode: 'production'
       },
       devOptions: {
-        enabled: true, // Development'da ham Service Worker'ni yoqish
-        type: 'module'
+        enabled: true,
+        type: 'module',
+        suppressWarnings: true
       }
     })
   ],
@@ -113,8 +120,8 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
         configure: (proxy, _options) => {
-          proxy.on('error', (err, _req, _res) => {
-            console.log('⚠️  Backend hali tayyor emas, kutilmoqda...');
+          proxy.on('error', () => {
+            // Silent error - backend hali tayyor emas
           });
         },
       },
