@@ -155,6 +155,15 @@ export function useCarsNew() {
       setCars(prev => prev.filter(car => car._id !== carId));
     };
     
+    // ⚡ To'liq to'langan mashina uchun alohida handler
+    const handleCarFullyPaid = (event: any) => {
+      const carId = event.detail?.carId;
+      if (!carId) return;
+      
+      // INSTANT: Mashinani faol ro'yxatdan olib tashlash (0ms)
+      setCars(prev => prev.filter(car => car._id !== carId));
+    };
+    
     // ⚡ Sahifaga qaytganda avtomatik refresh (visibility change)
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
@@ -173,12 +182,14 @@ export function useCarsNew() {
     
     window.addEventListener('cars-refresh', handleCarsRefresh);
     window.addEventListener('car-payment-added', handleCarPaymentAdded as EventListener);
+    window.addEventListener('car-fully-paid', handleCarFullyPaid as EventListener);
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', handleFocus);
     
     return () => {
       window.removeEventListener('cars-refresh', handleCarsRefresh);
       window.removeEventListener('car-payment-added', handleCarPaymentAdded as EventListener);
+      window.removeEventListener('car-fully-paid', handleCarFullyPaid as EventListener);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
     };
@@ -298,49 +309,35 @@ export function useCarsNew() {
   // Restore car - OPTIMIZED (instant UI update, silent)
   const restoreCar = useCallback(async (id: string) => {
     try {
-      // OPTIMIZATION 1: INSTANT UI update - arxivdan faol ro'yxatga qaytarish
-      // Faqat isDeleted mashinalarni qaytarish mumkin
-      setCars(prev => prev.map(car => 
-        car._id === id ? { 
-          ...car, 
-          isDeleted: false, 
-          deletedAt: undefined,
-          _pending: !isOnline 
-        } : car
-      ));
-      
-      // OPTIMIZATION 2: Backend'ga restore so'rovi yuborish
+      // OPTIMIZATION: Backend'ga restore so'rovi yuborish
       if (isOnline && !id.startsWith('temp_')) {
         // Online: Server'ga restore so'rovi yuborish
-        api.post(`/cars/${id}/restore`).then(() => {
-          updatePendingCount();
-          toast.success('✅ Mashina muvaffaqiyatli qaytarildi');
-          // Background'da yangilash
-          loadCars(true);
-        }).catch((err: any) => {
-          console.error('Failed to restore car:', err);
-          const errorMsg = err.response?.data?.message || err.message;
-          toast.error(`Xatolik: ${errorMsg}`);
-          // Rollback on error
-          loadCars(true); // silent reload
-        });
+        await api.post(`/cars/${id}/restore`);
+        updatePendingCount();
+        toast.success('✅ Mashina muvaffaqiyatli qaytarildi');
+        
+        // ⚡ MUHIM: Callback'dan oldin reload qilish
+        // Bu loading skeleton'ni ko'rsatadi
+        await loadCars(false); // false = show loading skeleton
       } else {
         // Offline yoki temp: IndexedDB'da restore
-        carsRepository.update(id, { 
+        await carsRepository.update(id, { 
           isDeleted: false,
           deletedAt: undefined
-        }).then(() => {
-          updatePendingCount();
-          toast.success('✅ Mashina muvaffaqiyatli qaytarildi (offline)');
-        }).catch((err: any) => {
-          console.error('Failed to restore car:', err);
-          toast.error(`Xatolik: ${err.message}`);
-          loadCars(true);
         });
+        updatePendingCount();
+        toast.success('✅ Mashina muvaffaqiyatli qaytarildi (offline)');
+        
+        // Offline'da ham reload
+        await loadCars(false);
       }
+      
+      // ⚡ SUCCESS: Return true to indicate success
+      return true;
     } catch (err: any) {
       console.error('Failed to restore car:', err);
-      toast.error(`Xatolik: ${err.message}`);
+      const errorMsg = err.response?.data?.message || err.message;
+      toast.error(`Xatolik: ${errorMsg}`);
       
       // Rollback on error
       await loadCars();

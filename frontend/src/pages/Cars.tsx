@@ -31,12 +31,87 @@ const Cars: React.FC = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isRestoreModalOpen, setIsRestoreModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false); // Restore qilinganda refresh holati
 
   // localStorage'dan tilni o'qish
   const language = React.useMemo<'latin' | 'cyrillic'>(() => {
     const savedLanguage = localStorage.getItem('language');
     return (savedLanguage as 'latin' | 'cyrillic') || 'latin';
   }, []);
+  
+  // Avtomobil raqami formatini qo'llash funksiyasi
+  const formatLicensePlate = (value: string): string => {
+    // Faqat raqam va harflarni qoldirish (bo'sh joylarni olib tashlash)
+    let cleaned = value.toUpperCase().replace(/[^0-9A-Z]/g, '');
+    
+    // Format: 20 A 100 AA yoki 20 123 AAA
+    // Qoidalar:
+    // 1. Birinchi 2 ta raqam
+    // 2. Bo'sh joy
+    // 3. 1-3 ta harf yoki raqam
+    // 4. Bo'sh joy
+    // 5. 3 ta raqam
+    // 6. Bo'sh joy
+    // 7. 2-3 ta harf
+    
+    let formatted = '';
+    let position = 0;
+    
+    // Birinchi 2 ta raqam
+    if (cleaned.length > 0) {
+      formatted += cleaned.substring(0, Math.min(2, cleaned.length));
+      position = 2;
+    }
+    
+    // Bo'sh joy va keyingi qism
+    if (cleaned.length > 2) {
+      formatted += ' ';
+      
+      // Keyingi qismni aniqlash (harf yoki raqam)
+      let nextPart = '';
+      let i = position;
+      
+      // Maksimal 3 ta belgi (harf yoki raqam)
+      while (i < cleaned.length && nextPart.length < 3) {
+        nextPart += cleaned[i];
+        i++;
+        
+        // Agar 3 ta raqam bo'lsa, to'xtatish
+        if (nextPart.length === 3 && /^\d+$/.test(nextPart)) {
+          break;
+        }
+        
+        // Agar harf kelsa va keyingi belgi raqam bo'lsa, to'xtatish
+        if (nextPart.length > 0 && /[A-Z]/.test(nextPart[nextPart.length - 1]) && i < cleaned.length && /\d/.test(cleaned[i])) {
+          break;
+        }
+      }
+      
+      formatted += nextPart;
+      position = i;
+    }
+    
+    // Bo'sh joy va keyingi qism
+    if (cleaned.length > position) {
+      formatted += ' ';
+      
+      // Keyingi 3 ta belgi
+      let nextPart = cleaned.substring(position, Math.min(position + 3, cleaned.length));
+      formatted += nextPart;
+      position += nextPart.length;
+    }
+    
+    // Bo'sh joy va oxirgi qism
+    if (cleaned.length > position) {
+      formatted += ' ';
+      
+      // Oxirgi 2-3 ta harf
+      let lastPart = cleaned.substring(position, Math.min(position + 3, cleaned.length));
+      formatted += lastPart;
+    }
+    
+    return formatted;
+  };
 
   // SMS matni yaratish funksiyasi
   const getSmsMessage = (car: Car) => {
@@ -66,7 +141,8 @@ const Cars: React.FC = () => {
     cars, 
     loading,
     updateCar,
-    getArchivedCars
+    getArchivedCars,
+    refresh // refresh funksiyasini olish
   } = useCarsNew();
 
   // Arxivlangan mashinalarni olish
@@ -82,7 +158,7 @@ const Cars: React.FC = () => {
         toast.error('Arxivlangan mashinalarni yuklashda xatolik');
       });
     }
-  }, [activeTab, getArchivedCars]);
+  }, [activeTab, getArchivedCars, cars]); // cars dependency qo'shildi - restore qilinganda yangilanadi
 
   // Qarzlar ro'yxatini olish (qarzi bor mashinalarni aniqlash uchun) - faqat online holatda
   const { data: debtsData } = useDebts({ type: 'receivable' });
@@ -228,6 +304,26 @@ const Cars: React.FC = () => {
     setSelectedCar(car);
     setIsRestoreModalOpen(true);
   };
+  
+  // Restore muvaffaqiyatli bo'lganda chaqiriladigan callback
+  const handleRestoreSuccess = async () => {
+    // ⚡ LOADING STATE: Refresh boshlanishi
+    setIsRefreshing(true);
+    
+    // Arxiv ma'lumotlarini tozalash
+    setArchivedCarsData([]);
+    
+    // Darhol "Faol" tabga o'tish
+    setActiveTab('active');
+    
+    // ⚡ MUHIM: Qo'shimcha refresh (double-check)
+    // Bu faol tab'da yangi ma'lumotlarni ko'rsatadi
+    setTimeout(async () => {
+      await refresh();
+      // Refresh tugagandan keyin loading'ni o'chirish
+      setIsRefreshing(false);
+    }, 500); // 500ms - skeleton ko'rsatish uchun yetarli vaqt
+  };
 
   const closeAllModals = () => {
     setIsViewModalOpen(false);
@@ -363,10 +459,10 @@ const Cars: React.FC = () => {
               }`} />
               <input
                 type="text"
-                placeholder={t("Qidirish...", language)}
+                placeholder={t("20 A 100 AA", language)}
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className={`w-full pl-10 pr-4 py-3 rounded-xl focus:ring-2 transition-all text-sm font-medium ${
+                onChange={(e) => setSearchTerm(formatLicensePlate(e.target.value))}
+                className={`w-full pl-10 pr-4 py-3 rounded-xl focus:ring-2 transition-all text-sm font-medium uppercase ${
                   isDarkMode
                     ? 'bg-gray-800 border border-red-900/30 text-white placeholder:text-gray-500 focus:ring-red-500 focus:border-red-500'
                     : 'bg-gray-50 border border-gray-200 text-gray-900 placeholder:text-gray-400 focus:ring-orange-500 focus:border-orange-500'
@@ -463,8 +559,8 @@ const Cars: React.FC = () => {
           </div>
 
         {/* Cars Grid */}
-        {loading ? (
-          // ⚡ SKELETON LOADER - Ma'lumotlar yuklanayotganda
+        {loading || isRefreshing ? (
+          // ⚡ SKELETON LOADER - Ma'lumotlar yuklanayotganda yoki restore qilinayotganda
           <CarsSkeleton />
         ) : displayedCars.length === 0 ? (
           <div className={`rounded-lg sm:rounded-2xl shadow-lg border p-6 sm:p-16 text-center ${
@@ -1226,6 +1322,7 @@ const Cars: React.FC = () => {
             isOpen={isRestoreModalOpen}
             onClose={closeAllModals}
             car={selectedCar}
+            onRestoreSuccess={handleRestoreSuccess}
           />
           
           <CarPaymentModalHybrid

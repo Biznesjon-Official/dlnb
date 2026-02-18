@@ -188,14 +188,10 @@ export const getCars = async (req: AuthRequest, res: Response) => {
     };
     
     // ⚡ SIMPLIFIED FILTER: Sodda va tez (index ishlatadi)
-    // ⚡ YANGI QOIDA: Faqat to'lov qilinmagan mashinalar (paidAmount === 0)
+    // ⚡ QOIDA: Faqat faol mashinalar (isDeleted: false, status: pending/in-progress)
     const filter: any = { 
       isDeleted: false,
-      status: { $in: ['pending', 'in-progress'] },
-      $or: [
-        { paidAmount: { $exists: false } }, // paidAmount yo'q
-        { paidAmount: 0 }                   // yoki 0 ga teng
-      ]
+      status: { $in: ['pending', 'in-progress'] }
     };
     
     if (status) filter.status = status;

@@ -9,9 +9,10 @@ interface RestoreCarModalProps {
   isOpen: boolean;
   onClose: () => void;
   car: Car;
+  onRestoreSuccess?: () => void; // Callback restore muvaffaqiyatli bo'lganda
 }
 
-const RestoreCarModal: React.FC<RestoreCarModalProps> = ({ isOpen, onClose, car }) => {
+const RestoreCarModal: React.FC<RestoreCarModalProps> = ({ isOpen, onClose, car, onRestoreSuccess }) => {
   const [isLoading, setIsLoading] = useState(false);
   const { restoreCar } = useCarsNew();
   
@@ -27,11 +28,21 @@ const RestoreCarModal: React.FC<RestoreCarModalProps> = ({ isOpen, onClose, car 
   const handleRestore = async () => {
     try {
       setIsLoading(true);
+      
+      // Restore qilish (bu ichida loadCars chaqiriladi)
       await restoreCar(car._id);
+      
+      // Modal yopish
       onClose();
+      
+      // ⚡ MUHIM: Restore tugagandan KEYIN callback chaqirish
+      // Bu vaqtda ma'lumotlar allaqachon yangilangan
+      if (onRestoreSuccess) {
+        onRestoreSuccess();
+      }
     } catch (error) {
       console.error('Error restoring car:', error);
-    } finally {
+      // Error bo'lsa loading'ni o'chirish
       setIsLoading(false);
     }
   };
