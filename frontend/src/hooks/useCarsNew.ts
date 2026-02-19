@@ -45,6 +45,10 @@ export function useCarsNew() {
         const response = await api.get('/cars');
         const data = response.data.cars || [];
         
+        // ⚡ MUHIM: IndexedDB'ni server bilan sync qilish
+        // replaceServerData pending operatsiyalarni saqlaydi
+        await carsRepository['storage'].replaceServerData('cars', data);
+        
         setCars(data);
         setLoading(false);
       } else {
@@ -397,6 +401,7 @@ export function useCarsNew() {
     restoreCar,
     refresh,
     syncNow,
-    getArchivedCars: () => carsRepository.getArchivedCars()
+    getArchivedCars: () => carsRepository.getArchivedCars(),
+    clearIndexedDB: () => carsRepository.clearCache() // IndexedDB'ni to'liq tozalash
   };
 }
