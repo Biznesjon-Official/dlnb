@@ -847,6 +847,21 @@ const MasterWarehouse: React.FC = memo(() => {
 
                       {/* Product Name */}
                       <div className="mb-2">
+                        {/* Rasm (agar mavjud bo'lsa) */}
+                        {part.imageUrl && (
+                          <div className="mb-2 rounded-lg overflow-hidden border-2 border-gray-700">
+                            <img
+                              src={part.imageUrl.startsWith('http') ? part.imageUrl : `${import.meta.env.VITE_API_URL}${part.imageUrl}`}
+                              alt={part.name}
+                              className="w-full h-24 object-cover"
+                              onError={(e) => {
+                                // Rasm yuklanmasa, placeholder ko'rsatish
+                                (e.target as HTMLImageElement).style.display = 'none';
+                              }}
+                            />
+                          </div>
+                        )}
+                        
                         <h4 className={`font-bold text-sm line-clamp-2 min-h-[2.5rem] ${
                           isDarkMode ? 'text-white' : 'text-gray-900'
                         }`}>

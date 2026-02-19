@@ -3,6 +3,7 @@ import { X, DollarSign, Package, User, Phone } from 'lucide-react';
 import { t } from '@/lib/transliteration';
 import { formatCurrency } from '@/lib/utils';
 import toast from 'react-hot-toast';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface SellSparePartModalProps {
   isOpen: boolean;
@@ -19,6 +20,7 @@ const SellSparePartModal: React.FC<SellSparePartModalProps> = ({
   sparePart,
   sellSparePart // YANGI: Function prop
 }) => {
+  const { isDarkMode } = useTheme();
   const [quantity, setQuantity] = useState(1);
   const [sellingPrice, setSellingPrice] = useState(sparePart?.sellingPrice || 0);
   const [customerName, setCustomerName] = useState('');
@@ -97,8 +99,16 @@ const SellSparePartModal: React.FC<SellSparePartModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-2">
-      <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-xl shadow-2xl max-w-md w-full max-h-[92vh] overflow-y-auto scrollbar-hide border border-red-900/30">
-        <div className="sticky top-0 bg-gradient-to-r from-red-600 via-red-700 to-gray-900 px-3 py-2.5 rounded-t-xl">
+      <div className={`rounded-xl shadow-2xl max-w-md w-full max-h-[92vh] overflow-y-auto scrollbar-hide border ${
+        isDarkMode 
+          ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 border-red-900/30' 
+          : 'bg-white border-rose-200'
+      }`}>
+        <div className={`sticky top-0 px-3 py-2.5 rounded-t-xl ${
+          isDarkMode 
+            ? 'bg-gradient-to-r from-red-600 via-red-700 to-gray-900' 
+            : 'bg-gradient-to-r from-rose-500 to-pink-600'
+        }`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="p-1.5 bg-white/20 rounded-lg backdrop-blur-sm">
@@ -108,7 +118,9 @@ const SellSparePartModal: React.FC<SellSparePartModalProps> = ({
                 <h2 className="text-sm font-bold text-white">
                   {t('Zapchast sotish', language)}
                 </h2>
-                <p className="text-[10px] text-red-100 mt-0.5 truncate max-w-[200px]">{sparePart.name}</p>
+                <p className={`text-[10px] mt-0.5 truncate max-w-[200px] ${
+                  isDarkMode ? 'text-red-100' : 'text-rose-100'
+                }`}>{sparePart.name}</p>
               </div>
             </div>
             <button
@@ -121,25 +133,29 @@ const SellSparePartModal: React.FC<SellSparePartModalProps> = ({
         </div>
 
         <form onSubmit={handleSubmit} className="p-2.5 space-y-2">
-          <div className="bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 rounded-lg p-2.5 border border-red-900/30">
+          <div className={`rounded-lg p-2.5 border ${
+            isDarkMode 
+              ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 border-red-900/30' 
+              : 'bg-gradient-to-br from-rose-50 to-pink-50 border-rose-200'
+          }`}>
             <div className="flex items-center gap-1.5 mb-2">
-              <Package className="h-3.5 w-3.5 text-red-400" />
-              <h3 className="text-xs font-bold text-red-400">{t('Tovar ma\'lumotlari', language)}</h3>
+              <Package className={`h-3.5 w-3.5 ${isDarkMode ? 'text-red-400' : 'text-rose-600'}`} />
+              <h3 className={`text-xs font-bold ${isDarkMode ? 'text-red-400' : 'text-rose-600'}`}>{t('Tovar ma\'lumotlari', language)}</h3>
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <p className="text-[10px] text-gray-400 mb-0.5">{t('Mavjud miqdor', language)}</p>
-                <p className="text-sm font-bold text-white">{sparePart.quantity} dona</p>
+                <p className={`text-[10px] mb-0.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{t('Mavjud miqdor', language)}</p>
+                <p className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{sparePart.quantity} dona</p>
               </div>
               <div>
-                <p className="text-[10px] text-gray-400 mb-0.5">{t('Tannarx', language)}</p>
-                <p className="text-sm font-bold text-white">{formatCurrency(sparePart.costPrice)}</p>
+                <p className={`text-[10px] mb-0.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{t('Tannarx', language)}</p>
+                <p className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{formatCurrency(sparePart.costPrice)}</p>
               </div>
             </div>
           </div>
 
           <div>
-            <label className="block text-[11px] font-semibold text-gray-200 mb-1">
+            <label className={`block text-[11px] font-semibold mb-1 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
               {t('Sotish miqdori', language)} *
             </label>
             <input
@@ -148,16 +164,20 @@ const SellSparePartModal: React.FC<SellSparePartModalProps> = ({
               max={sparePart.quantity}
               value={quantity}
               onChange={(e) => setQuantity(Math.max(1, Math.min(sparePart.quantity, parseInt(e.target.value) || 1)))}
-              className="w-full px-2 py-1.5 text-xs bg-gray-800 border border-red-900/30 rounded-lg focus:outline-none focus:border-red-500 text-white transition-all"
+              className={`w-full px-2 py-1.5 text-xs border rounded-lg focus:outline-none transition-all ${
+                isDarkMode 
+                  ? 'bg-gray-800 border-red-900/30 focus:border-red-500 text-white' 
+                  : 'bg-white border-rose-200 focus:border-rose-500 text-gray-900'
+              }`}
               required
             />
-            <p className="text-[10px] text-gray-400 mt-0.5">
+            <p className={`text-[10px] mt-0.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
               {t('Maksimal', language)}: {sparePart.quantity} dona
             </p>
           </div>
 
           <div>
-            <label className="block text-[11px] font-semibold text-gray-200 mb-1">
+            <label className={`block text-[11px] font-semibold mb-1 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
               {t('Sotish narxi (dona)', language)} *
             </label>
             <input
@@ -165,13 +185,17 @@ const SellSparePartModal: React.FC<SellSparePartModalProps> = ({
               min="0"
               value={sellingPrice}
               onChange={(e) => setSellingPrice(parseFloat(e.target.value) || 0)}
-              className="w-full px-2 py-1.5 text-xs bg-gray-800 border border-red-900/30 rounded-lg focus:outline-none focus:border-red-500 text-white transition-all"
+              className={`w-full px-2 py-1.5 text-xs border rounded-lg focus:outline-none transition-all ${
+                isDarkMode 
+                  ? 'bg-gray-800 border-red-900/30 focus:border-red-500 text-white' 
+                  : 'bg-white border-rose-200 focus:border-rose-500 text-gray-900'
+              }`}
               required
             />
           </div>
 
           <div>
-            <label className="block text-[11px] font-semibold text-gray-200 mb-1 flex items-center gap-1">
+            <label className={`block text-[11px] font-semibold mb-1 flex items-center gap-1 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
               <User className="h-3 w-3" />
               {t('Xaridor ismi', language)}
             </label>
@@ -179,13 +203,17 @@ const SellSparePartModal: React.FC<SellSparePartModalProps> = ({
               type="text"
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
-              className="w-full px-2 py-1.5 text-xs bg-gray-800 border border-red-900/30 rounded-lg focus:outline-none focus:border-red-500 text-white transition-all"
+              className={`w-full px-2 py-1.5 text-xs border rounded-lg focus:outline-none transition-all ${
+                isDarkMode 
+                  ? 'bg-gray-800 border-red-900/30 focus:border-red-500 text-white' 
+                  : 'bg-white border-rose-200 focus:border-rose-500 text-gray-900'
+              }`}
               placeholder={t('Ixtiyoriy', language)}
             />
           </div>
 
           <div>
-            <label className="block text-[11px] font-semibold text-gray-200 mb-1 flex items-center gap-1">
+            <label className={`block text-[11px] font-semibold mb-1 flex items-center gap-1 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
               <Phone className="h-3 w-3" />
               {t('Xaridor telefoni', language)}
             </label>
@@ -196,7 +224,11 @@ const SellSparePartModal: React.FC<SellSparePartModalProps> = ({
                 const formatted = formatPhoneNumber(e.target.value);
                 setCustomerPhone(formatted);
               }}
-              className="w-full px-2 py-1.5 text-xs bg-gray-800 border border-red-900/30 rounded-lg focus:outline-none focus:border-red-500 text-white transition-all"
+              className={`w-full px-2 py-1.5 text-xs border rounded-lg focus:outline-none transition-all ${
+                isDarkMode 
+                  ? 'bg-gray-800 border-red-900/30 focus:border-red-500 text-white' 
+                  : 'bg-white border-rose-200 focus:border-rose-500 text-gray-900'
+              }`}
               placeholder="+998 XX XXX XX XX"
             />
             {customerPhone && customerPhone.length === 12 && (
@@ -212,20 +244,24 @@ const SellSparePartModal: React.FC<SellSparePartModalProps> = ({
             )}
           </div>
 
-          <div className="bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 rounded-lg p-2.5 border border-red-900/30">
-            <h3 className="text-xs font-bold text-red-400 mb-2">{t('Hisob-kitob', language)}</h3>
+          <div className={`rounded-lg p-2.5 border ${
+            isDarkMode 
+              ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 border-red-900/30' 
+              : 'bg-gradient-to-br from-rose-50 to-pink-50 border-rose-200'
+          }`}>
+            <h3 className={`text-xs font-bold mb-2 ${isDarkMode ? 'text-red-400' : 'text-rose-600'}`}>{t('Hisob-kitob', language)}</h3>
             <div className="space-y-1.5">
               <div className="flex justify-between items-center">
-                <span className="text-[10px] text-gray-400">{t('Jami tannarx', language)}:</span>
-                <span className="text-xs font-bold text-white">{formatCurrency(totalCost)}</span>
+                <span className={`text-[10px] ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{t('Jami tannarx', language)}:</span>
+                <span className={`text-xs font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{formatCurrency(totalCost)}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-[10px] text-gray-400">{t('Jami tushum', language)}:</span>
+                <span className={`text-[10px] ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{t('Jami tushum', language)}:</span>
                 <span className="text-xs font-bold text-green-400">{formatCurrency(totalRevenue)}</span>
               </div>
-              <div className="h-px bg-red-900/30"></div>
+              <div className={`h-px ${isDarkMode ? 'bg-red-900/30' : 'bg-rose-200'}`}></div>
               <div className="flex justify-between items-center">
-                <span className="text-xs font-bold text-gray-200">{t('Foyda', language)}:</span>
+                <span className={`text-xs font-bold ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>{t('Foyda', language)}:</span>
                 <span className={`text-sm font-bold ${profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                   {formatCurrency(profit)}
                 </span>
@@ -233,11 +269,15 @@ const SellSparePartModal: React.FC<SellSparePartModalProps> = ({
             </div>
           </div>
 
-          <div className="flex gap-2 pt-2 border-t border-red-900/30">
+          <div className={`flex gap-2 pt-2 border-t ${isDarkMode ? 'border-red-900/30' : 'border-rose-200'}`}>
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-3 py-1.5 text-xs bg-gray-800 text-gray-300 border border-red-900/30 rounded-lg font-semibold hover:bg-gray-700 transition-colors"
+              className={`flex-1 px-3 py-1.5 text-xs border rounded-lg font-semibold transition-colors ${
+                isDarkMode 
+                  ? 'bg-gray-800 text-gray-300 border-red-900/30 hover:bg-gray-700' 
+                  : 'bg-white text-gray-700 border-rose-200 hover:bg-gray-50'
+              }`}
               disabled={isSubmitting}
             >
               {t('Bekor qilish', language)}
@@ -245,7 +285,11 @@ const SellSparePartModal: React.FC<SellSparePartModalProps> = ({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 px-3 py-1.5 text-xs bg-gradient-to-r from-red-600 via-red-700 to-gray-900 text-white rounded-lg font-semibold hover:from-red-700 hover:via-red-800 hover:to-gray-800 transition-all shadow-lg shadow-red-900/30 disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`flex-1 px-3 py-1.5 text-xs text-white rounded-lg font-semibold transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${
+                isDarkMode 
+                  ? 'bg-gradient-to-r from-red-600 via-red-700 to-gray-900 hover:from-red-700 hover:via-red-800 hover:to-gray-800 shadow-red-900/30' 
+                  : 'bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 shadow-rose-500/30'
+              }`}
             >
               {isSubmitting ? t('Saqlanmoqda...', language) : t('Sotish', language)}
             </button>

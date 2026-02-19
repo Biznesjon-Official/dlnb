@@ -14,10 +14,12 @@ import {
   addRequiredPartToInventory,
   sellSparePart,
   getSalesStatistics,
-  getSales
+  getSales,
+  uploadSparePartImage
 } from '../controllers/sparePartController';
 import { authenticate, authorize } from '../middleware/auth';
 import { handleValidationErrors } from '../middleware/validation';
+import { uploadSparePartImage as uploadMiddleware } from '../middleware/upload';
 
 const router = express.Router();
 
@@ -80,5 +82,8 @@ router.post('/sell', authenticate, [
   body('quantity').isInt({ min: 1 }).withMessage('Miqdor kamida 1 bo\'lishi kerak'),
   body('sellingPrice').optional().isFloat({ min: 0 }).withMessage('Sotish narxi 0 dan katta bo\'lishi kerak')
 ], handleValidationErrors, sellSparePart);
+
+// Upload spare part image
+router.post('/upload-image', authenticate, authorize('master'), uploadMiddleware, uploadSparePartImage);
 
 export default router;

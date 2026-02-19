@@ -1,10 +1,12 @@
 import React, { useState, useMemo } from 'react';
-import { X, Plus, AlertCircle, Package } from 'lucide-react';
+import { X, Plus, AlertCircle, Package, Upload, Image as ImageIcon } from 'lucide-react';
 import { t } from '@/lib/transliteration';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { formatNumber, parseFormattedNumber } from '@/lib/utils';
 import { useSpareParts } from '@/hooks/useSpareParts';
 import { useTheme } from '@/contexts/ThemeContext';
+import api from '@/lib/api';
+import toast from 'react-hot-toast';
 
 interface CreateSparePartModalProps {
   isOpen: boolean;
@@ -44,6 +46,7 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
     priceDisplay: '',
     currency: 'UZS', // Valyuta turi
     quantity: '',
+    imageUrl: '', // YANGI: Rasm URL
     // Balon uchun qo'shimcha maydonlar
     category: 'zapchast' as 'balon' | 'zapchast' | 'boshqa',
     tireType: 'universal' as 'yozgi' | 'qishki' | 'universal',
@@ -51,6 +54,9 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
     tireCategory: '', // Balon kategoriyasi (R60, R22.5 va h.k.)
     tireSize: '' // Aniq o'lcham
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>('');
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   // Mavjud balon nomlarini olish (unique)
   const existingTireNames = useMemo(() => {
@@ -219,6 +225,65 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
   // Modal ochilganda body scroll ni bloklash
   useBodyScrollLock(isOpen);
 
+  // Rasm tanlash
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Fayl hajmini tekshirish (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error(t('Rasm hajmi 5MB dan kichik bo\'lishi kerak', language));
+      return;
+    }
+
+    // Fayl turini tekshirish
+    if (!file.type.startsWith('image/')) {
+      toast.error(t('Faqat rasm fayllari qabul qilinadi', language));
+      return;
+    }
+
+    setImageFile(file);
+    
+    // Preview yaratish
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Rasm yuklash
+  const uploadImage = async (): Promise<string | null> => {
+    if (!imageFile) return null;
+
+    setIsUploadingImage(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', imageFile);
+
+      const response = await api.post('/spare-parts/upload-image', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      return response.data.imageUrl;
+    } catch (error: any) {
+      console.error('Error uploading image:', error);
+      toast.error(t('Rasm yuklanmadi', language));
+      return null;
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  // Rasmni o'chirish
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview('');
+    setFormData(prev => ({ ...prev, imageUrl: '' }));
+  };
+
   if (!isOpen) return null;
 
   const validateForm = () => {
@@ -267,6 +332,15 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
       return;
     }
 
+    // Agar rasm tanlangan bo'lsa, avval uni yuklash
+    let uploadedImageUrl = formData.imageUrl;
+    if (imageFile) {
+      const url = await uploadImage();
+      if (url) {
+        uploadedImageUrl = url;
+      }
+    }
+
     // Agar faqat bitta narx kiritilgan bo'lsa, ikkinchisini avtomatik to'ldirish
     let costPrice = Number(formData.costPrice) || Number(formData.sellingPrice);
     let sellingPrice = Number(formData.sellingPrice) || Number(formData.costPrice);
@@ -297,12 +371,15 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
       priceDisplay: '',
       currency: 'UZS',
       quantity: '',
+      imageUrl: '',
       category: 'zapchast',
       tireType: 'universal',
       tireBrand: '',
       tireCategory: '',
       tireSize: ''
     });
+    setImageFile(null);
+    setImagePreview('');
     setCurrency('UZS');
     setErrors({});
 
@@ -314,6 +391,7 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
       price: sellingPrice,
       currency: currency,
       quantity: Number(formData.quantity),
+      imageUrl: uploadedImageUrl || undefined,
       category: formData.category,
       ...(formData.category === 'balon' && {
         tireSize: formData.tireSize,
@@ -1026,6 +1104,122 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
                   {errors.quantity}
                 </p>
               )}
+            </div>
+          )}
+
+          {/* 7-QADAM: Rasm yuklash (ixtiyoriy) */}
+          {formData.quantity && (
+            <div className="transition-all duration-300 ease-in-out">
+              <label className={`block text-xs font-medium mb-1 ${
+                isDarkMode ? 'text-gray-200' : 'text-gray-700'
+              }`}>
+                {t('Rasm', language)} ({t('ixtiyoriy', language)})
+              </label>
+              
+              {/* Rasm yuklash yoki URL kiritish */}
+              <div className="space-y-2">
+                {/* Tab buttons */}
+                <div className={`flex gap-1 p-0.5 rounded border ${
+                  isDarkMode ? 'bg-gray-800 border-red-900/30' : 'bg-gray-100 border-orange-200'
+                }`}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // URL tab
+                      setImageFile(null);
+                      setImagePreview('');
+                    }}
+                    className={`flex-1 px-2 py-1 rounded text-xs font-medium transition-all ${
+                      !imageFile && !imagePreview
+                        ? isDarkMode
+                          ? 'bg-gradient-to-r from-red-600 to-red-700 text-white'
+                          : 'bg-gradient-to-r from-orange-500 to-amber-600 text-white'
+                        : isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                    }`}
+                  >
+                    <div className="flex items-center justify-center gap-1">
+                      <ImageIcon className="h-3 w-3" />
+                      <span>{t('URL', language)}</span>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // Upload tab
+                      document.getElementById('image-upload')?.click();
+                    }}
+                    className={`flex-1 px-2 py-1 rounded text-xs font-medium transition-all ${
+                      imageFile || imagePreview
+                        ? isDarkMode
+                          ? 'bg-gradient-to-r from-red-600 to-red-700 text-white'
+                          : 'bg-gradient-to-r from-orange-500 to-amber-600 text-white'
+                        : isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                    }`}
+                  >
+                    <div className="flex items-center justify-center gap-1">
+                      <Upload className="h-3 w-3" />
+                      <span>{t('Yuklash', language)}</span>
+                    </div>
+                  </button>
+                </div>
+
+                {/* URL input */}
+                {!imageFile && !imagePreview && (
+                  <input
+                    type="url"
+                    name="imageUrl"
+                    value={formData.imageUrl}
+                    onChange={handleChange}
+                    placeholder={t('Rasm URL manzilini kiriting', language)}
+                    className={`w-full px-2 py-1.5 text-sm border rounded-lg focus:outline-none transition-all ${
+                      isDarkMode
+                        ? 'border-red-900/30 bg-gray-800 text-white focus:border-red-500 placeholder-gray-500'
+                        : 'border-orange-200 bg-white text-gray-900 focus:border-orange-500 placeholder-gray-400'
+                    }`}
+                  />
+                )}
+
+                {/* File upload (hidden) */}
+                <input
+                  id="image-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
+                />
+
+                {/* Image preview */}
+                {(imagePreview || formData.imageUrl) && (
+                  <div className={`relative rounded-lg border-2 overflow-hidden ${
+                    isDarkMode ? 'border-red-900/30' : 'border-orange-200'
+                  }`}>
+                    <img
+                      src={imagePreview || formData.imageUrl}
+                      alt="Preview"
+                      className="w-full h-32 object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                    {isUploadingImage && (
+                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent"></div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Info */}
+                <p className={`text-[10px] ${
+                  isDarkMode ? 'text-gray-500' : 'text-gray-400'
+                }`}>
+                  💡 {t('Max 5MB, jpg/png/gif/webp', language)}
+                </p>
+              </div>
             </div>
           )}
 

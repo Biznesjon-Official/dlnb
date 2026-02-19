@@ -10,6 +10,7 @@ export interface ISparePart extends Document {
   supplier?: string; // Ixtiyoriy - eski ma'lumotlar uchun
   usageCount: number;
   isActive: boolean;
+  imageUrl?: string; // Rasm URL (ixtiyoriy)
   createdAt: Date;
   updatedAt: Date;
   profit?: number; // Virtual field - foyda (sellingPrice - costPrice)
@@ -69,6 +70,10 @@ const sparePartSchema = new Schema<ISparePart>({
   isActive: {
     type: Boolean,
     default: true
+  },
+  imageUrl: {
+    type: String,
+    trim: true
   },
   // Balon uchun maxsus maydonlar
   category: {

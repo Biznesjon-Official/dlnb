@@ -82,7 +82,7 @@ export const getSpareParts = async (req: AuthRequest, res: Response) => {
     // Statistikani faqat search bo'lmaganda hisoblash (tezroq)
     const queries: any[] = [
       SparePart.find(filter)
-        .select('name costPrice sellingPrice price currency quantity supplier isActive usageCount createdAt')
+        .select('name costPrice sellingPrice price currency quantity supplier imageUrl isActive usageCount createdAt')
         .sort(sortObj)
         .skip(skip)
         .limit(limitNum)
@@ -193,6 +193,7 @@ export const createSparePart = async (req: AuthRequest, res: Response) => {
       price, 
       quantity = 1, 
       supplier,
+      imageUrl, // YANGI: Rasm URL
       category = 'zapchast', // YANGI: Kategoriya (balon, zapchast, boshqa)
       tireSize, // YANGI: Balon o'lchami
       tireBrand, // YANGI: Balon brendi
@@ -209,6 +210,7 @@ export const createSparePart = async (req: AuthRequest, res: Response) => {
       price: sellingPrice || price, // Deprecated field
       quantity,
       supplier: supplier ? supplier.trim() : '', // Ixtiyoriy
+      imageUrl: imageUrl || undefined, // YANGI: Rasm URL (ixtiyoriy)
       category: category, // YANGI: Kategoriya
       ...(category === 'balon' && {
         tireSize: tireSize,
@@ -292,7 +294,7 @@ Jami: ${totalAmount.toLocaleString()} so'm${supplierText}`;
 
 export const updateSparePart = async (req: AuthRequest, res: Response) => {
   try {
-    const { name, costPrice, sellingPrice, price, quantity, supplier } = req.body;
+    const { name, costPrice, sellingPrice, price, quantity, supplier, imageUrl } = req.body;
     
     const sparePart = await SparePart.findById(req.params.id);
     
@@ -329,12 +331,13 @@ export const updateSparePart = async (req: AuthRequest, res: Response) => {
     }
     if (quantity !== undefined) sparePart.quantity = quantity;
     if (supplier !== undefined) sparePart.supplier = supplier ? supplier.trim() : '';
+    if (imageUrl !== undefined) sparePart.imageUrl = imageUrl || undefined; // YANGI: Rasm URL
 
     await sparePart.save();
 
     // To'liq ma'lumotni qaytarish - barcha maydonlar bilan
     const updatedSparePart = await SparePart.findById(sparePart._id)
-      .select('_id name costPrice sellingPrice price quantity supplier usageCount isActive createdAt updatedAt')
+      .select('_id name costPrice sellingPrice price quantity supplier imageUrl usageCount isActive createdAt updatedAt')
       .lean()
       .exec();
 
@@ -698,6 +701,27 @@ export const getSales = async (req: AuthRequest, res: Response) => {
     });
   } catch (error: any) {
     console.error('Error fetching sales:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+
+// Rasm yuklash
+export const uploadSparePartImage = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'Rasm yuklanmadi' });
+    }
+
+    // Rasm URL'ini qaytarish
+    const imageUrl = `/uploads/spare-parts/${req.file.filename}`;
+    
+    res.status(200).json({
+      message: 'Rasm muvaffaqiyatli yuklandi',
+      imageUrl
+    });
+  } catch (error: any) {
+    console.error('Error uploading spare part image:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };

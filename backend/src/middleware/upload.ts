@@ -5,6 +5,7 @@ import fs from 'fs';
 // Uploads papkalarini yaratish
 const profilesDir = path.join(__dirname, '../../uploads/profiles');
 const servicesDir = path.join(__dirname, '../../uploads/services');
+const sparePartsDir = path.join(__dirname, '../../uploads/spare-parts');
 
 if (!fs.existsSync(profilesDir)) {
   fs.mkdirSync(profilesDir, { recursive: true });
@@ -12,6 +13,10 @@ if (!fs.existsSync(profilesDir)) {
 
 if (!fs.existsSync(servicesDir)) {
   fs.mkdirSync(servicesDir, { recursive: true });
+}
+
+if (!fs.existsSync(sparePartsDir)) {
+  fs.mkdirSync(sparePartsDir, { recursive: true });
 }
 
 // Storage configuration for profiles
@@ -63,6 +68,27 @@ export const upload = multer({
 // Multer configuration for services
 export const uploadServiceImage = multer({
   storage: serviceStorage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB
+  },
+  fileFilter: fileFilter
+}).single('image');
+
+// Storage configuration for spare parts
+const sparePartStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, sparePartsDir);
+  },
+  filename: (_req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    cb(null, 'spare-part-' + uniqueSuffix + ext);
+  }
+});
+
+// Multer configuration for spare parts
+export const uploadSparePartImage = multer({
+  storage: sparePartStorage,
   limits: {
     fileSize: 5 * 1024 * 1024 // 5MB
   },
