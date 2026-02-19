@@ -24,6 +24,7 @@ import ExpenseModal from '@/components/ExpenseModal';
 import MonthlyHistoryModal from '@/components/MonthlyHistoryModal';
 import MonthlyResetModal from '@/components/MonthlyResetModal';
 import UserStatsModal from '@/components/UserStatsModal';
+import CashierSkeleton from '@/components/CashierSkeleton';
 import { useTheme } from '@/contexts/ThemeContext';
 
 const MasterCashier: React.FC = memo(() => {
@@ -71,11 +72,15 @@ const MasterCashier: React.FC = memo(() => {
   }, [dateFilter]);
 
   // React Query hooks - cache'dan instant yuklash
-  const { data: transactionsData } = useTransactions({
+  const { data: transactionsData, isLoading: isTransactionsLoading } = useTransactions({
     type: filter === 'all' ? undefined : filter,
     ...dateRange
   });
-  const { data: summaryData } = useTransactionSummary();
+  const { data: summaryData, isLoading: isSummaryLoading } = useTransactionSummary();
+  
+  // Loading state - faqat birinchi marta va cache bo'sh bo'lsa skeleton ko'rsatamiz
+  // Agar cache'da ma'lumot bo'lsa (data mavjud), skeleton ko'rsatmaymiz
+  const isInitialLoading = (isTransactionsLoading && !transactionsData) || (isSummaryLoading && !summaryData);
   
   // Memoized data - qayta hisoblashni oldini olish
   const transactions = useMemo(() => 
@@ -153,6 +158,12 @@ const MasterCashier: React.FC = memo(() => {
     setUserStatsType(type);
     setIsUserStatsModalOpen(true);
   };
+
+  // Agar birinchi marta loading bo'lsa va cache bo'sh bo'lsa, skeleton ko'rsatamiz
+  // Cache'da ma'lumot bo'lsa, darhol real ma'lumotlarni ko'rsatamiz
+  if (isInitialLoading) {
+    return <CashierSkeleton />;
+  }
 
   return (
     <div className={`min-h-screen p-4 sm:p-6 lg:p-8 ${

@@ -60,11 +60,12 @@ export const getBookingById = async (req: AuthRequest, res: Response) => {
 // Create booking
 export const createBooking = async (req: AuthRequest, res: Response) => {
   try {
-    const { customerName, phoneNumber, licensePlate, bookingDate, birthDate } = req.body;
+    const { customerName, phoneNumber, licensePlate, carMake, carModel, carYear, bookingDate, birthDate } = req.body;
 
     console.log('=== YANGI BRON YARATISH ===');
     console.log('Request body:', JSON.stringify(req.body, null, 2));
     console.log('Mijoz:', customerName);
+    console.log('Mashina:', carMake, carModel, carYear);
     console.log('Kun (input):', bookingDate, 'Type:', typeof bookingDate);
     console.log('Tug\'ilgan kun:', birthDate, 'Type:', typeof birthDate);
 
@@ -122,6 +123,15 @@ export const createBooking = async (req: AuthRequest, res: Response) => {
     if (parsedBirthDate) {
       bookingDataToSave.birthDate = parsedBirthDate;
     }
+    if (carMake && carMake.trim() !== '') {
+      bookingDataToSave.carMake = carMake;
+    }
+    if (carModel && carModel.trim() !== '') {
+      bookingDataToSave.carModel = carModel;
+    }
+    if (carYear) {
+      bookingDataToSave.carYear = carYear;
+    }
 
     console.log('Saqlanadigan ma\'lumot:', JSON.stringify(bookingDataToSave, null, 2));
 
@@ -166,7 +176,7 @@ export const createBooking = async (req: AuthRequest, res: Response) => {
 export const updateBooking = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const { customerName, phoneNumber, licensePlate, bookingDate, birthDate, status } = req.body;
+    const { customerName, phoneNumber, licensePlate, carMake, carModel, carYear, bookingDate, birthDate, status } = req.body;
 
     const booking = await Booking.findById(id);
     if (!booking) {
@@ -202,6 +212,9 @@ export const updateBooking = async (req: AuthRequest, res: Response) => {
     if (customerName) booking.customerName = customerName;
     if (phoneNumber) booking.phoneNumber = phoneNumber;
     if (licensePlate) booking.licensePlate = licensePlate.toUpperCase();
+    if (carMake !== undefined) booking.carMake = carMake && carMake.trim() !== '' ? carMake : undefined;
+    if (carModel !== undefined) booking.carModel = carModel && carModel.trim() !== '' ? carModel : undefined;
+    if (carYear !== undefined) booking.carYear = carYear;
     if (bookingDate && typeof bookingDate === 'string' && bookingDate.trim() !== '') {
       const [year, month, day] = bookingDate.split('-').map(Number);
       booking.bookingDate = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
@@ -308,6 +321,74 @@ export const getBookingStats = async (req: AuthRequest, res: Response) => {
       }
     });
   } catch (error: any) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// Convert booking to active car (Keldi)
+export const convertBookingToCar = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const booking = await Booking.findById(id);
+    if (!booking) {
+      return res.status(404).json({ message: 'Bron topilmadi' });
+    }
+
+    if (booking.status === 'completed') {
+      return res.status(400).json({ message: 'Bu bron allaqachon mashina bo\'lib o\'tkazilgan' });
+    }
+
+    console.log('🚗 Bronni mashinaga aylantirish:', booking.customerName);
+
+    // Car modelini import qilish
+    const Car = require('../models/Car').default;
+
+    // Yangi mashina yaratish
+    const car = new Car({
+      make: booking.carMake || 'Noma\'lum',
+      carModel: booking.carModel || 'Noma\'lum',
+      year: booking.carYear || new Date().getFullYear(),
+      licensePlate: booking.licensePlate,
+      ownerName: booking.customerName,
+      ownerPhone: booking.phoneNumber,
+      parts: [],
+      serviceItems: [],
+      status: 'pending',
+      paymentStatus: 'pending',
+      totalEstimate: 0,
+      paidAmount: 0,
+    });
+
+    await car.save();
+    console.log('✅ Mashina yaratildi:', car._id);
+
+    // Bronni "completed" qilish
+    booking.status = 'completed';
+    await booking.save();
+    console.log('✅ Bron tugallandi');
+
+    // 👤 Mijozni yaratish/yangilash
+    try {
+      const { updateOrCreateCustomer } = require('../services/customerService');
+      await updateOrCreateCustomer({
+        name: booking.customerName,
+        phone: booking.phoneNumber,
+        clientId: req.user?.clientId || '',
+        carAdded: true,
+      });
+      console.log('✅ Mijoz yaratildi/yangilandi');
+    } catch (customerError: any) {
+      console.error('⚠️ Mijoz yaratishda xatolik:', customerError.message);
+    }
+
+    res.json({ 
+      message: 'Bron muvaffaqiyatli mashinaga aylantirildi',
+      car,
+      booking
+    });
+  } catch (error: any) {
+    console.error('❌ Xatolik:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };

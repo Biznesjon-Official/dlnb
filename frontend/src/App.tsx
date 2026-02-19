@@ -23,6 +23,7 @@ import MasterKnowledgeBase from '@/pages/master/KnowledgeBase';
 import MasterCashier from '@/pages/master/Cashier';
 import MasterBookings from '@/pages/master/Bookings';
 import MasterWarehouse from '@/pages/master/Warehouse';
+import MasterCustomers from '@/pages/master/Customers';
 
 // Apprentice pages
 import ApprenticeTasks from '@/pages/apprentice/Tasks';
@@ -225,6 +226,11 @@ function AppRoutes() {
         <Route path="master/apprentices" element={
           <MasterRoute>
             <MasterApprentices />
+          </MasterRoute>
+        } />
+        <Route path="master/customers" element={
+          <MasterRoute>
+            <MasterCustomers />
           </MasterRoute>
         } />
         <Route path="master/knowledge" element={

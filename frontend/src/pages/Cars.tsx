@@ -146,6 +146,19 @@ const Cars: React.FC = () => {
     refresh // refresh funksiyasini olish
   } = useCarsNew();
 
+  // Brondan mashina yaratilganda callback
+  const handleCarCreatedFromBooking = React.useCallback(() => {
+    console.log('🔄 Brondan mashina yaratildi - to\'liq sahifa refresh');
+    
+    // 1. Faol tab'ga o'tish
+    setActiveTab('active');
+    
+    // 2. To'liq sahifa refresh (hard refresh)
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
+  }, []);
+
   // Arxivlangan mashinalarni olish
   const [archivedCarsData, setArchivedCarsData] = React.useState<Car[]>([]);
   
@@ -499,13 +512,30 @@ const Cars: React.FC = () => {
           </div>
         </div>
 
-        {/* Tabs - Faol, Arxiv va Bronlar - Compact Right */}
+        {/* Tabs - Bronlar, Faol va Arxiv - Compact Right */}
         <div className="flex justify-end">
             <div className={`inline-flex backdrop-blur-sm rounded-lg shadow-sm border p-0.5 ${
               isDarkMode
                 ? 'bg-gray-800/80 border-gray-700/50'
                 : 'bg-white/80 border-gray-200/50'
             }`}>
+              <button
+                onClick={() => setActiveTab('bookings')}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${
+                  activeTab === 'bookings'
+                    ? isDarkMode
+                      ? 'bg-orange-600 text-white shadow-sm'
+                      : 'bg-orange-600 text-white shadow-sm'
+                    : isDarkMode
+                      ? 'text-gray-300 hover:bg-gray-700'
+                      : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <div className="flex items-center gap-1.5">
+                  <Calendar className="h-3.5 w-3.5" />
+                  <span>{t('Bronlar', language)}</span>
+                </div>
+              </button>
               <button
                 onClick={() => setActiveTab('active')}
                 className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${
@@ -556,30 +586,13 @@ const Cars: React.FC = () => {
                   </span>
                 </div>
               </button>
-              <button
-                onClick={() => setActiveTab('bookings')}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${
-                  activeTab === 'bookings'
-                    ? isDarkMode
-                      ? 'bg-purple-600 text-white shadow-sm'
-                      : 'bg-blue-600 text-white shadow-sm'
-                    : isDarkMode
-                      ? 'text-gray-300 hover:bg-gray-700'
-                      : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <div className="flex items-center gap-1.5">
-                  <Calendar className="h-3.5 w-3.5" />
-                  <span>{t('Bronlar', language)}</span>
-                </div>
-              </button>
             </div>
           </div>
 
         {/* Cars Grid */}
         {activeTab === 'bookings' ? (
           // Bronlar tabi - BookingsContent komponenti
-          <BookingsContent onCarCreatedFromBooking={() => setActiveTab('active')} />
+          <BookingsContent onCarCreatedFromBooking={handleCarCreatedFromBooking} />
         ) : loading || isRefreshing ? (
           // ⚡ SKELETON LOADER - Ma'lumotlar yuklanayotganda yoki restore qilinayotganda
           <CarsSkeleton />

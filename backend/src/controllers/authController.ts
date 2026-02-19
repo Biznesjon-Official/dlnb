@@ -43,8 +43,11 @@ export const register = async (req: Request, res: Response) => {
       }
     }
 
+    // Phone validation
+    let phoneDigits: string | undefined;
     if (phone && phone.trim()) {
-      const existingPhone = await User.findOne({ phone: phone.trim() });
+      phoneDigits = phone.trim().replace(/\D/g, ''); // Faqat raqamlar
+      const existingPhone = await User.findOne({ phone: phoneDigits });
       if (existingPhone) {
         return res.status(400).json({ message: 'Bu telefon raqam allaqachon band' });
       }
@@ -63,8 +66,8 @@ export const register = async (req: Request, res: Response) => {
     }
 
     // Phone faqat mavjud bo'lsa qo'shish
-    if (phone && phone.trim()) {
-      userData.phone = phone.trim();
+    if (phoneDigits) {
+      userData.phone = phoneDigits;
     }
 
     if (profileImage) userData.profileImage = profileImage;
@@ -82,12 +85,9 @@ export const register = async (req: Request, res: Response) => {
           console.log('✅ Percentage set to:', percentage);
         }
       } else if (paymentType === 'daily') {
-        if (dailyRate !== undefined && dailyRate > 0) {
-          userData.dailyRate = dailyRate;
-          console.log('✅ DailyRate set to:', dailyRate);
-        } else {
-          return res.status(400).json({ message: 'Kunlik ish haqi kiritilishi shart' });
-        }
+        // Kunlik ishchi uchun dailyRate ixtiyoriy (ishlardan pul oladi)
+        userData.dailyRate = dailyRate || 0;
+        console.log('✅ DailyRate set to:', userData.dailyRate, '(0 = ishlardan pul oladi)');
       }
     } else {
       // Default: foizli ishchi
@@ -170,10 +170,13 @@ export const login = async (req: Request, res: Response) => {
         return res.status(400).json({ message: 'Username kiritilishi kerak' });
       }
 
+      // Telefon raqamni tozalash (faqat raqamlar)
+      const phoneDigits = phone.trim().replace(/\D/g, '');
+
       // Username va telefon raqam bilan kirish
       const user = await User.findOne({ 
         username: username,
-        phone: phone.trim() 
+        phone: phoneDigits
       });
       
       console.log('Apprentice user found:', user ? 'Yes' : 'No'); // Debug
@@ -524,17 +527,19 @@ export const updateUser = async (req: AuthRequest, res: Response) => {
 
     // Check if phone is taken by another user
     if (phone && phone !== user.phone) {
-      const existingPhone = await User.findOne({ phone: phone.trim() });
+      const phoneDigits = phone.trim().replace(/\D/g, ''); // Faqat raqamlar
+      const existingPhone = await User.findOne({ phone: phoneDigits });
       if (existingPhone && existingPhone._id.toString() !== id) {
         return res.status(400).json({ message: 'Bu telefon raqam allaqachon band' });
       }
+      user.phone = phoneDigits; // Faqat raqamlarni saqlash
     }
 
     // Update fields
     if (name) user.name = name;
     if (username) user.username = username;
     if (password) user.password = password;
-    if (phone !== undefined) user.phone = phone.trim() || undefined;
+    // phone allaqachon yuqorida yangilangan
     if (profileImage !== undefined) user.profileImage = profileImage;
     if (profession !== undefined) user.profession = profession;
     if (experience !== undefined) user.experience = experience;

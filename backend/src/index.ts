@@ -27,6 +27,7 @@ import transactionRoutes from './routes/transactions';
 import expenseCategoryRoutes from './routes/expenseCategories';
 import bookingRoutes from './routes/bookings';
 import smsRoutes from './routes/smsRoutes';
+import customerRoutes from './routes/customers';
 
 // Initialize Telegram Service (must be after dotenv.config())
 // Only initialize if Telegram tokens are provided and NOT in development mode
@@ -142,6 +143,7 @@ app.use('/api/transactions', transactionRoutes);
 app.use('/api/expense-categories', expenseCategoryRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/sms', smsRoutes);
+app.use('/api/customers', customerRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

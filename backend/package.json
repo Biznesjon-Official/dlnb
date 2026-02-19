@@ -35,6 +35,7 @@
     "clear-all-cars": "ts-node src/scripts/clearAllCars.ts",
     "delete-all-cars": "ts-node src/scripts/deleteAllCars.ts",
     "delete-all-cars-complete": "ts-node src/scripts/deleteAllCarsComplete.ts",
+    "delete-all-customers": "ts-node src/scripts/deleteAllCustomers.ts",
     "delete-all-spare-parts": "ts-node src/scripts/deleteAllSpareParts.ts",
     "clear-warehouse": "ts-node src/scripts/clearWarehouse.ts",
     "reset-spare-part-sales": "ts-node src/scripts/resetSparePartSales.ts",

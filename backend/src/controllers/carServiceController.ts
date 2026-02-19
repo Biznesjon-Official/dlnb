@@ -613,6 +613,12 @@ export const addCarServicePayment = async (req: AuthRequest, res: Response) => {
           car.paymentStatus = 'partial';
         }
         
+        // ✨ YANGI: Har qanday to'lovda mashinani arxivga o'tkazish (soft delete)
+        car.isDeleted = true;
+        car.deletedAt = new Date();
+        car.status = 'completed';
+        console.log(`🗄️ Mashina arxivga o'tkazildi: ${car.licensePlate}`);
+        
         // To'lov tarixiga qo'shish
         if (!car.payments) {
           car.payments = [];
@@ -626,7 +632,7 @@ export const addCarServicePayment = async (req: AuthRequest, res: Response) => {
         });
         
         await car.save();
-        console.log(`🚗 Car modeli yangilandi: paymentStatus = ${car.paymentStatus}`);
+        console.log(`🚗 Car modeli yangilandi: paymentStatus = ${car.paymentStatus}, isDeleted = ${car.isDeleted}`);
       }
     } catch (carError: any) {
       console.error('⚠️ Car modelini yangilashda xatolik:', carError.message);

@@ -378,3 +378,38 @@ export interface DebtSummary {
   };
   netPosition: number;
 }
+
+// Customer Types
+export interface Customer {
+  _id: string;
+  name: string;
+  phone: string;
+  totalDebt: number;
+  totalPaid: number;
+  carsCount: number;
+  lastVisit: string;
+  clientId: string;
+  createdAt: string;
+  updatedAt: string;
+  cars?: Array<{
+    make: string;
+    model: string;
+    licensePlate: string;
+    year?: number;
+    createdAt: string;
+  }>;
+}
+
+export interface CustomerStats {
+  totalCustomers: number;
+  customersWithDebt: number;
+  customersWithCars: number;
+  totalDebt: number;
+  totalPaid: number;
+}
+
+export interface CustomerDetails {
+  customer: Customer;
+  cars: Car[];
+  debts: Debt[];
+}

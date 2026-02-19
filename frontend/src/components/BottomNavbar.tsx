@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+﻿import React, { useMemo, useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
@@ -9,7 +9,6 @@ import {
   Users,
   Award,
   BookOpen,
-  Calendar,
 } from 'lucide-react';
 import { t } from '@/lib/transliteration';
 
@@ -17,13 +16,11 @@ const BottomNavbar: React.FC = () => {
   const { user } = useAuth();
   const location = useLocation();
 
-  // Dark mode state - faqat o'qish uchun
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const saved = localStorage.getItem('darkMode');
     return saved === 'true';
   });
 
-  // Dark mode o'zgarishini kuzatish
   useEffect(() => {
     const handleStorageChange = () => {
       const saved = localStorage.getItem('darkMode');
@@ -32,7 +29,6 @@ const BottomNavbar: React.FC = () => {
 
     window.addEventListener('storage', handleStorageChange);
     
-    // Interval bilan ham tekshirish (bir tab ichida o'zgarishlar uchun)
     const interval = setInterval(() => {
       const saved = localStorage.getItem('darkMode');
       setIsDarkMode(saved === 'true');
@@ -50,7 +46,7 @@ const BottomNavbar: React.FC = () => {
   }, []);
 
   const masterNavigation = [
-    { name: t('Mijozlar', language), href: '/app/master/bookings', icon: Calendar },
+    { name: t('Mijozlar', language), href: '/app/master/customers', icon: Users },
     { name: t('Shogirdlar', language), href: '/app/master/apprentices', icon: Users },
     { name: t('Kassa', language), href: '/app/master/cashier', icon: CreditCard },
     { name: t('Avtomobillar', language), href: '/app/cars', icon: Car },
@@ -76,11 +72,10 @@ const BottomNavbar: React.FC = () => {
         : 'bg-white/95 border-gray-200/50'
     }`}>
       <div className="flex items-center justify-around px-1 py-2">
-        {/* Navigation Items */}
         {navigation.map((item, index) => {
           const Icon = item.icon;
           const active = isActive(item.href);
-          const isCenter = index === 2; // O'rtadagi element
+          const isCenter = index === 2;
 
           return (
             <Link
@@ -90,7 +85,6 @@ const BottomNavbar: React.FC = () => {
                 isCenter ? 'flex-1 max-w-[70px]' : 'flex-1 max-w-[60px]'
               }`}
             >
-              {/* Center button - larger and elevated */}
               {isCenter ? (
                 <div className="relative -mt-6">
                   <div className={`absolute inset-0 rounded-2xl transition-all duration-300 ${
@@ -127,7 +121,6 @@ const BottomNavbar: React.FC = () => {
                   </span>
                 </div>
               ) : (
-                /* Side buttons - smaller size */
                 <div className="flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition-all duration-300">
                   <div className={`flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-300 ${
                     active 

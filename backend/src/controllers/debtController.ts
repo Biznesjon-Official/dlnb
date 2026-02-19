@@ -3,6 +3,7 @@ import Debt from '../models/Debt';
 import User from '../models/User';
 import { AuthRequest } from '../middleware/auth';
 import telegramService from '../services/telegramService';
+import { updateOrCreateCustomer } from '../services/customerService';
 export const createDebt = async (req: AuthRequest, res: Response) => {
   try {
     const { type, amount, description, creditorName, creditorPhone, car, dueDate } = req.body;
@@ -18,6 +19,22 @@ export const createDebt = async (req: AuthRequest, res: Response) => {
     });
     await debt.save();
     await debt.populate('car', 'make carModel licensePlate');
+    
+    // 👤 Mijozni yaratish/yangilash (faqat receivable uchun)
+    if (type === 'receivable' && creditorName && creditorPhone) {
+      try {
+        await updateOrCreateCustomer({
+          name: creditorName,
+          phone: creditorPhone,
+          clientId: req.user?.clientId || '',
+          debtAmount: amount,
+        });
+        console.log('✅ Mijoz yaratildi/yangilandi (qarz):', creditorPhone);
+      } catch (customerError: any) {
+        console.error('⚠️ Mijoz yaratishda xatolik:', customerError.message);
+        // Mijoz xatosi asosiy jarayonni to'xtatmasin
+      }
+    }
     
     // Qarz yaratilganda kassa daromadini yangilash
     const user = req.user!;

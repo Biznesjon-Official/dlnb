@@ -141,32 +141,28 @@ export function useCarsNew() {
     
     // ⚡ Custom event listener (to'lov qo'shilganda) - INSTANT yangilash
     const handleCarsRefresh = () => {
-      // INSTANT yangilash (0ms kutish yo'q!)
-      loadCars(true);
+      console.log('🔄 cars-refresh event: Mashinalar yangilanmoqda...');
+      // ⚡ MUHIM: Loading skeleton bilan yangilash (false = show loading)
+      // Bu foydalanuvchiga yangilanish jarayonini ko'rsatadi
+      loadCars(false);
       updatePendingCount();
     };
     
-    // ⚡ OPTIMISTIC UPDATE: To'lov qilingan mashina DARHOL yo'qoladi (to'liq yoki qisman farqi yo'q)
-    const handleCarPaymentAdded = (event: any) => {
-      const carId = event.detail?.carId;
-      if (!carId) return;
-      
-      // INSTANT: Mashinani faol ro'yxatdan olib tashlash (0ms)
-      setCars(prev => prev.filter(car => car._id !== carId));
-    };
-    
-    // ⚡ To'liq to'langan mashina uchun alohida handler
+    // ⚡ Car fully paid event listener - INSTANT remove from active list
     const handleCarFullyPaid = (event: any) => {
       const carId = event.detail?.carId;
-      if (!carId) return;
-      
-      // INSTANT: Mashinani faol ro'yxatdan olib tashlash (0ms)
-      setCars(prev => prev.filter(car => car._id !== carId));
+      if (carId) {
+        console.log('💰 car-fully-paid event: Mashina to\'liq to\'landi, faol ro\'yxatdan olib tashlanmoqda:', carId);
+        // ⚡ INSTANT: Mashinani DARHOL faol ro'yxatdan olib tashlash
+        setCars(prev => prev.filter(car => car._id !== carId));
+        updatePendingCount();
+      }
     };
     
     // ⚡ Sahifaga qaytganda avtomatik refresh (visibility change)
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
+        console.log('👁️ Sahifa ko\'rilmoqda: Mashinalar yangilanmoqda...');
         // INSTANT refresh (0ms kutish yo'q!)
         loadCars(true);
         updatePendingCount();
@@ -175,20 +171,19 @@ export function useCarsNew() {
     
     // ⚡ Focus event listener (sahifaga qaytganda)
     const handleFocus = () => {
+      console.log('🎯 Sahifa focus oldi: Mashinalar yangilanmoqda...');
       // INSTANT refresh (0ms kutish yo'q!)
       loadCars(true);
       updatePendingCount();
     };
     
     window.addEventListener('cars-refresh', handleCarsRefresh);
-    window.addEventListener('car-payment-added', handleCarPaymentAdded as EventListener);
     window.addEventListener('car-fully-paid', handleCarFullyPaid as EventListener);
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', handleFocus);
     
     return () => {
       window.removeEventListener('cars-refresh', handleCarsRefresh);
-      window.removeEventListener('car-payment-added', handleCarPaymentAdded as EventListener);
       window.removeEventListener('car-fully-paid', handleCarFullyPaid as EventListener);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);

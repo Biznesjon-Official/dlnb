@@ -135,43 +135,127 @@ export const createTask = async (req: AuthRequest, res: Response) => {
       console.log('👥 Ko\'p shogirdlar tizimi ishlatilmoqda:', assignments);
       
       const totalPayment = payment || 0;
-      const apprenticeCount = assignments.length;
-      const allocatedAmount = totalPayment / apprenticeCount; // Har biriga teng bo'lish
-
-      // Har bir shogird uchun hisoblash
-      const assignmentsWithPercentage = await Promise.all(
-        assignments.map(async (assignment: any) => {
-          if (!assignment.apprenticeId) {
-            throw new Error('apprenticeId maydoni yo\'q');
-          }
+      
+      // Foizlik va kunlik ishchilarni ajratish
+      const percentageApprentices: any[] = [];
+      const dailyWorkers: any[] = [];
+      
+      for (const assignment of assignments) {
+        if (!assignment.apprenticeId) {
+          throw new Error('apprenticeId maydoni yo\'q');
+        }
+        
+        const apprentice = await User.findById(assignment.apprenticeId);
+        if (!apprentice) {
+          throw new Error(`Shogird topilmadi: ${assignment.apprenticeId}`);
+        }
+        
+        if (apprentice.paymentType === 'daily') {
+          dailyWorkers.push({ ...assignment, apprentice });
+        } else {
+          percentageApprentices.push({ ...assignment, apprentice });
+        }
+      }
+      
+      console.log(`📊 Foizlik: ${percentageApprentices.length}, Kunlik: ${dailyWorkers.length}`);
+      
+      // YANGI LOGIKA: Foizlik + Kunlik aralash
+      if (percentageApprentices.length > 0 && dailyWorkers.length > 0) {
+        console.log('✅ YANGI LOGIKA: Foizlik + Kunlik aralash');
+        
+        const assignmentsWithPercentage: any[] = [];
+        
+        // 1. Barcha kunlik ishchilar uchun kiritilgan pullar yig'indisi
+        const totalDailyAmount = dailyWorkers.reduce((sum, dw) => sum + (dw.dailyAmount || 0), 0);
+        console.log(`💵 Jami kunlik ishchilar puli: ${totalDailyAmount}`);
+        
+        // 2. Kunlik ishchilar puli foizlik shogirdlardan proporsional olinadi
+        const dailyAmountPerPercentageApprentice = totalDailyAmount / percentageApprentices.length;
+        console.log(`💵 Har bir foizlik shogirddan olinadigan: ${dailyAmountPerPercentageApprentice}`);
+        
+        // 3. Foizlik shogirdlar uchun hisoblash
+        for (const item of percentageApprentices) {
+          const percentage = item.apprentice.percentage || 50;
+          const apprenticeShare = (totalPayment * percentage) / 100; // To'liq foiz ulushi
+          const earning = apprenticeShare - dailyAmountPerPercentageApprentice; // Kunlik ishchi puli ayriladi
+          const masterPercentage = 100 - percentage;
+          const masterShare = (totalPayment * masterPercentage) / 100;
           
-          // Shogirtning foizini User modelidan olish
-          const apprentice = await User.findById(assignment.apprenticeId);
-          if (!apprentice) {
-            throw new Error(`Shogird topilmadi: ${assignment.apprenticeId}`);
-          }
+          console.log(`💰 Foizlik shogird ${item.apprentice.name}:`);
+          console.log(`   Foiz ulushi (${percentage}%): ${apprenticeShare}`);
+          console.log(`   Kunlik ishchi: -${dailyAmountPerPercentageApprentice}`);
+          console.log(`   Final: ${earning}`);
+          console.log(`   Ustoz (${masterPercentage}%): ${masterShare}`);
           
-          const percentage = apprentice?.percentage || 50; // Agar foiz yo'q bo'lsa, default 50%
-          
-          const earning = (allocatedAmount * percentage) / 100;
-          const masterShare = allocatedAmount - earning;
-
-          console.log(`💰 Shogird ${apprentice?.name}: ${percentage}% = ${earning} so'm (jami: ${allocatedAmount})`);
-
-          return {
-            apprentice: assignment.apprenticeId,
+          assignmentsWithPercentage.push({
+            apprentice: item.apprenticeId,
             percentage,
-            allocatedAmount,
+            allocatedAmount: apprenticeShare,
             earning,
             masterShare
-          };
-        })
-      );
+          });
+        }
+        
+        // 4. Kunlik ishchilar uchun hisoblash
+        for (const item of dailyWorkers) {
+          const dailyAmount = item.dailyAmount || 0;
+          
+          console.log(`💰 Kunlik ishchi ${item.apprentice.name}: ${dailyAmount}`);
+          
+          assignmentsWithPercentage.push({
+            apprentice: item.apprenticeId,
+            percentage: 0,
+            allocatedAmount: 0,
+            earning: dailyAmount,
+            masterShare: 0
+          });
+        }
+        
+        taskData.assignments = assignmentsWithPercentage;
+        taskData.assignedTo = assignments[0].apprenticeId;
+      }
+      // ESKI LOGIKA: Faqat foizlik yoki faqat kunlik
+      else {
+        console.log('⚠️ ESKI LOGIKA: Faqat foizlik yoki faqat kunlik');
+        
+        const apprenticeCount = assignments.length;
+        const allocatedAmount = totalPayment / apprenticeCount; // Har biriga teng bo'lish
 
-      taskData.assignments = assignmentsWithPercentage;
+        // Har bir shogird uchun hisoblash
+        const assignmentsWithPercentage = await Promise.all(
+          assignments.map(async (assignment: any) => {
+            if (!assignment.apprenticeId) {
+              throw new Error('apprenticeId maydoni yo\'q');
+            }
+            
+            // Shogirtning foizini User modelidan olish
+            const apprentice = await User.findById(assignment.apprenticeId);
+            if (!apprentice) {
+              throw new Error(`Shogird topilmadi: ${assignment.apprenticeId}`);
+            }
+            
+            const percentage = apprentice?.percentage || 50; // Agar foiz yo'q bo'lsa, default 50%
+            
+            const earning = (allocatedAmount * percentage) / 100;
+            const masterShare = allocatedAmount - earning;
 
-      // Birinchi shogirdni assignedTo ga ham qo'yish (backward compatibility)
-      taskData.assignedTo = assignments[0].apprenticeId;
+            console.log(`💰 Shogird ${apprentice?.name}: ${percentage}% = ${earning} so'm (jami: ${allocatedAmount})`);
+
+            return {
+              apprentice: assignment.apprenticeId,
+              percentage,
+              allocatedAmount,
+              earning,
+              masterShare
+            };
+          })
+        );
+
+        taskData.assignments = assignmentsWithPercentage;
+
+        // Birinchi shogirdni assignedTo ga ham qo'yish (backward compatibility)
+        taskData.assignedTo = assignments[0].apprenticeId;
+      }
     } 
     // Eski tizim: Bitta shogird
     else if (assignedTo) {

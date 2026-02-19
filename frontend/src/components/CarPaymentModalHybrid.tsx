@@ -238,17 +238,11 @@ const CarPaymentModalHybrid: React.FC<CarPaymentModalProps> = ({ isOpen, onClose
     // ⚡ INSTANT: Modal yopish
     onClose();
     
-    // ⚡ OPTIMISTIC UPDATE: Agar to'liq to'langan bo'lsa, DARHOL faol ro'yxatdan olib tashlash
-    if (isFullyPaid) {
-      console.log('⚡ OPTIMISTIC: Mashina to\'liq to\'landi - DARHOL faol ro\'yxatdan olib tashlanmoqda...');
-      
-      // INSTANT: Custom event dispatch (mashina DARHOL yo'qoladi)
-      window.dispatchEvent(new CustomEvent('car-fully-paid', { detail: { carId: car._id } }));
-    } else {
-      // ⚡ Qisman to'lovda ham refresh kerak (paidAmount yangilandi)
-      console.log('⚡ OPTIMISTIC: Qisman to\'lov - ma\'lumotlar yangilanmoqda...');
-      window.dispatchEvent(new CustomEvent('cars-refresh'));
-    }
+    // ⚡ OPTIMISTIC UPDATE: Har qanday to'lovda DARHOL faol ro'yxatdan olib tashlash
+    console.log('⚡ OPTIMISTIC: To\'lov qilindi - DARHOL faol ro\'yxatdan olib tashlanmoqda...');
+    
+    // INSTANT: Custom event dispatch (mashina DARHOL yo'qoladi)
+    window.dispatchEvent(new CustomEvent('car-fully-paid', { detail: { carId: car._id } }));
     
     // ⚡ SILENT: Hech qanday toast xabar yo'q - faqat background sync
 

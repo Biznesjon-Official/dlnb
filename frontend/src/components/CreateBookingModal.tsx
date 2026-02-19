@@ -53,7 +53,7 @@ const CreateBookingModal: React.FC<CreateBookingModalProps> = ({ isOpen, onClose
     'Hyundai', 'Kia', 'Daewoo',
     // Boshqa mashhur markalar
     'Chevrolet', 'Toyota', 'Nissan', 'Honda', 'Ford', 'Volkswagen', 'BMW', 'Audi',
-    'Mazda', 'Subaru', 'Lexus', 'Mitsubishi', 'Suzuki', 'Peugeot', 'Renault', 'Fiat',
+    'Mazda', 'Subaru', 'Lexus', 'Mitsubishi', 'Suzuki', 'Peugeot', 'Fiat',
     'Opel', 'Skoda', 'Seat', 'Lada', 'UAZ', 'Geely', 'Chery', 'BYD', 'Great Wall',
     'Haval', 'Tata', 'Ashok Leyland', 'Eicher', 'Boshqa'
   ].sort();
@@ -129,9 +129,10 @@ const CreateBookingModal: React.FC<CreateBookingModalProps> = ({ isOpen, onClose
         phoneNumber: formatted,
       });
     } else if (name === 'licensePlate') {
+      const formatted = formatLicensePlate(value);
       setFormData({
         ...formData,
-        licensePlate: value.toUpperCase(),
+        licensePlate: formatted,
       });
     } else {
       setFormData({
@@ -169,6 +170,76 @@ const CreateBookingModal: React.FC<CreateBookingModalProps> = ({ isOpen, onClose
     return formattedNumber.length > 0 ? '+' + formattedNumber : '';
   };
 
+  // Davlat raqamini formatlash: 10 D 200 DD yoki 10 123 DDD
+  const formatLicensePlate = (value: string): string => {
+    // Faqat raqam va harflarni qoldirish
+    let cleaned = value.toUpperCase().replace(/[^0-9A-Z]/g, '');
+    
+    if (cleaned.length === 0) return '';
+    
+    let formatted = '';
+    let position = 0;
+    
+    // 1. Birinchi 2 ta raqam
+    if (cleaned.length > 0) {
+      formatted += cleaned.substring(0, Math.min(2, cleaned.length));
+      position = 2;
+    }
+    
+    if (cleaned.length <= 2) return formatted;
+    
+    // 2. Bo'sh joy
+    formatted += ' ';
+    
+    // 3. Keyingi qism (1-3 ta belgi: harf yoki raqam)
+    let nextPart = '';
+    let i = position;
+    
+    while (i < cleaned.length && nextPart.length < 3) {
+      const char = cleaned[i];
+      nextPart += char;
+      i++;
+      
+      // Agar 3 ta raqam bo'lsa, to'xtatish
+      if (nextPart.length === 3 && /^\d+$/.test(nextPart)) {
+        break;
+      }
+      
+      // Agar harf kelsa va keyingi belgi raqam bo'lsa, to'xtatish
+      if (nextPart.length > 0 && /[A-Z]/.test(char) && i < cleaned.length && /\d/.test(cleaned[i])) {
+        break;
+      }
+    }
+    
+    formatted += nextPart;
+    position = i;
+    
+    if (cleaned.length <= position) return formatted;
+    
+    // 4. Bo'sh joy
+    formatted += ' ';
+    
+    // 5. Keyingi 3 ta belgi (raqamlar)
+    if (cleaned.length > position) {
+      const nextNumbers = cleaned.substring(position, Math.min(position + 3, cleaned.length));
+      formatted += nextNumbers;
+      position += nextNumbers.length;
+    }
+    
+    if (cleaned.length <= position) return formatted;
+    
+    // 6. Bo'sh joy
+    formatted += ' ';
+    
+    // 7. Oxirgi 2-3 ta harf
+    if (cleaned.length > position) {
+      const lastPart = cleaned.substring(position, Math.min(position + 3, cleaned.length));
+      formatted += lastPart;
+    }
+    
+    return formatted;
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -182,7 +253,7 @@ const CreateBookingModal: React.FC<CreateBookingModalProps> = ({ isOpen, onClose
         <div className={`relative overflow-hidden rounded-t-xl sm:rounded-t-2xl px-4 sm:px-6 py-3 sm:py-4 ${
           isDarkMode
             ? 'bg-gradient-to-r from-red-600 via-red-700 to-gray-900'
-            : 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600'
+            : 'bg-gradient-to-r from-orange-600 via-orange-700 to-red-700'
         }`}>
           <div className="absolute inset-0 bg-black opacity-10"></div>
           <div className="relative z-10 flex items-center justify-between">
@@ -193,7 +264,7 @@ const CreateBookingModal: React.FC<CreateBookingModalProps> = ({ isOpen, onClose
               <div>
                 <h2 className="text-base sm:text-xl font-bold text-white">{t('Yangi bron', language)}</h2>
                 <p className={`text-xs hidden sm:block ${
-                  isDarkMode ? 'text-red-100' : 'text-blue-100'
+                  isDarkMode ? 'text-red-100' : 'text-orange-100'
                 }`}>
                   {t('Mijoz ma\'lumotlarini kiriting', language)}
                 </p>
@@ -232,7 +303,7 @@ const CreateBookingModal: React.FC<CreateBookingModalProps> = ({ isOpen, onClose
                   className={`w-full pl-9 pr-3 py-2.5 border-2 rounded-lg focus:outline-none transition-all text-sm ${
                     isDarkMode
                       ? 'bg-gray-800 border-gray-700 text-white focus:border-red-500 placeholder-gray-500'
-                      : 'bg-white border-gray-200 text-gray-900 focus:border-blue-500 placeholder-gray-400'
+                      : 'bg-white border-gray-200 text-gray-900 focus:border-orange-500 placeholder-gray-400'
                   }`}
                   placeholder={t('Alisher Navoiy', language)}
                 />
@@ -260,7 +331,7 @@ const CreateBookingModal: React.FC<CreateBookingModalProps> = ({ isOpen, onClose
                   className={`w-full pl-9 pr-3 py-2.5 border-2 rounded-lg focus:outline-none transition-all text-sm ${
                     isDarkMode
                       ? 'bg-gray-800 border-gray-700 text-white focus:border-red-500 placeholder-gray-500'
-                      : 'bg-white border-gray-200 text-gray-900 focus:border-blue-500 placeholder-gray-400'
+                      : 'bg-white border-gray-200 text-gray-900 focus:border-orange-500 placeholder-gray-400'
                   }`}
                   placeholder="+998 90 123 45 67"
                 />
@@ -288,7 +359,7 @@ const CreateBookingModal: React.FC<CreateBookingModalProps> = ({ isOpen, onClose
                   className={`w-full pl-9 pr-3 py-2.5 border-2 rounded-lg focus:outline-none transition-all text-sm uppercase ${
                     isDarkMode
                       ? 'bg-gray-800 border-gray-700 text-white focus:border-red-500 placeholder-gray-500'
-                      : 'bg-white border-gray-200 text-gray-900 focus:border-blue-500 placeholder-gray-400'
+                      : 'bg-white border-gray-200 text-gray-900 focus:border-orange-500 placeholder-gray-400'
                   }`}
                   placeholder="01 A 123 BC"
                 />
@@ -314,7 +385,7 @@ const CreateBookingModal: React.FC<CreateBookingModalProps> = ({ isOpen, onClose
                   className={`w-full pl-9 pr-3 py-2.5 border-2 rounded-lg focus:outline-none transition-all text-sm appearance-none cursor-pointer ${
                     isDarkMode
                       ? 'bg-gray-800 border-gray-700 text-white focus:border-red-500'
-                      : 'bg-white border-gray-200 text-gray-900 focus:border-blue-500'
+                      : 'bg-white border-gray-200 text-gray-900 focus:border-orange-500'
                   }`}
                 >
                   <option value="">{t('Tanlang', language)}</option>
@@ -351,7 +422,7 @@ const CreateBookingModal: React.FC<CreateBookingModalProps> = ({ isOpen, onClose
                   className={`w-full pl-9 pr-3 py-2.5 border-2 rounded-lg focus:outline-none transition-all text-sm ${
                     isDarkMode
                       ? 'bg-gray-800 border-gray-700 text-white focus:border-red-500 placeholder-gray-500'
-                      : 'bg-white border-gray-200 text-gray-900 focus:border-blue-500 placeholder-gray-400'
+                      : 'bg-white border-gray-200 text-gray-900 focus:border-orange-500 placeholder-gray-400'
                   }`}
                   placeholder={t('Nexia 3', language)}
                 />
@@ -377,7 +448,7 @@ const CreateBookingModal: React.FC<CreateBookingModalProps> = ({ isOpen, onClose
                   className={`w-full pl-9 pr-3 py-2.5 border-2 rounded-lg focus:outline-none transition-all text-sm appearance-none cursor-pointer ${
                     isDarkMode
                       ? 'bg-gray-800 border-gray-700 text-white focus:border-red-500'
-                      : 'bg-white border-gray-200 text-gray-900 focus:border-blue-500'
+                      : 'bg-white border-gray-200 text-gray-900 focus:border-orange-500'
                   }`}
                 >
                   {years.map((year) => (
@@ -414,7 +485,7 @@ const CreateBookingModal: React.FC<CreateBookingModalProps> = ({ isOpen, onClose
                   className={`w-full pl-9 pr-3 py-2.5 border-2 rounded-lg focus:outline-none transition-all text-sm ${
                     isDarkMode
                       ? 'bg-gray-800 border-gray-700 text-white focus:border-red-500 [color-scheme:dark]'
-                      : 'bg-white border-gray-200 text-gray-900 focus:border-blue-500'
+                      : 'bg-white border-gray-200 text-gray-900 focus:border-orange-500'
                   }`}
                 />
               </div>
@@ -440,7 +511,7 @@ const CreateBookingModal: React.FC<CreateBookingModalProps> = ({ isOpen, onClose
                   className={`w-full pl-9 pr-3 py-2.5 border-2 rounded-lg focus:outline-none transition-all text-sm ${
                     isDarkMode
                       ? 'bg-gray-800 border-gray-700 text-white focus:border-red-500 [color-scheme:dark]'
-                      : 'bg-white border-gray-200 text-gray-900 focus:border-blue-500'
+                      : 'bg-white border-gray-200 text-gray-900 focus:border-orange-500'
                   }`}
                 />
               </div>
@@ -466,7 +537,7 @@ const CreateBookingModal: React.FC<CreateBookingModalProps> = ({ isOpen, onClose
               className={`flex-1 px-4 py-2.5 text-sm font-semibold text-white rounded-lg disabled:opacity-50 transition-all shadow-lg ${
                 isDarkMode
                   ? 'bg-gradient-to-r from-red-600 via-red-700 to-gray-900 hover:from-red-700 hover:via-red-800 hover:to-gray-900'
-                  : 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700'
+                  : 'bg-gradient-to-r from-orange-600 via-orange-700 to-red-700 hover:from-orange-700 hover:via-orange-800 hover:to-red-800'
               }`}
             >
               {isSubmitting ? t('Saqlanmoqda...', language) : t('Saqlash', language)}

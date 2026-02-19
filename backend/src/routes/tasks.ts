@@ -19,7 +19,7 @@ const router = express.Router();
 // Create task (authenticated users can create tasks)
 router.post('/', authenticate, [
   body('title').trim().isLength({ min: 3 }).withMessage('Vazifa nomi kamida 3 ta belgidan iborat bo\'lishi kerak'),
-  body('description').optional().trim().isLength({ min: 5 }).withMessage('Tavsif kamida 5 ta belgidan iborat bo\'lishi kerak'),
+  body('description').optional().trim(),
   body('assignedTo').optional().isMongoId().withMessage('Noto\'g\'ri shogird ID'),
   body('assignments').optional().isArray().withMessage('Assignments array bo\'lishi kerak'),
   body('assignments.*.apprenticeId').optional().isMongoId().withMessage('Noto\'g\'ri shogird ID'),
@@ -43,7 +43,7 @@ router.get('/:id', authenticate, getTaskById);
 // Update task (master can update any task, apprentice can update their own tasks)
 router.put('/:id', authenticate, [
   body('title').optional().trim().isLength({ min: 3 }).withMessage('Vazifa nomi kamida 3 ta belgidan iborat bo\'lishi kerak'),
-  body('description').optional().trim().isLength({ min: 5 }).withMessage('Tavsif kamida 5 ta belgidan iborat bo\'lishi kerak'),
+  body('description').optional().trim(),
   body('assignedTo').optional().isMongoId().withMessage('Noto\'g\'ri shogird ID'),
   body('car').optional().isMongoId().withMessage('Noto\'g\'ri mashina ID'),
   body('priority').optional().isIn(['low', 'medium', 'high', 'urgent']).withMessage('Noto\'g\'ri muhimlik darajasi'),

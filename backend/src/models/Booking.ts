@@ -4,6 +4,9 @@ export interface IBooking extends Document {
   customerName: string;
   phoneNumber: string;
   licensePlate: string;
+  carMake?: string; // Mashina markasi (ixtiyoriy)
+  carModel?: string; // Mashina modeli (ixtiyoriy)
+  carYear?: number; // Mashina yili (ixtiyoriy)
   bookingDate?: Date; // Ixtiyoriy
   birthDate?: Date; // Tug'ilgan kun (ixtiyoriy)
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
@@ -29,6 +32,20 @@ const bookingSchema = new Schema<IBooking>(
       required: true,
       trim: true,
       uppercase: true,
+    },
+    carMake: {
+      type: String,
+      required: false,
+      trim: true,
+    },
+    carModel: {
+      type: String,
+      required: false,
+      trim: true,
+    },
+    carYear: {
+      type: Number,
+      required: false,
     },
     bookingDate: {
       type: Date,

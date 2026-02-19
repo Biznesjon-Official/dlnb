@@ -5,6 +5,7 @@ import SparePart from '../models/SparePart';
 import { AuthRequest } from '../middleware/auth';
 import telegramService from '../services/telegramService';
 import debtService from '../services/debtService';
+import { updateOrCreateCustomer } from '../services/customerService';
 export const createCar = async (req: AuthRequest, res: Response) => {
   try {
     const { make, carModel, year, licensePlate, ownerName, ownerPhone, parts, serviceItems, usedSpareParts } = req.body;
@@ -81,6 +82,20 @@ export const createCar = async (req: AuthRequest, res: Response) => {
     
     console.log('✅ Mashina saqlandi:', car._id);
     console.log('📋 Saqlangan serviceItems:', car.serviceItems);
+
+    // 👤 Mijozni yaratish/yangilash
+    try {
+      await updateOrCreateCustomer({
+        name: ownerName,
+        phone: ownerPhone,
+        clientId: req.user?.clientId || '',
+        carAdded: true,
+      });
+      console.log('✅ Mijoz yaratildi/yangilandi:', ownerPhone);
+    } catch (customerError: any) {
+      console.error('⚠️ Mijoz yaratishda xatolik:', customerError.message);
+      // Mijoz xatosi asosiy jarayonni to'xtatmasin
+    }
 
     // ✨ CarService yaratish (xizmatlar uchun)
     try {

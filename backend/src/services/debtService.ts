@@ -45,6 +45,9 @@ class DebtService {
         existingDebt.paidAmount = existingDebt.amount;
         await existingDebt.save();
         console.log(`✅ Qarz to'liq to'landi - ${car.licensePlate}`);
+        
+        // 👤 Customer'ni yangilash - qarzni kamaytirish
+        await this.updateCustomerDebt(car.ownerPhone, car.ownerName);
       }
       return { debt: existingDebt, action: 'paid' };
     }
@@ -67,6 +70,10 @@ class DebtService {
       
       await existingDebt.save();
       console.log(`📝 Qarz yangilandi: ${remainingAmount} so'm qoldi - ${car.ownerName}`);
+      
+      // 👤 Customer'ni yangilash
+      await this.updateCustomerDebt(car.ownerPhone, car.ownerName);
+      
       return { debt: existingDebt, action: 'updated' };
     } else {
       // Yangi qarz yaratish
@@ -95,7 +102,49 @@ class DebtService {
 
       await newDebt.save();
       console.log(`📝 Qarz yaratildi: ${remainingAmount} so'm - ${car.ownerName}`);
+      
+      // 👤 Customer'ni yangilash
+      await this.updateCustomerDebt(car.ownerPhone, car.ownerName);
+      
       return { debt: newDebt, action: 'created' };
+    }
+  }
+
+  /**
+   * Customer'ning umumiy qarzini yangilash
+   */
+  async updateCustomerDebt(phone: string, name: string) {
+    try {
+      const Customer = require('../models/Customer').default;
+      
+      // Mijozning barcha faol qarzlarini hisoblash
+      const debts = await Debt.find({
+        creditorPhone: phone,
+        type: 'receivable',
+        status: { $in: ['pending', 'partial'] }
+      });
+      
+      const totalDebt = debts.reduce((sum, debt) => {
+        const remaining = debt.amount - (debt.paidAmount || 0);
+        return sum + remaining;
+      }, 0);
+      
+      // Customer'ni yangilash yoki yaratish
+      await Customer.findOneAndUpdate(
+        { phone },
+        {
+          $set: {
+            name,
+            totalDebt,
+            lastVisit: new Date()
+          }
+        },
+        { upsert: true, new: true }
+      );
+      
+      console.log(`👤 Customer yangilandi: ${name} - Qarz: ${totalDebt} so'm`);
+    } catch (error: any) {
+      console.error('⚠️ Customer yangilashda xatolik:', error.message);
     }
   }
 

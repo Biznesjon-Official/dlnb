@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { Calendar, Phone, Car, Plus, Edit2, Trash2, Clock, Gift, Cake, PartyPopper, Sparkles, CheckCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { t } from '@/lib/transliteration';
 import BookingsSkeleton from './BookingsSkeleton';
 import CreateBookingModal from './CreateBookingModal';
@@ -36,6 +37,7 @@ interface BookingsContentProps {
 }
 
 const BookingsContent: React.FC<BookingsContentProps> = ({ onCarCreatedFromBooking }) => {
+  const navigate = useNavigate();
   const { isDarkMode } = useTheme();
   const [language] = useState<'latin' | 'cyrillic'>(() => {
     const savedLanguage = localStorage.getItem('language');
@@ -127,10 +129,19 @@ const BookingsContent: React.FC<BookingsContentProps> = ({ onCarCreatedFromBooki
 
   const handleArrived = useCallback(async (booking: Booking) => {
     try {
-      // 1. Yangi mashina yaratish
+      console.log('🚗 Brondan mashina yaratilmoqda:', {
+        customerName: booking.customerName,
+        phoneNumber: booking.phoneNumber,
+        licensePlate: booking.licensePlate,
+        carMake: booking.carMake,
+        carModel: booking.carModel,
+        carYear: booking.carYear
+      });
+
+      // 1. Yangi mashina yaratish (barcha ma'lumotlar bilan)
       const carData = {
-        make: booking.carMake || '',
-        carModel: booking.carModel || '',
+        make: booking.carMake || 'Noma\'lum',
+        carModel: booking.carModel || 'Noma\'lum',
         year: booking.carYear || new Date().getFullYear(),
         licensePlate: booking.licensePlate,
         ownerName: booking.customerName,
@@ -145,23 +156,42 @@ const BookingsContent: React.FC<BookingsContentProps> = ({ onCarCreatedFromBooki
         updatedAt: new Date().toISOString(),
       };
       
+      console.log('📦 Mashina ma\'lumotlari:', carData);
+      
       // Mashina yaratish
       await createCar(carData);
+      
+      console.log('✅ Mashina yaratildi');
       
       // 2. Bronni o'chirish
       await deleteBooking(booking._id);
       
-      // 3. Faol mashinalar tabiga o'tish
+      console.log('✅ Bron o\'chirildi');
+      
+      // 3. Success xabari
+      toast.success(t('Mashina faol ro\'yxatga qo\'shildi', language));
+      
+      // 4. Avtomobillar sahifasiga o'tish
+      navigate('/app/cars');
+      
+      // 5. Callback chaqirish (agar mavjud bo'lsa) - sahifa reload bo'ladi
       if (onCarCreatedFromBooking) {
         onCarCreatedFromBooking();
       }
-      
-      toast.success(t('Mashina faol ro\'yxatga qo\'shildi', language));
     } catch (error: any) {
-      console.error('Mashina yaratishda xatolik:', error);
-      toast.error(error.response?.data?.message || t('Xatolik yuz berdi', language));
+      console.error('❌ Mashina yaratishda xatolik:', error);
+      
+      // Agar davlat raqami allaqachon mavjud bo'lsa
+      if (error.response?.data?.duplicateField === 'licensePlate') {
+        toast.error(
+          t('Bu davlat raqami bilan mashina allaqachon mavjud. Iltimos, davlat raqamini tekshiring.', language),
+          { duration: 5000 }
+        );
+      } else {
+        toast.error(error.response?.data?.message || t('Xatolik yuz berdi', language));
+      }
     }
-  }, [createCar, deleteBooking, onCarCreatedFromBooking, language]);
+  }, [createCar, deleteBooking, onCarCreatedFromBooking, language, navigate]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
