@@ -20,7 +20,10 @@ export function useSparePartsNew() {
   // Load spare parts - CACHE YO'Q (har doim server'dan)
   const loadSpareParts = useCallback(async (silent = false) => {
     try {
-      if (!silent) setLoading(true);
+      if (!silent) {
+        setLoading(true); // Loading'ni yoqish
+        console.log('🔄 Loading spare parts... (loading = true)');
+      }
       setError(null);
       
       // Backend'dan yuklash (cache bypass)
@@ -32,11 +35,16 @@ export function useSparePartsNew() {
       const validData = data.filter((part: any) => part && part._id);
       setSpareParts(validData);
       
+      console.log(`✅ Loaded ${validData.length} spare parts`);
+      
     } catch (err: any) {
       console.error('Failed to load spare parts:', err);
       setError(err.message);
     } finally {
-      if (!silent) setLoading(false);
+      if (!silent) {
+        setLoading(false); // Loading'ni o'chirish
+        console.log('✅ Loading complete (loading = false)');
+      }
     }
   }, []);
 

@@ -42,6 +42,7 @@ interface ApprenticeAssignment {
   id: string;
   apprenticeId: string;
   percentage: number;
+  dailyAmount?: number; // Kunlik ishchi uchun kiritilgan pul (faqat kunlik ishchi bo'lsa)
 }
 
 interface TaskItem {
@@ -154,11 +155,11 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
   const createTaskMutation = useCreateTask();
   const { data: usersData, isLoading: usersLoading } = useUsers();
   
-  // Faqat foizlik shogirtlarni filtrlash (kunlik ishchilar emas)
+  // Barcha shogirtlarni ko'rsatish (kunlik va foizlik)
   const apprentices = React.useMemo(() => {
     const users = usersData?.users || [];
     const filtered = users.filter((u: any) => 
-      u.role === 'apprentice' && u.paymentType !== 'daily'
+      u.role === 'apprentice'
     );
     return filtered;
   }, [usersData]);
@@ -400,7 +401,12 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
             if (assignment.id === assignmentId) {
               if (field === 'apprenticeId' && value) {
                 const selectedApprentice = apprentices.find((a: any) => a._id === value);
-                const apprenticePercentage = selectedApprentice?.percentage || 50;
+                
+                // Kunlik ishchi uchun foiz 0, foizlik uchun o'z foizi
+                const apprenticePercentage = selectedApprentice?.paymentType === 'daily' 
+                  ? 0 
+                  : (selectedApprentice?.percentage || 50);
+                
                 return { 
                   ...assignment, 
                   apprenticeId: value,
@@ -561,7 +567,8 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
           // Assignments formatini to'g'rilash
           if (task.assignments && task.assignments.length > 0) {
             taskData.assignments = task.assignments.map(a => ({
-              apprenticeId: a.apprenticeId
+              apprenticeId: a.apprenticeId,
+              dailyAmount: a.dailyAmount || 0 // Kunlik ishchi uchun kiritilgan pul
             }));
           }
           
@@ -2008,10 +2015,6 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
                           ) : (
                             <div className="space-y-2">
                               {task.assignments.map((assignment) => {
-                                const allocatedAmount = task.payment / task.assignments.length;
-                                const earning = (allocatedAmount * assignment.percentage) / 100;
-                                const masterShare = allocatedAmount - earning;
-
                                 return (
                                   <div key={assignment.id} className={`p-2 rounded-lg border ${
                                     isDarkMode
@@ -2041,7 +2044,7 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
                                         </option>
                                         {apprentices.map((apprentice: any) => (
                                           <option key={apprentice._id} value={apprentice._id}>
-                                            {apprentice.name} ({apprentice.percentage || 50}%)
+                                            {apprentice.name} ({apprentice.paymentType === 'daily' ? 'Kunlik' : `${apprentice.percentage || 50}%`})
                                           </option>
                                         ))}
                                       </select>
@@ -2058,23 +2061,199 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
                                       </button>
                                     </div>
 
+                                    {/* Kunlik ishchi uchun pul kiritish maydoni */}
+                                    {(() => {
+                                      const selectedApprentice = apprentices.find((a: any) => a._id === assignment.apprenticeId);
+                                      const isDaily = selectedApprentice?.paymentType === 'daily';
+                                      
+                                      if (isDaily) {
+                                        return (
+                                          <div className={`mt-2 p-3 rounded-lg border-2 ${
+                                            isDarkMode
+                                              ? 'bg-orange-900/20 border-orange-700'
+                                              : 'bg-orange-50 border-orange-300'
+                                          }`}>
+                                            <label className={`block text-sm font-bold mb-2 flex items-center gap-2 ${
+                                              isDarkMode ? 'text-orange-300' : 'text-orange-700'
+                                            }`}>
+                                              💵 {t('Kunlik ishchi uchun pul kiriting:', language)}
+                                            </label>
+                                            <input
+                                              type="number"
+                                              value={assignment.dailyAmount || ''}
+                                              onChange={(e) => {
+                                                const value = parseInt(e.target.value) || 0;
+                                                setTasks(tasks.map(t => {
+                                                  if (t.id === task.id) {
+                                                    return {
+                                                      ...t,
+                                                      assignments: t.assignments.map(a => {
+                                                        if (a.id === assignment.id) {
+                                                          return { ...a, dailyAmount: value };
+                                                        }
+                                                        return a;
+                                                      })
+                                                    };
+                                                  }
+                                                  return t;
+                                                }));
+                                              }}
+                                              placeholder="100000"
+                                              className={`w-full px-3 py-2.5 text-base font-bold rounded-lg focus:ring-2 ${
+                                                isDarkMode
+                                                  ? 'bg-gray-900 border-2 border-orange-700 text-white placeholder:text-gray-500 focus:ring-orange-500'
+                                                  : 'bg-white border-2 border-orange-400 text-gray-900 placeholder:text-gray-400 focus:ring-orange-500'
+                                              }`}
+                                            />
+                                            <p className={`text-xs mt-1 ${isDarkMode ? 'text-orange-400' : 'text-orange-600'}`}>
+                                              {t('Bu pul foizlik shogird pulidan olinadi', language)}
+                                            </p>
+                                          </div>
+                                        );
+                                      }
+                                      return null;
+                                    })()}
+
                                     {/* Hisob-kitob - Sodda va tushunarli */}
-                                    {task.payment > 0 && assignment.percentage > 0 && assignment.apprenticeId && (
+                                    {task.payment > 0 && assignment.apprenticeId && (
                                       <div className={`p-2 rounded text-xs space-y-1 ${
                                         isDarkMode ? 'bg-gray-900/50' : 'bg-purple-50'
                                       }`}>
-                                        <div className="flex justify-between">
-                                          <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>💰 {t('Ajratilgan:', language)}</span>
-                                          <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{allocatedAmount.toLocaleString()}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                          <span className={isDarkMode ? 'text-green-400' : 'text-green-600'}>👤 {t('Shogird', language)} ({assignment.percentage}%):</span>
-                                          <span className={`font-bold ${isDarkMode ? 'text-green-400' : 'text-green-700'}`}>{earning.toLocaleString()}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                          <span className={isDarkMode ? 'text-blue-400' : 'text-blue-600'}>👨‍🏫 {t('Ustoz:', language)}</span>
-                                          <span className={`font-bold ${isDarkMode ? 'text-blue-400' : 'text-blue-700'}`}>{masterShare.toLocaleString()}</span>
-                                        </div>
+                                        {(() => {
+                                          const selectedApprentice = apprentices.find((a: any) => a._id === assignment.apprenticeId);
+                                          const isDaily = selectedApprentice?.paymentType === 'daily';
+                                          
+                                          // Foizlik shogirdlar sonini hisoblash
+                                          const percentageApprentices = task.assignments.filter(a => {
+                                            if (!a.apprenticeId) return false; // Shogird tanlanmagan
+                                            const app = apprentices.find((ap: any) => ap._id === a.apprenticeId);
+                                            return app && app.paymentType !== 'daily';
+                                          });
+                                          
+                                          // Kunlik ishchilar sonini hisoblash
+                                          const dailyWorkers = task.assignments.filter(a => {
+                                            if (!a.apprenticeId) return false; // Shogird tanlanmagan
+                                            const app = apprentices.find((ap: any) => ap._id === a.apprenticeId);
+                                            return app && app.paymentType === 'daily';
+                                          });
+                                          
+                                          // DEBUG: Console'ga chiqarish
+                                          console.log('🔍 DEBUG:', {
+                                            taskId: task.id,
+                                            assignmentId: assignment.id,
+                                            apprenticeName: selectedApprentice?.name,
+                                            isDaily,
+                                            percentageCount: percentageApprentices.length,
+                                            dailyCount: dailyWorkers.length,
+                                            totalAssignments: task.assignments.length,
+                                            dailyWorkerDetails: dailyWorkers.map(dw => ({
+                                              id: dw.id,
+                                              apprenticeId: dw.apprenticeId,
+                                              dailyAmount: dw.dailyAmount
+                                            }))
+                                          });
+                                          
+                                          // Agar foizlik + kunlik aralash bo'lsa - YANGI LOGIKA
+                                          if (percentageApprentices.length > 0 && dailyWorkers.length > 0) {
+                                            console.log('✅ YANGI LOGIKA ishlamoqda!');
+                                            
+                                            if (isDaily) {
+                                              // Kunlik ishchi uchun
+                                              const dailyAmount = assignment.dailyAmount || 0;
+                                              
+                                              return (
+                                                <>
+                                                  <div className="flex justify-between">
+                                                    <span className={isDarkMode ? 'text-orange-400' : 'text-orange-600'}>👤 {t('Kunlik ishchi:', language)}</span>
+                                                    <span className={`font-bold ${isDarkMode ? 'text-orange-400' : 'text-orange-700'}`}>{dailyAmount.toLocaleString()} {t("so'm", language)}</span>
+                                                  </div>
+                                                  <div className={`text-[10px] ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                                                    {t('(Foizlik shogird pulidan olinadi)', language)}
+                                                  </div>
+                                                </>
+                                              );
+                                            } else {
+                                              // Foizlik shogird uchun - TO'G'RI HISOB
+                                              // 1. Foizlik shogirdning to'liq ulushi (task.payment dan)
+                                              const apprenticeShare = (task.payment * assignment.percentage) / 100;
+                                              
+                                              // 2. Barcha kunlik ishchilar uchun kiritilgan pullar yig'indisi
+                                              const totalDailyAmount = dailyWorkers.reduce((sum, dw) => {
+                                                return sum + (dw.dailyAmount || 0);
+                                              }, 0);
+                                              
+                                              // 3. Kunlik ishchilar puli foizlik shogirdlardan proporsional olinadi
+                                              const dailyAmountPerPercentageApprentice = totalDailyAmount / percentageApprentices.length;
+                                              
+                                              // 4. Foizlik shogird final puli (foizidan kunlik ishchi puli ayriladi)
+                                              const apprenticeFinal = apprenticeShare - dailyAmountPerPercentageApprentice;
+                                              
+                                              // 5. Ustoz ulushi (100% - foiz = ustoz foizi)
+                                              const masterPercentage = 100 - assignment.percentage;
+                                              const masterShare = (task.payment * masterPercentage) / 100;
+                                              
+                                              return (
+                                                <>
+                                                  <div className="flex justify-between">
+                                                    <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>💰 {t('Foiz ulushi:', language)} ({assignment.percentage}%)</span>
+                                                    <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{apprenticeShare.toLocaleString()}</span>
+                                                  </div>
+                                                  <div className="flex justify-between">
+                                                    <span className={isDarkMode ? 'text-red-400' : 'text-red-600'}>🚚 {t('Kunlik ishchi:', language)}</span>
+                                                    <span className={`font-bold ${isDarkMode ? 'text-red-400' : 'text-red-700'}`}>-{dailyAmountPerPercentageApprentice.toLocaleString()}</span>
+                                                  </div>
+                                                  <div className="flex justify-between border-t pt-1 mt-1">
+                                                    <span className={`font-bold ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>✅ {t('Shogird oladi:', language)}</span>
+                                                    <span className={`font-bold ${isDarkMode ? 'text-green-400' : 'text-green-700'}`}>{apprenticeFinal.toLocaleString()}</span>
+                                                  </div>
+                                                  <div className="flex justify-between">
+                                                    <span className={isDarkMode ? 'text-blue-400' : 'text-blue-600'}>👨‍🏫 {t('Ustoz:', language)} ({masterPercentage}%)</span>
+                                                    <span className={`font-bold ${isDarkMode ? 'text-blue-400' : 'text-blue-700'}`}>{masterShare.toLocaleString()}</span>
+                                                  </div>
+                                                </>
+                                              );
+                                            }
+                                          }
+                                          
+                                          console.log('⚠️ ESKI LOGIKA ishlamoqda!');
+                                          
+                                          // ESKI LOGIKA - faqat foizlik yoki faqat kunlik
+                                          const allocatedAmount = task.payment / task.assignments.length;
+                                          const earning = isDaily ? 0 : (allocatedAmount * assignment.percentage) / 100;
+                                          const masterShare = allocatedAmount - earning;
+
+                                          return (
+                                            <>
+                                              <div className="flex justify-between">
+                                                <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>💰 {t('Ajratilgan:', language)}</span>
+                                                <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{allocatedAmount.toLocaleString()}</span>
+                                              </div>
+                                              {isDaily ? (
+                                                <>
+                                                  <div className="flex justify-between">
+                                                    <span className={isDarkMode ? 'text-orange-400' : 'text-orange-600'}>👤 {t('Kunlik ishchi:', language)}</span>
+                                                    <span className={`font-bold ${isDarkMode ? 'text-orange-400' : 'text-orange-700'}`}>0 {t("so'm", language)} ({t('kunlik to\'lov', language)})</span>
+                                                  </div>
+                                                  <div className="flex justify-between">
+                                                    <span className={isDarkMode ? 'text-blue-400' : 'text-blue-600'}>👨‍🏫 {t('Ustoz:', language)}</span>
+                                                    <span className={`font-bold ${isDarkMode ? 'text-blue-400' : 'text-blue-700'}`}>{allocatedAmount.toLocaleString()}</span>
+                                                  </div>
+                                                </>
+                                              ) : (
+                                                <>
+                                                  <div className="flex justify-between">
+                                                    <span className={isDarkMode ? 'text-green-400' : 'text-green-600'}>👤 {t('Shogird', language)} ({assignment.percentage}%):</span>
+                                                    <span className={`font-bold ${isDarkMode ? 'text-green-400' : 'text-green-700'}`}>{earning.toLocaleString()}</span>
+                                                  </div>
+                                                  <div className="flex justify-between">
+                                                    <span className={isDarkMode ? 'text-blue-400' : 'text-blue-600'}>👨‍🏫 {t('Ustoz:', language)}</span>
+                                                    <span className={`font-bold ${isDarkMode ? 'text-blue-400' : 'text-blue-700'}`}>{masterShare.toLocaleString()}</span>
+                                                  </div>
+                                                </>
+                                              )}
+                                            </>
+                                          );
+                                        })()}
                                       </div>
                                     )}
                                   </div>

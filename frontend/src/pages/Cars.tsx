@@ -11,7 +11,8 @@ import DeleteCarModal from '@/components/DeleteCarModal';
 import RestoreCarModal from '@/components/RestoreCarModal';
 import CarPaymentModalHybrid from '@/components/CarPaymentModalHybrid';
 import CarsSkeleton from '@/components/CarsSkeleton';
-import {Plus,Search, Car as CarIcon, Eye, Edit, Trash2, Phone, Package2, Filter, CheckCircle, RotateCcw, DollarSign, Users, ClipboardList, XCircle, MessageSquare} from 'lucide-react';
+import BookingsContent from '@/components/BookingsContent';
+import {Plus,Search, Car as CarIcon, Eye, Edit, Trash2, Phone, Package2, Filter, CheckCircle, RotateCcw, DollarSign, Users, ClipboardList, XCircle, MessageSquare, Calendar} from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { Car } from '@/types';
 import { t } from '@/lib/transliteration';
@@ -23,7 +24,7 @@ const Cars: React.FC = () => {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [activeTab, setActiveTab] = useState<'active' | 'archive'>('active');
+  const [activeTab, setActiveTab] = useState<'active' | 'archive' | 'bookings'>('active');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedCar, setSelectedCar] = useState<Car | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -498,7 +499,7 @@ const Cars: React.FC = () => {
           </div>
         </div>
 
-        {/* Tabs - Faol va Arxiv - Compact Right */}
+        {/* Tabs - Faol, Arxiv va Bronlar - Compact Right */}
         <div className="flex justify-end">
             <div className={`inline-flex backdrop-blur-sm rounded-lg shadow-sm border p-0.5 ${
               isDarkMode
@@ -555,11 +556,31 @@ const Cars: React.FC = () => {
                   </span>
                 </div>
               </button>
+              <button
+                onClick={() => setActiveTab('bookings')}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${
+                  activeTab === 'bookings'
+                    ? isDarkMode
+                      ? 'bg-purple-600 text-white shadow-sm'
+                      : 'bg-blue-600 text-white shadow-sm'
+                    : isDarkMode
+                      ? 'text-gray-300 hover:bg-gray-700'
+                      : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <div className="flex items-center gap-1.5">
+                  <Calendar className="h-3.5 w-3.5" />
+                  <span>{t('Bronlar', language)}</span>
+                </div>
+              </button>
             </div>
           </div>
 
         {/* Cars Grid */}
-        {loading || isRefreshing ? (
+        {activeTab === 'bookings' ? (
+          // Bronlar tabi - BookingsContent komponenti
+          <BookingsContent onCarCreatedFromBooking={() => setActiveTab('active')} />
+        ) : loading || isRefreshing ? (
           // ⚡ SKELETON LOADER - Ma'lumotlar yuklanayotganda yoki restore qilinayotganda
           <CarsSkeleton />
         ) : displayedCars.length === 0 ? (

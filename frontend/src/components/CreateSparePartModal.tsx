@@ -4,6 +4,7 @@ import { t } from '@/lib/transliteration';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { formatNumber, parseFormattedNumber } from '@/lib/utils';
 import { useSpareParts } from '@/hooks/useSpareParts';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface CreateSparePartModalProps {
   isOpen: boolean;
@@ -18,6 +19,8 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
   onSuccess,
   createSparePart // YANGI: Function prop
 }) => {
+  const { isDarkMode } = useTheme();
+  
   // Mavjud zapchastlar nomlarini olish
   const { data: sparePartsData } = useSpareParts();
   const spareParts = useMemo(() => sparePartsData?.spareParts || [], [sparePartsData]);
@@ -304,7 +307,7 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
     setErrors({});
 
     // To'g'ridan-to'g'ri funksiyani chaqirish - hook ichida optimistic update
-    await createSparePart({
+    createSparePart({
       name: finalName,
       costPrice: costPrice,
       sellingPrice: sellingPrice,
@@ -319,9 +322,9 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
       })
     });
 
-    // Modal'ni yopish va callback
-    onSuccess();
+    // Modal'ni yopish va callback - DARHOL
     onClose();
+    onSuccess();
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -379,9 +382,13 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
       <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
       
       {/* IXCHAM MODAL - Scroll kerak emas */}
-      <div className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-xl shadow-2xl max-w-lg w-full max-h-[92vh] overflow-hidden mx-2 border border-red-900/30">
+      <div className={`relative rounded-xl shadow-2xl max-w-lg w-full max-h-[92vh] overflow-hidden mx-2 border ${
+        isDarkMode 
+          ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 border-red-900/30' 
+          : 'bg-white border-orange-200'
+      }`}>
         {/* Header - IXCHAM */}
-        <div className="bg-gradient-to-r from-red-600 via-red-700 to-gray-900 px-3 py-2.5">
+        <div className={isDarkMode ? 'bg-gradient-to-r from-red-600 via-red-700 to-gray-900 px-3 py-2.5' : 'bg-gradient-to-r from-orange-500 to-amber-600 px-3 py-2.5'}>
           <button onClick={onClose} className="absolute top-2 right-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg p-1 transition-colors">
             <X className="h-4 w-4" />
           </button>
@@ -392,7 +399,7 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
             </div>
             <div>
               <h2 className="text-sm font-bold text-white">{t('Yangi zapchast', language)}</h2>
-              <p className="text-red-100 text-[10px]">{t("Ma'lumotlarni kiriting", language)}</p>
+              <p className={`text-[10px] ${isDarkMode ? 'text-red-100' : 'text-orange-100'}`}>{t("Ma'lumotlarni kiriting", language)}</p>
             </div>
           </div>
         </div>
@@ -401,14 +408,18 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
         <form onSubmit={handleSubmit} className="p-2.5 space-y-2 max-h-[calc(92vh-70px)] overflow-y-auto [&_label]:text-[11px] [&_label]:mb-0.5 [&_input]:px-2 [&_input]:py-1.5 [&_input]:text-xs [&_select]:px-2 [&_select]:py-1.5 [&_select]:text-xs [&_.text-xs]:text-[10px] [&_.text-sm]:text-xs [&_.gap-2]:gap-1 [&_.space-y-4]:space-y-2 [&_.p-4]:p-2 [&_.p-3]:p-2 [&_.rounded-xl]:rounded-lg [&_.mb-2]:mb-0.5 [&_.mt-2]:mt-1">
           {/* Kategoriya tanlash */}
           <div>
-            <label className="block font-medium text-gray-200">
+            <label className={`block font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
               {t('Kategoriya', language)} *
             </label>
             <select
               name="category"
               value={formData.category}
               onChange={handleChange}
-              className="w-full border-2 border-red-900/30 bg-gray-800 text-white rounded-md focus:outline-none focus:border-red-500 transition-all"
+              className={`w-full border-2 rounded-md focus:outline-none transition-all ${
+                isDarkMode 
+                  ? 'border-red-900/30 bg-gray-800 text-white focus:border-red-500' 
+                  : 'border-orange-200 bg-white text-gray-900 focus:border-orange-500'
+              }`}
             >
               <option value="zapchast">{t('Zapchast', language)}</option>
               <option value="balon">{t('Balon', language)}</option>
@@ -418,53 +429,152 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
 
           {/* Balon uchun qo'shimcha maydonlar - STEP BY STEP */}
           {formData.category === 'balon' && (
-            <div className="space-y-2.5 bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 border-2 border-red-900/30 rounded-lg p-2.5">
-              <h3 className="text-xs font-bold text-red-400 flex items-center gap-1.5">
+            <div className={`space-y-2.5 rounded-lg p-2.5 border-2 ${
+              isDarkMode 
+                ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 border-red-900/30' 
+                : 'bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200'
+            }`}>
+              <h3 className={`text-xs font-bold flex items-center gap-1.5 ${
+                isDarkMode ? 'text-red-400' : 'text-orange-600'
+              }`}>
                 <Package className="h-3.5 w-3.5" />
                 {t('Balon ma\'lumotlari', language)}
               </h3>
               
               {/* 1-QADAM: Balon kategoriyasi */}
               <div>
-                <label className="block text-sm font-medium text-gray-200 mb-2">
+                <label className={`block text-sm font-medium mb-2 ${
+                  isDarkMode ? 'text-gray-200' : 'text-gray-700'
+                }`}>
                   {t('1-qadam: Balon turi', language)} *
                 </label>
-                <select
-                  name="tireCategory"
-                  value={formData.tireCategory}
-                  onChange={(e) => {
-                    setFormData(prev => ({
-                      ...prev,
-                      tireCategory: e.target.value,
-                      tireSize: '' // Kategoriya o'zgarganda o'lchamni tozalash
-                    }));
-                    if (errors.tireCategory) {
-                      setErrors(prev => {
-                        const newErrors = { ...prev };
-                        delete newErrors.tireCategory;
-                        return newErrors;
-                      });
-                    }
-                  }}
-                  className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 bg-gray-800 text-white rounded-lg focus:outline-none transition-all text-sm sm:text-base ${
-                    errors.tireCategory 
-                      ? 'border-red-500 focus:border-red-400' 
-                      : 'border-red-900/30 focus:border-red-500'
-                  }`}
-                >
-                  <option value="">{t('Balon turini tanlang', language)}</option>
-                  <option value="R22.5">R22.5 - Standart fura (28 ta o'lcham)</option>
-                  <option value="R24.5">R24.5 - Katta fura (7 ta o'lcham)</option>
-                  <option value="R19.5">R19.5 - O'rta fura (5 ta o'lcham)</option>
-                  <option value="R17.5">R17.5 - Kichik fura (5 ta o'lcham)</option>
-                  <option value="R20">R20 - Eski standart (11 ta o'lcham)</option>
-                  <option value="R16">R16 - Yengil yuk (12 ta o'lcham)</option>
-                  <option value="R15">R15 - Yengil yuk (7 ta o'lcham)</option>
-                  <option value="R14">R14 - Kichik yuk (3 ta o'lcham)</option>
-                </select>
+                
+                {/* Select + Input Combo */}
+                <div className="space-y-2">
+                  {/* Select - Asosiy tanlash */}
+                  <select
+                    name="tireCategory"
+                    value={formData.tireCategory}
+                    onChange={(e) => {
+                      setFormData(prev => ({
+                        ...prev,
+                        tireCategory: e.target.value,
+                        tireSize: '' // Kategoriya o'zgarganda o'lchamni tozalash
+                      }));
+                      if (errors.tireCategory) {
+                        setErrors(prev => {
+                          const newErrors = { ...prev };
+                          delete newErrors.tireCategory;
+                          return newErrors;
+                        });
+                      }
+                    }}
+                    className={`w-full px-3 py-2 border-2 rounded-lg focus:outline-none transition-all text-sm ${
+                      errors.tireCategory 
+                        ? 'border-red-500 focus:border-red-400' 
+                        : isDarkMode
+                          ? 'border-red-900/30 bg-gray-800 text-white focus:border-red-500'
+                          : 'border-orange-200 bg-white text-gray-900 focus:border-orange-500'
+                    }`}
+                  >
+                    <option value="">{t('Balon turini tanlang', language)}</option>
+                    <option value="R22.5">R22.5 - Standart fura</option>
+                    <option value="R24.5">R24.5 - Katta fura</option>
+                    <option value="R19.5">R19.5 - O'rta fura</option>
+                    <option value="R17.5">R17.5 - Kichik fura</option>
+                    <option value="R20">R20 - Eski standart</option>
+                    <option value="R16">R16 - Yengil yuk</option>
+                    <option value="R15">R15 - Yengil yuk</option>
+                    <option value="R14">R14 - Kichik yuk</option>
+                  </select>
+                  
+                  {/* Input - O'zi yozish */}
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={formData.tireCategory}
+                      onChange={(e) => {
+                        setFormData(prev => ({
+                          ...prev,
+                          tireCategory: e.target.value,
+                          tireSize: ''
+                        }));
+                        if (errors.tireCategory) {
+                          setErrors(prev => {
+                            const newErrors = { ...prev };
+                            delete newErrors.tireCategory;
+                            return newErrors;
+                          });
+                        }
+                      }}
+                      placeholder={t('Yoki o\'zi yozing (masalan: R25)', language)}
+                      className={`w-full px-3 py-2 border-2 rounded-lg focus:outline-none transition-all text-sm ${
+                        isDarkMode
+                          ? 'border-red-900/30 bg-gray-800 text-white focus:border-red-500 placeholder-gray-500'
+                          : 'border-orange-200 bg-white text-gray-900 focus:border-orange-500 placeholder-gray-400'
+                      }`}
+                    />
+                    <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-xs ${
+                      isDarkMode ? 'text-gray-500' : 'text-gray-400'
+                    }`}>
+                      ✏️
+                    </span>
+                  </div>
+                  
+                  {/* Tez tanlash tugmalari */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {['R22.5', 'R24.5', 'R19.5', 'R17.5', 'R20', 'R16'].map((cat) => (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => {
+                          setFormData(prev => ({
+                            ...prev,
+                            tireCategory: cat,
+                            tireSize: ''
+                          }));
+                          if (errors.tireCategory) {
+                            setErrors(prev => {
+                              const newErrors = { ...prev };
+                              delete newErrors.tireCategory;
+                              return newErrors;
+                            });
+                          }
+                        }}
+                        className={`px-2 py-1 text-xs rounded-md border transition-colors font-medium ${
+                          formData.tireCategory === cat
+                            ? isDarkMode
+                              ? 'bg-red-900/50 border-red-500 text-red-300'
+                              : 'bg-orange-100 border-orange-500 text-orange-700'
+                            : isDarkMode
+                              ? 'bg-gray-800 border-red-900/30 hover:bg-gray-700 hover:border-red-500 text-gray-400'
+                              : 'bg-white border-orange-200 hover:bg-orange-50 hover:border-orange-400 text-gray-700'
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+                  
+                  {/* Yangi kategoriya haqida ma'lumot */}
+                  {formData.tireCategory && !['R22.5', 'R24.5', 'R19.5', 'R17.5', 'R20', 'R16', 'R15', 'R14'].includes(formData.tireCategory) && (
+                    <div className={`p-2 rounded-lg border ${
+                      isDarkMode
+                        ? 'bg-blue-900/20 border-blue-700/50'
+                        : 'bg-blue-50 border-blue-200'
+                    }`}>
+                      <p className={`text-xs font-medium ${
+                        isDarkMode ? 'text-blue-400' : 'text-blue-700'
+                      }`}>
+                        ℹ️ {t('Yangi kategoriya', language)}: <span className="font-bold">{formData.tireCategory}</span>
+                      </p>
+                    </div>
+                  )}
+                </div>
+                
                 {errors.tireCategory && (
-                  <p className="mt-2 text-xs sm:text-sm text-red-400 flex items-center gap-2">
-                    <AlertCircle className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <p className="mt-2 text-xs text-red-400 flex items-center gap-2">
+                    <AlertCircle className="h-3 w-3" />
                     {errors.tireCategory}
                   </p>
                 )}
@@ -473,27 +583,85 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
               {/* 2-QADAM: Aniq o'lcham (faqat kategoriya tanlanganda) */}
               {formData.tireCategory && (
                 <div className="transition-all duration-300 ease-in-out">
-                  <label className="block text-sm font-medium text-gray-200 mb-2">
+                  <label className={`block text-sm font-medium mb-2 ${
+                    isDarkMode ? 'text-gray-200' : 'text-gray-700'
+                  }`}>
                     {t('2-qadam: Aniq o\'lcham', language)} *
                   </label>
-                  <select
-                    name="tireSize"
-                    value={formData.tireSize}
-                    onChange={handleChange}
-                    className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 bg-gray-800 text-white rounded-lg focus:outline-none transition-all text-sm sm:text-base ${
-                      errors.tireSize 
-                        ? 'border-red-500 focus:border-red-400' 
-                        : 'border-red-900/30 focus:border-red-500'
-                    }`}
-                  >
-                    <option value="">{t('O\'lchamni tanlang', language)}</option>
-                    {tireSizeOptions[formData.tireCategory]?.map((size) => (
-                      <option key={size} value={size}>{size}</option>
-                    ))}
-                  </select>
+                  
+                  {/* Agar standart kategoriya bo'lsa - select, aks holda - input */}
+                  {tireSizeOptions[formData.tireCategory] ? (
+                    <>
+                      {/* Select + Input Combo */}
+                      <div className="space-y-2">
+                        {/* Select - Asosiy tanlash */}
+                        <select
+                          name="tireSize"
+                          value={formData.tireSize}
+                          onChange={handleChange}
+                          className={`w-full px-3 py-2 border-2 rounded-lg focus:outline-none transition-all text-sm ${
+                            errors.tireSize 
+                              ? 'border-red-500 focus:border-red-400' 
+                              : isDarkMode
+                                ? 'border-red-900/30 bg-gray-800 text-white focus:border-red-500'
+                                : 'border-orange-200 bg-white text-gray-900 focus:border-orange-500'
+                          }`}
+                        >
+                          <option value="">{t('O\'lchamni tanlang', language)}</option>
+                          {tireSizeOptions[formData.tireCategory]?.map((size) => (
+                            <option key={size} value={size}>{size}</option>
+                          ))}
+                        </select>
+                        
+                        {/* Input - O'zi yozish */}
+                        <div className="relative">
+                          <input
+                            type="text"
+                            value={formData.tireSize}
+                            onChange={(e) => setFormData(prev => ({ ...prev, tireSize: e.target.value }))}
+                            placeholder={t('Yoki o\'zi yozing', language)}
+                            className={`w-full px-3 py-2 border-2 rounded-lg focus:outline-none transition-all text-sm ${
+                              isDarkMode
+                                ? 'border-red-900/30 bg-gray-800 text-white focus:border-red-500 placeholder-gray-500'
+                                : 'border-orange-200 bg-white text-gray-900 focus:border-orange-500 placeholder-gray-400'
+                            }`}
+                          />
+                          <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-xs ${
+                            isDarkMode ? 'text-gray-500' : 'text-gray-400'
+                          }`}>
+                            ✏️
+                          </span>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      {/* Yangi kategoriya uchun - faqat input */}
+                      <input
+                        type="text"
+                        name="tireSize"
+                        value={formData.tireSize}
+                        onChange={handleChange}
+                        placeholder={t('O\'lchamni kiriting (masalan: 295/80R22.5)', language)}
+                        className={`w-full px-3 py-2 border-2 rounded-lg focus:outline-none transition-all text-sm ${
+                          errors.tireSize 
+                            ? 'border-red-500 focus:border-red-400' 
+                            : isDarkMode
+                              ? 'border-red-900/30 bg-gray-800 text-white focus:border-red-500 placeholder-gray-500'
+                              : 'border-orange-200 bg-white text-gray-900 focus:border-orange-500 placeholder-gray-400'
+                        }`}
+                      />
+                      <p className={`mt-1 text-xs ${
+                        isDarkMode ? 'text-blue-400' : 'text-blue-600'
+                      }`}>
+                        💡 {t('Yangi kategoriya uchun o\'lchamni o\'zingiz kiriting', language)}
+                      </p>
+                    </>
+                  )}
+                  
                   {errors.tireSize && (
-                    <p className="mt-2 text-xs sm:text-sm text-red-400 flex items-center gap-2">
-                      <AlertCircle className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <p className="mt-2 text-xs text-red-400 flex items-center gap-2">
+                      <AlertCircle className="h-3 w-3" />
                       {errors.tireSize}
                     </p>
                   )}
@@ -503,14 +671,20 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
               {/* 3-QADAM: Balon mavsumi (faqat o'lcham tanlanganda) */}
               {formData.tireSize && (
                 <div className="transition-all duration-300 ease-in-out">
-                  <label className="block text-sm font-medium text-gray-200 mb-2">
+                  <label className={`block text-sm font-medium mb-2 ${
+                    isDarkMode ? 'text-gray-200' : 'text-gray-700'
+                  }`}>
                     {t('3-qadam: Balon mavsumi', language)} *
                   </label>
                   <select
                     name="tireType"
                     value={formData.tireType}
                     onChange={handleChange}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 border-red-900/30 bg-gray-800 text-white rounded-lg focus:outline-none focus:border-red-500 transition-all text-sm sm:text-base"
+                    className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 rounded-lg focus:outline-none transition-all text-sm sm:text-base ${
+                      isDarkMode
+                        ? 'border-red-900/30 bg-gray-800 text-white focus:border-red-500'
+                        : 'border-orange-200 bg-white text-gray-900 focus:border-orange-500'
+                    }`}
                   >
                     <option value="universal">{t('Universal', language)}</option>
                     <option value="yozgi">{t('Yozgi', language)}</option>
@@ -522,14 +696,22 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
               {/* 4-QADAM: Balon brendi (faqat mavsumi tanlanganda) */}
               {formData.tireSize && formData.tireType && (
                 <div className="transition-all duration-300 ease-in-out">
-                  <label className="block text-sm font-medium text-gray-200 mb-2">
+                  <label className={`block text-sm font-medium mb-2 ${
+                    isDarkMode ? 'text-gray-200' : 'text-gray-700'
+                  }`}>
                     {t('4-qadam: Balon brendi', language)} ({t('ixtiyoriy', language)})
                   </label>
                   
                   {/* Mavjud balon nomlari ko'rsatish */}
                   {existingTireNames.length > 0 && (
-                    <div className="mb-2 p-2 bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 border border-red-900/30 rounded-lg">
-                      <p className="text-xs font-semibold text-red-400 mb-1.5">
+                    <div className={`mb-2 p-2 rounded-lg border ${
+                      isDarkMode 
+                        ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 border-red-900/30' 
+                        : 'bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200'
+                    }`}>
+                      <p className={`text-xs font-semibold mb-1.5 ${
+                        isDarkMode ? 'text-red-400' : 'text-orange-600'
+                      }`}>
                         💡 {t('Mavjud balonlar', language)} ({existingTireNames.length} ta):
                       </p>
                       <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
@@ -541,13 +723,19 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
                               // Nomni input'ga qo'yish
                               setFormData(prev => ({ ...prev, name: name }));
                             }}
-                            className="px-2 py-1 text-xs bg-gray-800 border border-red-900/30 rounded-md hover:bg-gray-700 hover:border-red-500 transition-colors text-red-400 font-medium"
+                            className={`px-2 py-1 text-xs rounded-md border transition-colors font-medium ${
+                              isDarkMode
+                                ? 'bg-gray-800 border-red-900/30 hover:bg-gray-700 hover:border-red-500 text-red-400'
+                                : 'bg-white border-orange-200 hover:bg-orange-50 hover:border-orange-400 text-orange-600'
+                            }`}
                           >
                             {name}
                           </button>
                         ))}
                         {existingTireNames.length > 10 && (
-                          <span className="px-2 py-1 text-xs text-red-400 font-medium">
+                          <span className={`px-2 py-1 text-xs font-medium ${
+                            isDarkMode ? 'text-red-400' : 'text-orange-600'
+                          }`}>
                             +{existingTireNames.length - 10} ta
                           </span>
                         )}
@@ -555,21 +743,27 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
                     </div>
                   )}
                   
-                  <select
-                    name="tireBrand"
-                    value={formData.tireBrand}
-                    onChange={handleChange}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 border-red-900/30 bg-gray-800 text-white rounded-lg focus:outline-none focus:border-red-500 transition-all text-sm sm:text-base"
-                  >
-                    <option value="">{t('Brend tanlang (ixtiyoriy)', language)}</option>
-                    <optgroup label={t('Premium brendlar', language)}>
+                  {/* Combobox: Input + Datalist (o'zi yozish yoki tanlash) */}
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      name="tireBrand"
+                      value={formData.tireBrand}
+                      onChange={handleChange}
+                      list="tire-brands-list"
+                      placeholder={t('Brend nomini yozing yoki tanlang', language)}
+                      className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 rounded-lg focus:outline-none transition-all text-sm sm:text-base ${
+                        isDarkMode
+                          ? 'border-red-900/30 bg-gray-800 text-white focus:border-red-500 placeholder-gray-500'
+                          : 'border-orange-200 bg-white text-gray-900 focus:border-orange-500 placeholder-gray-400'
+                      }`}
+                    />
+                    <datalist id="tire-brands-list">
                       <option value="Michelin">Michelin (Fransiya)</option>
                       <option value="Bridgestone">Bridgestone (Yaponiya)</option>
                       <option value="Continental">Continental (Germaniya)</option>
                       <option value="Goodyear">Goodyear (AQSh)</option>
                       <option value="Pirelli">Pirelli (Italiya)</option>
-                    </optgroup>
-                    <optgroup label={t('O\'rta darajali brendlar', language)}>
                       <option value="Hankook">Hankook (Janubiy Koreya)</option>
                       <option value="Yokohama">Yokohama (Yaponiya)</option>
                       <option value="Kumho">Kumho (Janubiy Koreya)</option>
@@ -578,26 +772,51 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
                       <option value="BFGoodrich">BFGoodrich (AQSh)</option>
                       <option value="Toyo">Toyo (Yaponiya)</option>
                       <option value="Nokian">Nokian (Finlandiya)</option>
-                    </optgroup>
-                    <optgroup label={t('Iqtisodiy brendlar', language)}>
                       <option value="Kama">Kama (Rossiya)</option>
                       <option value="Belshina">Belshina (Belarus)</option>
                       <option value="Matador">Matador (Slovakiya)</option>
-                    </optgroup>
-                    <optgroup label={t('Boshqa', language)}>
-                      <option value="Boshqa">Boshqa brend</option>
-                    </optgroup>
-                  </select>
+                    </datalist>
+                    
+                    {/* Tez tanlash tugmalari */}
+                    <div className="flex flex-wrap gap-1.5">
+                      {['Michelin', 'Bridgestone', 'Continental', 'Goodyear', 'Pirelli', 'Hankook'].map((brand) => (
+                        <button
+                          key={brand}
+                          type="button"
+                          onClick={() => setFormData(prev => ({ ...prev, tireBrand: brand }))}
+                          className={`px-2 py-1 text-xs rounded-md border transition-colors font-medium ${
+                            formData.tireBrand === brand
+                              ? isDarkMode
+                                ? 'bg-red-900/50 border-red-500 text-red-300'
+                                : 'bg-orange-100 border-orange-500 text-orange-700'
+                              : isDarkMode
+                                ? 'bg-gray-800 border-red-900/30 hover:bg-gray-700 hover:border-red-500 text-gray-400'
+                                : 'bg-white border-orange-200 hover:bg-orange-50 hover:border-orange-400 text-gray-700'
+                          }`}
+                        >
+                          {brand}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
 
               {/* Avtomatik yaratilgan nom ko'rsatish - faqat brend tanlangandan keyin */}
               {formData.tireSize && formData.tireType && (
-                <div className="bg-gradient-to-br from-green-900/30 via-green-800/20 to-green-900/30 border border-green-700/50 rounded-lg p-3">
-                  <p className="text-xs font-semibold text-green-400 mb-1">
+                <div className={`rounded-lg p-3 border ${
+                  isDarkMode
+                    ? 'bg-gradient-to-br from-green-900/30 via-green-800/20 to-green-900/30 border-green-700/50'
+                    : 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-300'
+                }`}>
+                  <p className={`text-xs font-semibold mb-1 ${
+                    isDarkMode ? 'text-green-400' : 'text-green-700'
+                  }`}>
                     {t('Avtomatik yaratilgan nom:', language)}
                   </p>
-                  <p className="text-sm font-bold text-green-300">
+                  <p className={`text-sm font-bold ${
+                    isDarkMode ? 'text-green-300' : 'text-green-800'
+                  }`}>
                     {generateTireName() || t('Ma\'lumotlar to\'liq emas', language)}
                   </p>
                 </div>
@@ -608,11 +827,17 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
           {/* Zapchast nomi - IXCHAM */}
           {formData.category !== 'balon' && (
             <div>
-              <label className="block text-xs font-medium text-gray-200 mb-1">
+              <label className={`block text-xs font-medium mb-1 ${
+                isDarkMode ? 'text-gray-200' : 'text-gray-700'
+              }`}>
                 {formData.category === 'zapchast' ? t('Zapchast nomi', language) : t('Tovar nomi', language)} *
               </label>
               <div className="flex gap-2">
-                <div className="flex-shrink-0 px-3 py-2 text-sm bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 border border-red-900/30 rounded-lg font-medium text-red-400">
+                <div className={`flex-shrink-0 px-3 py-2 text-sm rounded-lg font-medium border ${
+                  isDarkMode
+                    ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 border-red-900/30 text-red-400'
+                    : 'bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200 text-orange-600'
+                }`}>
                   {formData.category === 'zapchast' ? t('Zapchast', language) : t('Boshqa', language)}
                 </div>
                 <input
@@ -621,10 +846,12 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
                   required
                   value={formData.name}
                   onChange={handleChange}
-                  className={`flex-1 px-3 py-2 text-sm border bg-gray-800 text-white rounded-lg focus:outline-none transition-all ${
+                  className={`flex-1 px-3 py-2 text-sm border rounded-lg focus:outline-none transition-all ${
                     errors.name 
                       ? 'border-red-500 focus:border-red-400' 
-                      : 'border-red-900/30 focus:border-red-500'
+                      : isDarkMode
+                        ? 'border-red-900/30 bg-gray-800 text-white focus:border-red-500'
+                        : 'border-orange-200 bg-white text-gray-900 focus:border-orange-500'
                   }`}
                   placeholder={formData.category === 'zapchast' ? t('Masalan: Tormoz kolodkasi', language) : t('Masalan: Yog\'', language)}
                 />
@@ -637,11 +864,19 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
               )}
               {/* Avtomatik yaratilgan nom ko'rsatish */}
               {formData.name && (
-                <div className="mt-2 bg-gradient-to-br from-green-900/30 via-green-800/20 to-green-900/30 border border-green-700/50 rounded-lg p-2">
-                  <p className="text-xs font-semibold text-green-400 mb-1">
+                <div className={`mt-2 rounded-lg p-2 border ${
+                  isDarkMode
+                    ? 'bg-gradient-to-br from-green-900/30 via-green-800/20 to-green-900/30 border-green-700/50'
+                    : 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-300'
+                }`}>
+                  <p className={`text-xs font-semibold mb-1 ${
+                    isDarkMode ? 'text-green-400' : 'text-green-700'
+                  }`}>
                     {t('Saqlanadigan nom:', language)}
                   </p>
-                  <p className="text-sm font-bold text-green-300">
+                  <p className={`text-sm font-bold ${
+                    isDarkMode ? 'text-green-300' : 'text-green-800'
+                  }`}>
                     {formData.category === 'zapchast' ? t('Zapchast', language) : t('Boshqa', language)} {formData.name}
                   </p>
                 </div>
@@ -654,15 +889,21 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
             <div className="transition-all duration-300 ease-in-out">
               {/* Valyuta */}
               <div className="flex items-center gap-1.5 mb-2">
-                <span className="text-xs font-medium text-gray-200">{t('Valyuta', language)}:</span>
-                <div className="flex bg-gray-800 border border-red-900/30 rounded p-0.5">
+                <span className={`text-xs font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>{t('Valyuta', language)}:</span>
+                <div className={`flex rounded p-0.5 border ${
+                  isDarkMode 
+                    ? 'bg-gray-800 border-red-900/30' 
+                    : 'bg-gray-100 border-orange-200'
+                }`}>
                   <button
                     type="button"
                     onClick={() => setCurrency('UZS')}
                     className={`px-2 py-1 rounded text-xs font-medium transition-all ${
                       currency === 'UZS'
-                        ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-sm'
-                        : 'text-gray-400'
+                        ? isDarkMode
+                          ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-sm'
+                          : 'bg-gradient-to-r from-orange-500 to-amber-600 text-white shadow-sm'
+                        : isDarkMode ? 'text-gray-400' : 'text-gray-600'
                     }`}
                   >
                     {t("So'm", language)}
@@ -672,8 +913,10 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
                     onClick={() => setCurrency('USD')}
                     className={`px-2 py-1 rounded text-xs font-medium transition-all ${
                       currency === 'USD'
-                        ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-sm'
-                        : 'text-gray-400'
+                        ? isDarkMode
+                          ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-sm'
+                          : 'bg-gradient-to-r from-orange-500 to-amber-600 text-white shadow-sm'
+                        : isDarkMode ? 'text-gray-400' : 'text-gray-600'
                     }`}
                   >
                     USD
@@ -684,7 +927,9 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
               <div className="grid grid-cols-2 gap-2">
                 {/* O'zini narxi */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-200 mb-1">
+                  <label className={`block text-xs font-medium mb-1 ${
+                    isDarkMode ? 'text-gray-200' : 'text-gray-700'
+                  }`}>
                     {t("O'zini narxi", language)}
                   </label>
                   <input
@@ -693,10 +938,12 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
                     value={formData.costPriceDisplay}
                     onChange={handleChange}
                     autoComplete="off"
-                    className={`w-full px-2 py-1.5 text-sm border bg-gray-800 text-white rounded-lg focus:outline-none transition-all ${
+                    className={`w-full px-2 py-1.5 text-sm border rounded-lg focus:outline-none transition-all ${
                       errors.costPrice 
                         ? 'border-red-500 focus:border-red-400' 
-                        : 'border-red-900/30 focus:border-red-500'
+                        : isDarkMode
+                          ? 'border-red-900/30 bg-gray-800 text-white focus:border-red-500'
+                          : 'border-orange-200 bg-white text-gray-900 focus:border-orange-500'
                     }`}
                     placeholder={currency === 'UZS' ? '800,000' : '62.50'}
                   />
@@ -704,7 +951,9 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
 
                 {/* Sotish narxi */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-200 mb-1">
+                  <label className={`block text-xs font-medium mb-1 ${
+                    isDarkMode ? 'text-gray-200' : 'text-gray-700'
+                  }`}>
                     {t('Sotish narxi', language)}
                   </label>
                   <input
@@ -713,10 +962,12 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
                     value={formData.sellingPriceDisplay}
                     onChange={handleChange}
                     autoComplete="off"
-                    className={`w-full px-2 py-1.5 text-sm border bg-gray-800 text-white rounded-lg focus:outline-none transition-all ${
+                    className={`w-full px-2 py-1.5 text-sm border rounded-lg focus:outline-none transition-all ${
                       errors.sellingPrice 
                         ? 'border-red-500 focus:border-red-400' 
-                        : 'border-red-900/30 focus:border-red-500'
+                        : isDarkMode
+                          ? 'border-red-900/30 bg-gray-800 text-white focus:border-red-500'
+                          : 'border-orange-200 bg-white text-gray-900 focus:border-orange-500'
                     }`}
                     placeholder={currency === 'UZS' ? '1,000,000' : '78.13'}
                   />
@@ -725,10 +976,18 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
 
               {/* Foyda */}
               {formData.costPrice && formData.sellingPrice && Number(formData.sellingPrice) >= Number(formData.costPrice) && (
-                <div className="bg-gradient-to-br from-green-900/30 via-green-800/20 to-green-900/30 border border-green-700/50 rounded p-2 mt-2">
+                <div className={`rounded p-2 mt-2 border ${
+                  isDarkMode
+                    ? 'bg-gradient-to-br from-green-900/30 via-green-800/20 to-green-900/30 border-green-700/50'
+                    : 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-300'
+                }`}>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-green-400">{t('Foyda', language)}:</span>
-                    <span className="text-sm font-bold text-green-300">
+                    <span className={`text-xs font-medium ${
+                      isDarkMode ? 'text-green-400' : 'text-green-700'
+                    }`}>{t('Foyda', language)}:</span>
+                    <span className={`text-sm font-bold ${
+                      isDarkMode ? 'text-green-300' : 'text-green-800'
+                    }`}>
                       {formatNumber((Number(formData.sellingPrice) - Number(formData.costPrice)).toString())} {currency === 'UZS' ? t("so'm", language) : 'USD'}
                     </span>
                   </div>
@@ -740,7 +999,9 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
           {/* 6-QADAM: Miqdor - IXCHAM */}
           {(formData.costPrice || formData.sellingPrice) && (
             <div className="transition-all duration-300 ease-in-out">
-              <label className="block text-xs font-medium text-gray-200 mb-1">
+              <label className={`block text-xs font-medium mb-1 ${
+                isDarkMode ? 'text-gray-200' : 'text-gray-700'
+              }`}>
                 {t('Miqdor', language)} *
               </label>
               <input
@@ -750,10 +1011,12 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
                 min="0"
                 value={formData.quantity}
                 onChange={handleChange}
-                className={`w-full px-2 py-1.5 text-sm border bg-gray-800 text-white rounded-lg focus:outline-none transition-all ${
+                className={`w-full px-2 py-1.5 text-sm border rounded-lg focus:outline-none transition-all ${
                   errors.quantity 
                     ? 'border-red-500 focus:border-red-400' 
-                    : 'border-red-900/30 focus:border-red-500'
+                    : isDarkMode
+                      ? 'border-red-900/30 bg-gray-800 text-white focus:border-red-500'
+                      : 'border-orange-200 bg-white text-gray-900 focus:border-orange-500'
                 }`}
                 placeholder="0"
               />
@@ -767,17 +1030,27 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
           )}
 
           {/* Buttons - IXCHAM */}
-          <div className="flex items-center gap-2 pt-3 border-t border-red-900/30">
+          <div className={`flex items-center gap-2 pt-3 border-t ${
+            isDarkMode ? 'border-red-900/30' : 'border-orange-200'
+          }`}>
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-3 py-2 text-xs font-medium text-gray-300 bg-gray-800 border border-red-900/30 rounded-lg hover:bg-gray-700 transition-colors"
+              className={`flex-1 px-3 py-2 text-xs font-medium rounded-lg border transition-colors ${
+                isDarkMode
+                  ? 'text-gray-300 bg-gray-800 border-red-900/30 hover:bg-gray-700'
+                  : 'text-gray-700 bg-white border-orange-200 hover:bg-gray-50'
+              }`}
             >
               {t('Bekor qilish', language)}
             </button>
             <button
               type="submit"
-              className="flex-1 px-3 py-2 text-xs font-medium text-white bg-gradient-to-r from-red-600 via-red-700 to-gray-900 rounded-lg hover:from-red-700 hover:via-red-800 hover:to-gray-800 transition-all shadow-lg shadow-red-900/30"
+              className={`flex-1 px-3 py-2 text-xs font-medium text-white rounded-lg transition-all shadow-lg ${
+                isDarkMode
+                  ? 'bg-gradient-to-r from-red-600 via-red-700 to-gray-900 hover:from-red-700 hover:via-red-800 hover:to-gray-800 shadow-red-900/30'
+                  : 'bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 shadow-orange-500/30'
+              }`}
             >
               {t('Saqlash', language)}
             </button>

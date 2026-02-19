@@ -1002,18 +1002,12 @@ const MasterWarehouse: React.FC = memo(() => {
       <CreateSparePartModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        onSuccess={async () => {
-          // Modal'ni yopish
-          setIsCreateModalOpen(false);
+        onSuccess={() => {
+          console.log('🎉 Zapchast yaratildi - sahifani yangilash');
           
-          // Loading state'ni yoqish
-          setIsLoadingStats(true);
-          
-          // Ma'lumotlarni yangilash
-          await Promise.all([
-            refetchSpareParts(),
-            fetchSalesStats()
-          ]);
+          // Ma'lumotlarni yangilash - DARHOL
+          refetchSpareParts();
+          fetchSalesStats();
         }}
         createSparePart={createSparePart}
       />

@@ -9,6 +9,9 @@ interface Booking {
   customerName: string;
   phoneNumber: string;
   licensePlate: string;
+  carMake?: string;
+  carModel?: string;
+  carYear?: number;
   bookingDate: string;
   birthDate?: string; // Tug'ilgan kun
   status: string;
@@ -32,6 +35,9 @@ const EditBookingModal: React.FC<EditBookingModalProps> = ({ isOpen, onClose, bo
     customerName: '',
     phoneNumber: '',
     licensePlate: '',
+    carMake: '',
+    carModel: '',
+    carYear: new Date().getFullYear(),
     bookingDate: '',
     birthDate: '', // Tug'ilgan kun
   });
@@ -59,6 +65,9 @@ const EditBookingModal: React.FC<EditBookingModalProps> = ({ isOpen, onClose, bo
         customerName: booking.customerName,
         phoneNumber: formattedPhone,
         licensePlate: booking.licensePlate,
+        carMake: booking.carMake || '',
+        carModel: booking.carModel || '',
+        carYear: booking.carYear || new Date().getFullYear(),
         bookingDate: formattedDate,
         birthDate: formattedBirthDate,
       });
@@ -81,6 +90,9 @@ const EditBookingModal: React.FC<EditBookingModalProps> = ({ isOpen, onClose, bo
         customerName: formData.customerName,
         phoneNumber: formData.phoneNumber,
         licensePlate: formData.licensePlate,
+        ...(formData.carMake && formData.carMake.trim() !== '' && { carMake: formData.carMake }),
+        ...(formData.carModel && formData.carModel.trim() !== '' && { carModel: formData.carModel }),
+        ...(formData.carYear && { carYear: formData.carYear }),
         ...(formData.bookingDate && formData.bookingDate.trim() !== '' && { bookingDate: formData.bookingDate }),
         ...(formData.birthDate && formData.birthDate.trim() !== '' && { birthDate: formData.birthDate })
       };
@@ -97,7 +109,7 @@ const EditBookingModal: React.FC<EditBookingModalProps> = ({ isOpen, onClose, bo
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     
     if (name === 'phoneNumber') {
@@ -106,6 +118,11 @@ const EditBookingModal: React.FC<EditBookingModalProps> = ({ isOpen, onClose, bo
       setFormData({
         ...formData,
         phoneNumber: formatted,
+      });
+    } else if (name === 'carYear') {
+      setFormData({
+        ...formData,
+        carYear: parseInt(value),
       });
     } else {
       setFormData({
@@ -247,6 +264,86 @@ const EditBookingModal: React.FC<EditBookingModalProps> = ({ isOpen, onClose, bo
                 placeholder="01 A 123 BC"
                 required
               />
+            </div>
+
+            {/* Car Make */}
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${
+                isDarkMode ? 'text-gray-300' : 'text-gray-700'
+              }`}>
+                <Car className="h-4 w-4 inline mr-1" />
+                {t('Mashina markasi', language)}
+              </label>
+              <select
+                name="carMake"
+                value={formData.carMake}
+                onChange={handleChange}
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 transition-colors ${
+                  isDarkMode
+                    ? 'bg-gray-800 border-red-900/30 text-white focus:ring-red-500 focus:border-red-500'
+                    : 'border-gray-300 focus:ring-blue-500 focus:border-transparent'
+                }`}
+              >
+                <option value="">{t('Tanlang', language)}</option>
+                {['FAW', 'Foton', 'Howo', 'Shacman', 'Dongfeng', 'JAC', 'Beiben', 'Camc', 'Sinotruk',
+                  'Mercedes-Benz', 'MAN', 'Scania', 'Volvo', 'DAF', 'Iveco', 'Renault',
+                  'Freightliner', 'Kenworth', 'Peterbilt', 'Mack', 'International', 'Western Star',
+                  'Hino', 'Mitsubishi Fuso', 'UD Trucks', 'Isuzu',
+                  'Kamaz', 'MAZ', 'Ural', 'GAZ', 'ZIL', 'KrAZ',
+                  'Hyundai', 'Kia', 'Daewoo',
+                  'Chevrolet', 'Toyota', 'Nissan', 'Honda', 'Ford', 'Volkswagen', 'BMW', 'Audi',
+                  'Mazda', 'Subaru', 'Lexus', 'Mitsubishi', 'Suzuki', 'Peugeot', 'Renault', 'Fiat',
+                  'Opel', 'Skoda', 'Seat', 'Lada', 'UAZ', 'Geely', 'Chery', 'BYD', 'Great Wall',
+                  'Haval', 'Tata', 'Ashok Leyland', 'Eicher', 'Boshqa'].sort().map((make) => (
+                  <option key={make} value={make}>{make}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Car Model */}
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${
+                isDarkMode ? 'text-gray-300' : 'text-gray-700'
+              }`}>
+                <Car className="h-4 w-4 inline mr-1" />
+                {t('Mashina modeli', language)}
+              </label>
+              <input
+                type="text"
+                name="carModel"
+                value={formData.carModel}
+                onChange={handleChange}
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 transition-colors ${
+                  isDarkMode
+                    ? 'bg-gray-800 border-red-900/30 text-white placeholder:text-gray-500 focus:ring-red-500 focus:border-red-500'
+                    : 'border-gray-300 focus:ring-blue-500 focus:border-transparent'
+                }`}
+                placeholder={t('Nexia 3', language)}
+              />
+            </div>
+
+            {/* Car Year */}
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${
+                isDarkMode ? 'text-gray-300' : 'text-gray-700'
+              }`}>
+                <Calendar className="h-4 w-4 inline mr-1" />
+                {t('Yil', language)}
+              </label>
+              <select
+                name="carYear"
+                value={formData.carYear}
+                onChange={handleChange}
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 transition-colors ${
+                  isDarkMode
+                    ? 'bg-gray-800 border-red-900/30 text-white focus:ring-red-500 focus:border-red-500'
+                    : 'border-gray-300 focus:ring-blue-500 focus:border-transparent'
+                }`}
+              >
+                {Array.from({ length: new Date().getFullYear() - 1980 + 1 }, (_, i) => new Date().getFullYear() - i).map((year) => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
             </div>
 
             {/* Booking Date */}

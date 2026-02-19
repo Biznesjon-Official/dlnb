@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, User, UserPlus, Phone, Percent, DollarSign, Calendar } from 'lucide-react';
+import { X, User, UserPlus, Phone, Percent, Calendar } from 'lucide-react';
 import { useCreateApprentice } from '@/hooks/useUsers';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { formatPhoneNumber, validatePhoneNumber, getPhoneDigits } from '@/lib/phoneUtils';
@@ -49,10 +49,7 @@ const CreateApprenticeModal: React.FC<CreateApprenticeModalProps> = ({ isOpen, o
       newErrors.phone = 'Telefon raqam toliq va togri formatda kiritilishi kerak';
     }
 
-    // Kunlik ishchi uchun kunlik ish haqi majburiy
-    if (formData.paymentType === 'daily' && (!formData.dailyRate || formData.dailyRate < 1000)) {
-      newErrors.dailyRate = 'Kunlik ish haqi kamida 1000 so\'m bo\'lishi kerak';
-    }
+    // Kunlik ishchi uchun kunlik ish haqi majburiy emas (ishlardan pul oladi)
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -67,20 +64,21 @@ const CreateApprenticeModal: React.FC<CreateApprenticeModalProps> = ({ isOpen, o
 
     try {
       const apprenticeData = {
-        ...formData,
+        name: formData.name,
+        username: formData.username,
         phone: getPhoneDigits(formData.phone),
         profileImage: '',
         password: getPhoneDigits(formData.phone),
-        role: 'apprentice'
+        role: 'apprentice',
+        paymentType: formData.paymentType,
+        // Foizli ishchi uchun percentage, kunlik ishchi uchun dailyRate (0 = ishlardan pul oladi)
+        ...(formData.paymentType === 'percentage' 
+          ? { percentage: formData.percentage }
+          : { dailyRate: 0 } // Kunlik ishchi - ishlardan pul oladi
+        )
       };
 
-      console.log('📤 Sending apprentice data:', {
-        name: apprenticeData.name,
-        username: apprenticeData.username,
-        paymentType: apprenticeData.paymentType,
-        percentage: apprenticeData.percentage,
-        dailyRate: apprenticeData.dailyRate
-      });
+      console.log('📤 Sending apprentice data:', apprenticeData);
 
       if (onCreate) {
         await onCreate(apprenticeData);
@@ -341,45 +339,30 @@ const CreateApprenticeModal: React.FC<CreateApprenticeModalProps> = ({ isOpen, o
             </div>
           )}
 
-          {/* Kunlik ishchi uchun */}
+          {/* Kunlik ishchi uchun ma'lumot */}
           {formData.paymentType === 'daily' && (
-            <div>
-              <label htmlFor="dailyRate" className={`block text-xs font-semibold mb-1 ${
-                isDarkMode ? 'text-gray-200' : 'text-gray-700'
-              }`}>
-                Kunlik ish haqi (so'm) *
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <DollarSign className={`h-4 w-4 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
+            <div className={`p-3 rounded-lg border-2 ${
+              isDarkMode
+                ? 'bg-green-900/20 border-green-800/50'
+                : 'bg-green-50 border-green-200'
+            }`}>
+              <div className="flex items-start gap-2">
+                <Calendar className={`h-5 w-5 mt-0.5 flex-shrink-0 ${
+                  isDarkMode ? 'text-green-400' : 'text-green-600'
+                }`} />
+                <div>
+                  <p className={`text-sm font-semibold mb-1 ${
+                    isDarkMode ? 'text-green-300' : 'text-green-800'
+                  }`}>
+                    Kunlik ishchi
+                  </p>
+                  <p className={`text-xs ${
+                    isDarkMode ? 'text-green-400' : 'text-green-700'
+                  }`}>
+                    Kunlik ishchi qo'shiladi. Keyinchalik ishlardan pul oladi va daromad hisoblanadi.
+                  </p>
                 </div>
-                <input
-                  type="number"
-                  id="dailyRate"
-                  name="dailyRate"
-                  value={formData.dailyRate || ''}
-                  onChange={handleChange}
-                  onFocus={(e) => {
-                    e.target.value = '';
-                    setFormData(prev => ({ ...prev, dailyRate: 0 }));
-                  }}
-                  min="1000"
-                  step="1000"
-                  required
-                  className={`w-full pl-9 pr-3 py-2 border-2 rounded-lg focus:outline-none transition-all text-sm ${
-                    errors.dailyRate 
-                      ? 'border-red-300 focus:border-red-500' 
-                      : isDarkMode
-                        ? 'bg-gray-800 border-gray-700 text-white focus:border-green-500 placeholder-gray-500'
-                        : 'bg-white border-gray-200 text-gray-900 focus:border-green-500 placeholder-gray-400'
-                  }`}
-                  placeholder="100000"
-                />
               </div>
-              {errors.dailyRate && <p className="mt-0.5 text-xs text-red-600">{errors.dailyRate}</p>}
-              <p className="mt-0.5 text-xs text-green-600 font-medium">
-                ✓ Har kuni avtomatik to'lov qo'shiladi
-              </p>
             </div>
           )}
 
