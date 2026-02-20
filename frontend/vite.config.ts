@@ -125,6 +125,16 @@ export default defineConfig({
           });
         },
       },
+      '/uploads': {
+        target: 'http://127.0.0.1:4000',
+        changeOrigin: true,
+        secure: false,
+        configure: (proxy, _options) => {
+          proxy.on('error', () => {
+            // Silent error - backend hali tayyor emas
+          });
+        },
+      },
     },
   },
   cacheDir: 'node_modules/.vite',

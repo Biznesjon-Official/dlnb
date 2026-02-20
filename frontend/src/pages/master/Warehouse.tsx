@@ -17,6 +17,7 @@ import { t } from '@/lib/transliteration';
 import { formatCurrency } from '@/lib/utils';
 import { useSparePartsNew } from '@/hooks/useSparePartsNew';
 import api from '@/lib/api';
+import API_CONFIG from '@/config/api.config';
 import CreateSparePartModal from '@/components/CreateSparePartModal';
 import EditSparePartModal from '@/components/EditSparePartModal';
 import DeleteSparePartModal from '@/components/DeleteSparePartModal';
@@ -40,6 +41,40 @@ const useDebounce = (value: string, delay: number) => {
   }, [value, delay]);
   
   return debouncedValue;
+};
+
+// Helper function to get full image URL
+const getFullImageUrl = (imagePath: string | undefined): string => {
+  if (!imagePath) return '';
+  
+  // Base64 rasm bo'lsa, to'g'ridan-to'g'ri qaytarish (lekin bu xavfli - juda uzun)
+  if (imagePath.startsWith('data:image/')) {
+    console.warn('⚠️ Base64 rasm URL juda uzun - server\'ga yuklash tavsiya etiladi');
+    return imagePath;
+  }
+  
+  // Agar to'liq URL bo'lsa, o'zini qaytarish
+  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    return imagePath;
+  }
+  
+  // API URL'dan /api qismini olib tashlash
+  const baseUrl = API_CONFIG.BASE_URL.replace('/api', '');
+  
+  // Agar imagePath / bilan boshlanmasa, qo'shish
+  const path = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+  
+  const fullUrl = `${baseUrl}${path}`;
+  
+  console.log('🖼️ WAREHOUSE getFullImageUrl:', {
+    imagePath,
+    'API_CONFIG.BASE_URL': API_CONFIG.BASE_URL,
+    baseUrl,
+    path,
+    fullUrl
+  });
+  
+  return fullUrl;
 };
 
 const MasterWarehouse: React.FC = memo(() => {
@@ -849,14 +884,19 @@ const MasterWarehouse: React.FC = memo(() => {
                       <div className="mb-2">
                         {/* Rasm (agar mavjud bo'lsa) */}
                         {part.imageUrl && (
-                          <div className="mb-2 rounded-lg overflow-hidden border-2 border-gray-700">
+                          <div className={`mb-2 rounded-lg overflow-hidden border-2 ${
+                            isDarkMode ? 'border-gray-700' : 'border-gray-300'
+                          }`}>
                             <img
-                              src={part.imageUrl.startsWith('http') ? part.imageUrl : `${import.meta.env.VITE_API_URL}${part.imageUrl}`}
+                              src={getFullImageUrl(part.imageUrl)}
                               alt={part.name}
                               className="w-full h-24 object-cover"
                               onError={(e) => {
+                                console.error('❌ Rasm yuklanmadi:', part.imageUrl);
+                                console.error('📍 To\'liq URL:', getFullImageUrl(part.imageUrl));
                                 // Rasm yuklanmasa, placeholder ko'rsatish
-                                (e.target as HTMLImageElement).style.display = 'none';
+                                const target = e.target as HTMLImageElement;
+                                target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="100" viewBox="0 0 200 100"%3E%3Crect fill="%23ddd" width="200" height="100"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="14" dy="10.5" font-weight="bold" x="50%25" y="50%25" text-anchor="middle"%3ERasm yo\'q%3C/text%3E%3C/svg%3E';
                               }}
                             />
                           </div>

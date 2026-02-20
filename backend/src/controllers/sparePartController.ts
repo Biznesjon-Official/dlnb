@@ -2,6 +2,9 @@ import { Response } from 'express';
 import SparePart from '../models/SparePart';
 import SparePartSale from '../models/SparePartSale';
 import { AuthRequest } from '../middleware/auth';
+import sharp from 'sharp';
+import path from 'path';
+import fs from 'fs';
 
 export const searchSpareParts = async (req: AuthRequest, res: Response) => {
   try {
@@ -704,8 +707,6 @@ export const getSales = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
-
-
 // Rasm yuklash
 export const uploadSparePartImage = async (req: AuthRequest, res: Response) => {
   try {
@@ -713,15 +714,50 @@ export const uploadSparePartImage = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ message: 'Rasm yuklanmadi' });
     }
 
-    // Rasm URL'ini qaytarish
-    const imageUrl = `/uploads/spare-parts/${req.file.filename}`;
-    
-    res.status(200).json({
-      message: 'Rasm muvaffaqiyatli yuklandi',
-      imageUrl
-    });
+    const originalPath = req.file.path;
+    const filename = req.file.filename;
+    const filenameWithoutExt = path.parse(filename).name;
+    const webpFilename = `${filenameWithoutExt}.webp`;
+    const webpPath = path.join('uploads', 'spare-parts', webpFilename);
+
+    try {
+      // Rasmni WebP formatga o'girish va siqish
+      await sharp(originalPath)
+        .webp({ quality: 80 }) // 80% sifat - optimal hajm va sifat
+        .resize(800, 800, { // Max 800x800px
+          fit: 'inside',
+          withoutEnlargement: true
+        })
+        .toFile(webpPath);
+
+      // Asl rasmni o'chirish
+      fs.unlinkSync(originalPath);
+
+      // WebP rasm URL'ini qaytarish
+      const imageUrl = `/uploads/spare-parts/${webpFilename}`;
+      
+      console.log('✅ Rasm WebP formatga o\'girildi:', {
+        original: filename,
+        webp: webpFilename,
+        imageUrl,
+        path: webpPath
+      });
+      
+      res.status(200).json({
+        message: 'Rasm muvaffaqiyatli yuklandi va WebP formatga o\'girildi',
+        imageUrl
+      });
+    } catch (sharpError: any) {
+      console.error('❌ Sharp error:', sharpError);
+      // Agar sharp xatolik bersa, asl rasmni qaytarish
+      const imageUrl = `/uploads/spare-parts/${filename}`;
+      res.status(200).json({
+        message: 'Rasm yuklandi (WebP formatga o\'girilmadi)',
+        imageUrl
+      });
+    }
   } catch (error: any) {
-    console.error('Error uploading spare part image:', error);
+    console.error('❌ Error uploading spare part image:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };

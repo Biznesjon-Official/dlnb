@@ -254,22 +254,36 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
 
   // Rasm yuklash
   const uploadImage = async (): Promise<string | null> => {
-    if (!imageFile) return null;
+    if (!imageFile) {
+      console.log('⚠️ imageFile yo\'q, rasm yuklanmaydi');
+      return null;
+    }
+
+    console.log('📤 Rasm yuklanmoqda...', {
+      fileName: imageFile.name,
+      fileSize: imageFile.size,
+      fileType: imageFile.type
+    });
 
     setIsUploadingImage(true);
     try {
       const formData = new FormData();
       formData.append('image', imageFile);
 
+      console.log('📡 Backend\'ga so\'rov yuborilmoqda...');
       const response = await api.post('/spare-parts/upload-image', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       });
 
+      console.log('✅ Backend javob berdi:', response.data);
+      console.log('📸 Qaytgan imageUrl:', response.data.imageUrl);
+
       return response.data.imageUrl;
     } catch (error: any) {
-      console.error('Error uploading image:', error);
+      console.error('❌ Rasm yuklashda xatolik:', error);
+      console.error('❌ Error response:', error.response?.data);
       toast.error(t('Rasm yuklanmadi', language));
       return null;
     } finally {
@@ -332,14 +346,22 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
       return;
     }
 
+    console.log('📝 Form submit boshlandi');
+    console.log('🖼️ imageFile:', imageFile ? 'Mavjud' : 'Yo\'q');
+    console.log('🔗 formData.imageUrl:', formData.imageUrl);
+
     // Agar rasm tanlangan bo'lsa, avval uni yuklash
     let uploadedImageUrl = formData.imageUrl;
     if (imageFile) {
+      console.log('📤 Rasm yuklanmoqda...');
       const url = await uploadImage();
+      console.log('📥 Yuklangan rasm URL:', url);
       if (url) {
         uploadedImageUrl = url;
       }
     }
+
+    console.log('✅ Final imageUrl:', uploadedImageUrl);
 
     // Agar faqat bitta narx kiritilgan bo'lsa, ikkinchisini avtomatik to'ldirish
     let costPrice = Number(formData.costPrice) || Number(formData.sellingPrice);
@@ -407,6 +429,12 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    
+    // Base64 URL'larni bloklash
+    if (name === 'imageUrl' && value.startsWith('data:image/')) {
+      toast.error(t('Base64 rasm URL qabul qilinmaydi. Iltimos, rasm faylini yuklang yoki tashqi URL kiriting.', language));
+      return;
+    }
     
     if (name === 'costPrice') {
       // O'zini narxi formatini boshqarish

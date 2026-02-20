@@ -2,6 +2,30 @@ import React from 'react';
 import { X, Package, DollarSign, TrendingUp, Calendar, Edit, Trash2 } from 'lucide-react';
 import { t } from '@/lib/transliteration';
 import { useTheme } from '@/contexts/ThemeContext';
+import API_CONFIG from '@/config/api.config';
+
+// Helper function to get full image URL
+const getFullImageUrl = (imagePath: string | undefined): string => {
+  if (!imagePath) return '';
+  
+  // Base64 rasm bo'lsa, to'g'ridan-to'g'ri qaytarish
+  if (imagePath.startsWith('data:image/')) {
+    return imagePath;
+  }
+  
+  // Agar to'liq URL bo'lsa, o'zini qaytarish
+  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    return imagePath;
+  }
+  
+  // API URL'dan /api qismini olib tashlash
+  const baseUrl = API_CONFIG.BASE_URL.replace('/api', '');
+  
+  // Agar imagePath / bilan boshlanmasa, qo'shish
+  const path = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+  
+  return `${baseUrl}${path}`;
+};
 
 interface SparePart {
   _id: string;
@@ -13,6 +37,7 @@ interface SparePart {
   profit?: number; // Foyda (virtual field)
   quantity: number;
   supplier: string;
+  imageUrl?: string; // Rasm URL
   usageCount: number;
   isActive: boolean;
   createdAt: string;
@@ -87,6 +112,26 @@ const ViewSparePartModal: React.FC<ViewSparePartModalProps> = ({
 
         {/* Content */}
         <div className="p-4 space-y-3 overflow-y-auto max-h-[calc(95vh-140px)] scrollbar-hide">
+          {/* Rasm (agar mavjud bo'lsa) */}
+          {sparePart.imageUrl && (
+            <div className={`rounded-lg overflow-hidden border-2 ${
+              isDarkMode ? 'border-red-900/30' : 'border-orange-200'
+            }`}>
+              <img
+                src={getFullImageUrl(sparePart.imageUrl)}
+                alt={sparePart.name}
+                className="w-full h-48 object-cover"
+                onError={(e) => {
+                  console.error('❌ Rasm yuklanmadi:', sparePart.imageUrl);
+                  console.error('📍 To\'liq URL:', getFullImageUrl(sparePart.imageUrl));
+                  // Rasm yuklanmasa, placeholder ko'rsatish
+                  const target = e.target as HTMLImageElement;
+                  target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="200" viewBox="0 0 400 200"%3E%3Crect fill="%23ddd" width="400" height="200"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="20" dy="10.5" font-weight="bold" x="50%25" y="50%25" text-anchor="middle"%3ERasm yo\'q%3C/text%3E%3C/svg%3E';
+                }}
+              />
+            </div>
+          )}
+          
           {/* Stats Grid */}
           <div className="grid grid-cols-2 gap-2">
             <div className={`rounded-lg p-3 border ${

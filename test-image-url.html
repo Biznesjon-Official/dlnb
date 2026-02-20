@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Image URL</title>
+</head>
+<body>
+    <h1>Test Zapchast Rasmi</h1>
+    
+    <h2>1. To'g'ridan-to'g'ri backend URL:</h2>
+    <img src="http://localhost:4000/uploads/spare-parts/spare-part-1771504513800-344026412.png" 
+         alt="Test 1" 
+         style="max-width: 300px; border: 2px solid red;"
+         onerror="this.style.border='2px solid red'; this.alt='XATO: Rasm yuklanmadi'">
+    
+    <h2>2. API URL orqali:</h2>
+    <img src="http://localhost:4000/api/uploads/spare-parts/spare-part-1771504513800-344026412.png" 
+         alt="Test 2" 
+         style="max-width: 300px; border: 2px solid blue;"
+         onerror="this.style.border='2px solid red'; this.alt='XATO: Rasm yuklanmadi'">
+    
+    <h2>3. Nisbiy URL:</h2>
+    <img src="/uploads/spare-parts/spare-part-1771504513800-344026412.png" 
+         alt="Test 3" 
+         style="max-width: 300px; border: 2px solid green;"
+         onerror="this.style.border='2px solid red'; this.alt='XATO: Rasm yuklanmadi'">
+    
+    <script>
+        console.log('Test sahifasi yuklandi');
+        console.log('Backend URL: http://localhost:4000');
+        console.log('Rasm path: /uploads/spare-parts/spare-part-1771504513800-344026412.png');
+    </script>
+</body>
+</html>

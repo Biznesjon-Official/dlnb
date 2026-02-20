@@ -1396,9 +1396,9 @@ const TasksSection: React.FC<{
   const createTaskMutation = useCreateTask();
   
   const tasks = isOnline && shouldFetchTasks ? (tasksData?.tasks || []) : [];
-  // Faqat foizlik shogirtlarni filtrlash (kunlik ishchilar emas)
+  // Barcha shogirtlarni ko'rsatish (kunlik va foizlik)
   const apprentices = isOnline 
-    ? (apprenticesData?.users || []).filter((u: any) => u.role === 'apprentice' && u.paymentType !== 'daily')
+    ? (apprenticesData?.users || []).filter((u: any) => u.role === 'apprentice')
     : [];
   
   // Mashina xizmatlarini yuklash
@@ -1568,7 +1568,7 @@ const TasksSection: React.FC<{
       // Assignments ni to'g'ri formatga o'tkazish
       const formattedAssignments = editingTask.assignments.map((assignment: any) => ({
         apprenticeId: assignment.apprenticeId || assignment.apprentice?._id || assignment.apprentice,
-        percentage: assignment.percentage || 50
+        dailyAmount: assignment.dailyAmount || 0 // Kunlik ishchi uchun kiritilgan pul
       }));
 
       // Task data tayyorlash - description'ni olib tashlash
@@ -1625,7 +1625,7 @@ const TasksSection: React.FC<{
         .filter((a: any) => a.apprenticeId) // Faqat shogird tanlangan bo'lsa
         .map((assignment: any) => ({
           apprenticeId: assignment.apprenticeId,
-          percentage: assignment.percentage || 50
+          dailyAmount: assignment.dailyAmount || 0 // Kunlik ishchi uchun kiritilgan pul
         }));
 
       // Task data tayyorlash - description'ni olib tashlash
@@ -1730,10 +1730,23 @@ const TasksSection: React.FC<{
     // Agar shogird tanlanayotgan bo'lsa, uning foizini avtomatik olish
     if (field === 'apprenticeId' && value) {
       const selectedApprentice = apprentices.find((app: any) => app._id === value);
+      
+      // Kunlik ishchi uchun foiz 0, foizlik uchun o'z foizi
+      const apprenticePercentage = selectedApprentice?.paymentType === 'daily' 
+        ? 0 
+        : (selectedApprentice?.percentage || 50);
+      
       updatedAssignments[index] = {
         ...updatedAssignments[index],
         apprenticeId: value,
-        percentage: selectedApprentice?.percentage || 50 // Shogirdning ustoz bergan foizi
+        percentage: apprenticePercentage,
+        dailyAmount: selectedApprentice?.paymentType === 'daily' ? 0 : undefined // Kunlik ishchi uchun dailyAmount field qo'shish
+      };
+    } else if (field === 'dailyAmount') {
+      // Kunlik ishchi uchun kiritilgan pulni saqlash
+      updatedAssignments[index] = {
+        ...updatedAssignments[index],
+        dailyAmount: Number(value) || 0
       };
     } else {
       updatedAssignments[index] = {
@@ -1924,50 +1937,85 @@ const TasksSection: React.FC<{
                   {t('Shogird qo\'shing', language)}
                 </div>
               ) : (
-                newTask.assignments.map((assignment: any, index: number) => (
-                  <div key={index} className={`flex items-center space-x-2 rounded-lg p-2 border ${
-                    isDarkMode
-                      ? 'bg-gray-900 border-red-900/50'
-                      : 'bg-white border-red-200'
-                  }`}>
-                    <div className="flex-1">
-                      <select
-                        value={assignment.apprenticeId}
-                        onChange={(e) => handleUpdateApprentice(newTask, setNewTask, index, 'apprenticeId', e.target.value)}
-                        className={`w-full px-2 py-1.5 text-sm rounded focus:ring-2 ${
-                          isDarkMode
-                            ? 'bg-gray-800 border border-gray-700 text-white focus:ring-red-500'
-                            : 'bg-white border border-gray-300 text-gray-900 focus:ring-red-500'
-                        }`}
-                      >
-                        <option value="">{t('Shogird tanlang', language)}</option>
-                        {apprentices.map((app: any) => (
-                          <option key={app._id} value={app._id}>
-                            {app.name} ({app.percentage || 50}%)
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className={`w-16 px-2 py-1.5 text-xs rounded text-center font-medium ${
+                newTask.assignments.map((assignment: any, index: number) => {
+                  // Shogirdni topish
+                  const selectedApprentice = apprentices.find((app: any) => app._id === assignment.apprenticeId);
+                  const isDaily = selectedApprentice?.paymentType === 'daily';
+                  
+                  return (
+                    <div key={index} className={`space-y-2 rounded-lg p-2 border ${
                       isDarkMode
-                        ? 'bg-gray-900 border border-gray-700 text-gray-300'
-                        : 'bg-gray-50 border border-gray-200 text-gray-700'
+                        ? 'bg-gray-900 border-red-900/50'
+                        : 'bg-white border-red-200'
                     }`}>
-                      {assignment.percentage || 0}%
+                      <div className="flex items-center space-x-2">
+                        <div className="flex-1">
+                          <select
+                            value={assignment.apprenticeId}
+                            onChange={(e) => handleUpdateApprentice(newTask, setNewTask, index, 'apprenticeId', e.target.value)}
+                            className={`w-full px-2 py-1.5 text-sm rounded focus:ring-2 ${
+                              isDarkMode
+                                ? 'bg-gray-800 border border-gray-700 text-white focus:ring-red-500'
+                                : 'bg-white border border-gray-300 text-gray-900 focus:ring-red-500'
+                            }`}
+                          >
+                            <option value="">{t('Shogird tanlang', language)}</option>
+                            {apprentices.map((app: any) => (
+                              <option key={app._id} value={app._id}>
+                                {app.name} {app.paymentType === 'daily' ? '(Kunlik)' : `(${app.percentage || 50}%)`}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        {!isDaily && (
+                          <div className={`w-16 px-2 py-1.5 text-xs rounded text-center font-medium ${
+                            isDarkMode
+                              ? 'bg-gray-900 border border-gray-700 text-gray-300'
+                              : 'bg-gray-50 border border-gray-200 text-gray-700'
+                          }`}>
+                            {assignment.percentage || 0}%
+                          </div>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveApprentice(newTask, setNewTask, index)}
+                          className={`p-1.5 rounded transition-colors ${
+                            isDarkMode
+                              ? 'text-red-400 hover:bg-red-900/30'
+                              : 'text-red-600 hover:bg-red-50'
+                          }`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                      
+                      {/* Kunlik ishchi uchun pul kiritish */}
+                      {isDaily && assignment.apprenticeId && (
+                        <div className="flex items-center space-x-2">
+                          <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                            {t('Pul:', language)}
+                          </span>
+                          <input
+                            type="number"
+                            min="0"
+                            step="1000"
+                            value={assignment.dailyAmount || ''}
+                            onChange={(e) => handleUpdateApprentice(newTask, setNewTask, index, 'dailyAmount', e.target.value)}
+                            placeholder={t("Pul kiriting", language)}
+                            className={`flex-1 px-2 py-1.5 text-sm rounded focus:ring-2 ${
+                              isDarkMode
+                                ? 'bg-gray-800 border border-gray-700 text-white placeholder:text-gray-500 focus:ring-red-500'
+                                : 'bg-white border border-gray-300 text-gray-900 placeholder:text-gray-400 focus:ring-red-500'
+                            }`}
+                          />
+                          <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                            {t("so'm", language)}
+                          </span>
+                        </div>
+                      )}
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveApprentice(newTask, setNewTask, index)}
-                      className={`p-1.5 rounded transition-colors ${
-                        isDarkMode
-                          ? 'text-red-400 hover:bg-red-900/30'
-                          : 'text-red-600 hover:bg-red-50'
-                      }`}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
 
@@ -2134,29 +2182,60 @@ const TasksSection: React.FC<{
                         + {t('Qo\'shish', language)}
                       </button>
                     </div>
-                    {editingTask.assignments.map((assignment: any, index: number) => (
-                      <div key={index} className="flex items-center space-x-2">
-                        <select
-                          value={assignment.apprenticeId || assignment.apprentice?._id}
-                          onChange={(e) => handleUpdateApprentice(editingTask, setEditingTask, index, 'apprenticeId', e.target.value)}
-                          className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded"
-                        >
-                          <option value="">{t('Tanlang', language)}</option>
-                          {apprentices.map((app: any) => (
-                            <option key={app._id} value={app._id}>{app.name}</option>
-                          ))}
-                        </select>
-                        <div className="w-16 px-2 py-1 text-xs border border-gray-200 rounded bg-gray-50 text-center font-medium text-gray-700">
-                          {assignment.percentage || 0}%
+                    {editingTask.assignments.map((assignment: any, index: number) => {
+                      // Shogirdni topish
+                      const selectedApprentice = apprentices.find((app: any) => 
+                        app._id === (assignment.apprenticeId || assignment.apprentice?._id)
+                      );
+                      const isDaily = selectedApprentice?.paymentType === 'daily';
+                      
+                      return (
+                        <div key={index} className="space-y-2">
+                          <div className="flex items-center space-x-2">
+                            <select
+                              value={assignment.apprenticeId || assignment.apprentice?._id}
+                              onChange={(e) => handleUpdateApprentice(editingTask, setEditingTask, index, 'apprenticeId', e.target.value)}
+                              className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded"
+                            >
+                              <option value="">{t('Tanlang', language)}</option>
+                              {apprentices.map((app: any) => (
+                                <option key={app._id} value={app._id}>
+                                  {app.name} {app.paymentType === 'daily' ? '(Kunlik)' : `(${app.percentage || 50}%)`}
+                                </option>
+                              ))}
+                            </select>
+                            {!isDaily && (
+                              <div className="w-16 px-2 py-1 text-xs border border-gray-200 rounded bg-gray-50 text-center font-medium text-gray-700">
+                                {assignment.percentage || 0}%
+                              </div>
+                            )}
+                            <button
+                              onClick={() => handleRemoveApprentice(editingTask, setEditingTask, index)}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          </div>
+                          
+                          {/* Kunlik ishchi uchun pul kiritish */}
+                          {isDaily && (assignment.apprenticeId || assignment.apprentice?._id) && (
+                            <div className="flex items-center space-x-2 pl-2">
+                              <span className="text-xs text-gray-600">{t('Pul:', language)}</span>
+                              <input
+                                type="number"
+                                min="0"
+                                step="1000"
+                                value={assignment.dailyAmount || ''}
+                                onChange={(e) => handleUpdateApprentice(editingTask, setEditingTask, index, 'dailyAmount', e.target.value)}
+                                placeholder={t("Pul kiriting", language)}
+                                className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded"
+                              />
+                              <span className="text-xs text-gray-600">{t("so'm", language)}</span>
+                            </div>
+                          )}
                         </div>
-                        <button
-                          onClick={() => handleRemoveApprentice(editingTask, setEditingTask, index)}
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </button>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
                   <div className="flex items-center space-x-2 pt-2">

@@ -78,11 +78,21 @@ router.post('/', authenticate, [
   body('licensePlate')
     .custom((value) => {
       const plateClean = value.replace(/\s/g, '').toUpperCase();
+      
+      // Eski format: 01A123BC (2 raqam + 1 harf + 3 raqam + 2 harf)
       const isOldFormat = /^[0-9]{2}[A-Z]{1}[0-9]{3}[A-Z]{2}$/.test(plateClean);
+      
+      // Yangi format: 01123ABC (5 raqam + 3 harf)
       const isNewFormat = /^[0-9]{5}[A-Z]{3}$/.test(plateClean);
       
-      if (!isOldFormat && !isNewFormat) {
-        throw new Error('Davlat raqami noto\'g\'ri formatda. Masalan: 01 A 123 BC yoki 01 123 ABC');
+      // Qisqa format: 01A123B (2 raqam + 1 harf + 3 raqam + 1 harf)
+      const isShortFormat = /^[0-9]{2}[A-Z]{1}[0-9]{3}[A-Z]{1}$/.test(plateClean);
+      
+      // Maxsus format: Kamida 5 ta belgi, raqam va harflar aralash
+      const isCustomFormat = /^[0-9A-Z]{5,15}$/.test(plateClean);
+      
+      if (!isOldFormat && !isNewFormat && !isShortFormat && !isCustomFormat) {
+        throw new Error('Davlat raqami noto\'g\'ri formatda. Kamida 5 ta belgi (raqam va harflar)');
       }
       return true;
     }),

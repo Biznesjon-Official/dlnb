@@ -1,9 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import { X, Edit3, AlertCircle, Package } from 'lucide-react';
+import { X, Edit3, AlertCircle, Package, Upload, Image as ImageIcon } from 'lucide-react';
 import { t } from '@/lib/transliteration';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { formatNumber, parseFormattedNumber } from '@/lib/utils';
 import { useTheme } from '@/contexts/ThemeContext';
+import API_CONFIG from '@/config/api.config';
+import api from '@/lib/api';
+import toast from 'react-hot-toast';
+
+// Helper function to get full image URL
+const getFullImageUrl = (imagePath: string | undefined): string => {
+  if (!imagePath) return '';
+  
+  // Base64 rasm bo'lsa, to'g'ridan-to'g'ri qaytarish
+  if (imagePath.startsWith('data:image/')) {
+    return imagePath;
+  }
+  
+  // Agar to'liq URL bo'lsa, o'zini qaytarish
+  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    return imagePath;
+  }
+  
+  // API URL'dan /api qismini olib tashlash
+  const baseUrl = API_CONFIG.BASE_URL.replace('/api', '');
+  
+  // Agar imagePath / bilan boshlanmasa, qo'shish
+  const path = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+  
+  return `${baseUrl}${path}`;
+};
 
 interface SparePart {
   _id: string;
@@ -53,6 +79,7 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
     price: '',
     priceDisplay: '', // Formatli ko'rsatish uchun
     quantity: '',
+    imageUrl: '', // YANGI: Rasm URL
     // Balon uchun qo'shimcha maydonlar
     category: 'zapchast' as 'balon' | 'zapchast' | 'boshqa',
     tireType: 'universal' as 'yozgi' | 'qishki' | 'universal',
@@ -60,6 +87,9 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
     tireCategory: '', // Balon kategoriyasi (R60, R22.5 va h.k.)
     tireSize: '' // Aniq o'lcham
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>('');
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   // Balon kategoriyalari va ularga tegishli o'lchamlar - TO'LIQ RO'YXAT
   const tireSizeOptions: Record<string, string[]> = {
@@ -207,6 +237,7 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
         price: price.toString(),
         priceDisplay: priceFormatted,
         quantity: sparePart.quantity.toString(),
+        imageUrl: sparePart.imageUrl || '', // YANGI: Rasm URL
         // @ts-ignore - balon maydonlari
         category: sparePart.category || 'zapchast',
         // @ts-ignore
@@ -218,6 +249,14 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
         // @ts-ignore
         tireSize: sparePart.tireSize || ''
       });
+      
+      // Agar rasm URL mavjud bo'lsa, preview'ni o'rnatish
+      if (sparePart.imageUrl) {
+        setImagePreview(sparePart.imageUrl);
+      } else {
+        setImagePreview('');
+      }
+      setImageFile(null);
       
       // Modal ochilganda valyutani va previousCurrency ni reset qilish
       setCurrency('UZS');
@@ -332,11 +371,79 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
+  // Rasm tanlash
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Fayl hajmini tekshirish (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error(t('Rasm hajmi 5MB dan oshmasligi kerak', language));
+      return;
+    }
+
+    // Fayl turini tekshirish
+    if (!file.type.startsWith('image/')) {
+      toast.error(t('Faqat rasm fayllari qabul qilinadi', language));
+      return;
+    }
+
+    setImageFile(file);
+    
+    // Preview yaratish
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Rasm yuklash
+  const uploadImage = async (): Promise<string | null> => {
+    if (!imageFile) return null;
+
+    setIsUploadingImage(true);
+    try {
+      const formDataUpload = new FormData();
+      formDataUpload.append('image', imageFile);
+
+      const response = await api.post('/spare-parts/upload-image', formDataUpload, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      return response.data.imageUrl;
+    } catch (error: any) {
+      console.error('❌ Error uploading image:', error);
+      toast.error(t('Rasm yuklanmadi', language));
+      return null;
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  // Rasmni o'chirish
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview('');
+    setFormData(prev => ({ ...prev, imageUrl: '' }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!validateForm()) {
       return;
+    }
+
+    // Agar rasm tanlangan bo'lsa, avval uni yuklash
+    let uploadedImageUrl = formData.imageUrl;
+    if (imageFile) {
+      const url = await uploadImage();
+      if (url) {
+        uploadedImageUrl = url;
+      }
     }
 
     // Agar faqat bitta narx kiritilgan bo'lsa, ikkinchisini avtomatik to'ldirish
@@ -368,6 +475,7 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
       sellingPrice: sellingPrice,
       price: sellingPrice,
       quantity: Number(formData.quantity),
+      imageUrl: uploadedImageUrl || undefined, // YANGI: Rasm URL
       category: formData.category,
       ...(formData.category === 'balon' && {
         tireSize: formData.tireSize,
@@ -383,6 +491,12 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+    
+    // Base64 URL'larni bloklash
+    if (name === 'imageUrl' && value.startsWith('data:image/')) {
+      toast.error(t('Base64 rasm URL qabul qilinmaydi. Iltimos, rasm faylini yuklang yoki tashqi URL kiriting.', language));
+      return;
+    }
     
     if (name === 'costPrice') {
       if (currency === 'USD') {
@@ -504,7 +618,7 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
                   ? 'border-red-500 focus:border-red-400' 
                   : isDarkMode
                     ? 'bg-gray-800 text-white border-red-900/30 focus:border-red-500'
-                    : 'bg-white text-gray-900 border-orange-200 focus:border-orange-500'
+                    : 'bg-white text-orange-900 border-orange-200 focus:border-orange-500'
               }`}
               placeholder={t('Masalan: Tormoz kolodkasi', language)}
             />
@@ -528,7 +642,7 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
               className={`w-full px-3 py-2 text-sm border-2 rounded-lg focus:outline-none transition-all ${
                 isDarkMode 
                   ? 'border-red-900/30 bg-gray-800 text-white focus:border-red-500' 
-                  : 'border-orange-200 bg-white text-gray-900 focus:border-orange-500'
+                  : 'border-orange-200 bg-white text-orange-900 focus:border-orange-500'
               }`}
             >
               <option value="zapchast">{t('Zapchast', language)}</option>
@@ -704,7 +818,7 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
                       : 'bg-gradient-to-r from-orange-500 to-amber-600 text-white shadow-sm'
                     : isDarkMode
                       ? 'text-gray-400 hover:text-gray-200'
-                      : 'text-gray-600 hover:text-gray-900'
+                      : 'text-orange-600 hover:text-orange-800'
                 }`}
               >
                 {t("So'm", language)}
@@ -719,14 +833,14 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
                       : 'bg-gradient-to-r from-orange-500 to-amber-600 text-white shadow-sm'
                     : isDarkMode
                       ? 'text-gray-400 hover:text-gray-200'
-                      : 'text-gray-600 hover:text-gray-900'
+                      : 'text-orange-600 hover:text-orange-800'
                 }`}
               >
                 USD
               </button>
             </div>
             {currency === 'USD' && (
-              <span className={`text-[10px] ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              <span className={`text-[10px] ${isDarkMode ? 'text-gray-400' : 'text-orange-600'}`}>
                 (1 USD = {exchangeRate.toLocaleString()})
               </span>
             )}
@@ -748,7 +862,7 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
                     ? 'border-red-500 focus:border-red-400' 
                     : isDarkMode
                       ? 'bg-gray-800 text-white border-red-900/30 focus:border-red-500'
-                      : 'bg-white text-gray-900 border-orange-200 focus:border-orange-500'
+                      : 'bg-white text-orange-900 border-orange-200 focus:border-orange-500'
                 }`}
                 placeholder={currency === 'UZS' ? '800,000' : '62.50'}
               />
@@ -770,10 +884,14 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
                 value={formData.sellingPriceDisplay}
                 onChange={handleChange}
                 autoComplete="off"
-                className={`w-full px-3 py-2 text-sm border-2 bg-gray-800 text-white rounded-lg focus:outline-none transition-all ${
+                className={`w-full px-3 py-2 text-sm border-2 rounded-lg focus:outline-none transition-all ${
                   errors.sellingPrice 
-                    ? 'border-red-500 focus:border-red-400' 
-                    : 'border-red-900/30 focus:border-red-500'
+                    ? isDarkMode
+                      ? 'border-red-500 focus:border-red-400 bg-gray-800 text-white'
+                      : 'border-red-500 focus:border-red-400 bg-white text-orange-900'
+                    : isDarkMode
+                      ? 'border-red-900/30 focus:border-red-500 bg-gray-800 text-white'
+                      : 'border-orange-200 focus:border-orange-500 bg-white text-orange-900'
                 }`}
                 placeholder={currency === 'UZS' ? '1,000,000' : '78.13'}
               />
@@ -787,9 +905,13 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
           </div>
 
           {formData.costPrice && formData.sellingPrice && Number(formData.sellingPrice) >= Number(formData.costPrice) && (
-            <div className="bg-gradient-to-br from-green-900/30 via-green-800/20 to-green-900/30 border border-green-700/50 rounded-lg p-2">
+            <div className={`rounded-lg p-2 border ${
+              isDarkMode
+                ? 'bg-gradient-to-br from-green-900/30 via-green-800/20 to-green-900/30 border-green-700/50'
+                : 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200'
+            }`}>
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-green-400">{t('Foyda', language)}:</span>
+                <span className={`text-xs font-medium ${isDarkMode ? 'text-green-400' : 'text-green-700'}`}>{t('Foyda', language)}:</span>
                 <div className="text-right">
                   {(() => {
                     const profit = Number(formData.sellingPrice) - Number(formData.costPrice);
@@ -798,11 +920,11 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
                       : profit.toFixed(0);
                     return (
                       <>
-                        <span className="text-sm font-bold text-green-300">
+                        <span className={`text-sm font-bold ${isDarkMode ? 'text-green-300' : 'text-green-700'}`}>
                           {formatNumber(profitStr)} {currency === 'UZS' ? t("so'm", language) : 'USD'}
                         </span>
                         {currency === 'USD' && (
-                          <div className="text-[10px] text-green-400 mt-0.5">
+                          <div className={`text-[10px] mt-0.5 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>
                             ≈ {formatNumber(Math.round(profit * exchangeRate).toString())} {t("so'm", language)}
                           </div>
                         )}
@@ -816,7 +938,7 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-gray-200 mb-1">
+              <label className={`block text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-200' : 'text-orange-700'}`}>
                 {t('Miqdor', language)} *
               </label>
               <input
@@ -826,10 +948,14 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
                 min="0"
                 value={formData.quantity}
                 onChange={handleChange}
-                className={`w-full px-3 py-2 text-sm border-2 bg-gray-800 text-white rounded-lg focus:outline-none transition-all ${
+                className={`w-full px-3 py-2 text-sm border-2 rounded-lg focus:outline-none transition-all ${
                   errors.quantity 
-                    ? 'border-red-500 focus:border-red-400' 
-                    : 'border-red-900/30 focus:border-red-500'
+                    ? isDarkMode
+                      ? 'border-red-500 focus:border-red-400 bg-gray-800 text-white'
+                      : 'border-red-500 focus:border-red-400 bg-white text-orange-900'
+                    : isDarkMode
+                      ? 'border-red-900/30 focus:border-red-500 bg-gray-800 text-white'
+                      : 'border-orange-200 focus:border-orange-500 bg-white text-orange-900'
                 }`}
                 placeholder="0"
               />
@@ -840,7 +966,120 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
                 </p>
               )}
             </div>
+          </div>
 
+          {/* Rasm yuklash (ixtiyoriy) */}
+          <div className="transition-all duration-300 ease-in-out">
+            <label className={`block text-xs font-medium mb-1 ${
+              isDarkMode ? 'text-gray-200' : 'text-gray-700'
+            }`}>
+              {t('Rasm', language)} ({t('ixtiyoriy', language)})
+            </label>
+            
+            {/* Rasm yuklash yoki URL kiritish */}
+            <div className="space-y-2">
+              {/* Tab buttons */}
+              <div className={`flex gap-1 p-0.5 rounded border ${
+                isDarkMode ? 'bg-gray-800 border-red-900/30' : 'bg-gray-100 border-orange-200'
+              }`}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    // URL tab
+                    setImageFile(null);
+                    setImagePreview(formData.imageUrl || '');
+                  }}
+                  className={`flex-1 px-2 py-1 rounded text-xs font-medium transition-all ${
+                    !imageFile && !imagePreview
+                      ? isDarkMode
+                        ? 'bg-gradient-to-r from-red-600 to-red-700 text-white'
+                        : 'bg-gradient-to-r from-orange-500 to-amber-600 text-white'
+                      : isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                  }`}
+                >
+                  <div className="flex items-center justify-center gap-1">
+                    <ImageIcon className="h-3 w-3" />
+                    <span>{t('URL', language)}</span>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    // Upload tab
+                    document.getElementById('image-upload-edit')?.click();
+                  }}
+                  className={`flex-1 px-2 py-1 rounded text-xs font-medium transition-all ${
+                    imageFile || (imagePreview && imagePreview !== formData.imageUrl)
+                      ? isDarkMode
+                        ? 'bg-gradient-to-r from-red-600 to-red-700 text-white'
+                        : 'bg-gradient-to-r from-orange-500 to-amber-600 text-white'
+                      : isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                  }`}
+                >
+                  <div className="flex items-center justify-center gap-1">
+                    <Upload className="h-3 w-3" />
+                    <span>{t('Yuklash', language)}</span>
+                  </div>
+                </button>
+              </div>
+
+              {/* URL input */}
+              {!imageFile && !imagePreview && (
+                <input
+                  type="url"
+                  name="imageUrl"
+                  value={formData.imageUrl}
+                  onChange={handleChange}
+                  placeholder={t('Rasm URL manzilini kiriting', language)}
+                  className={`w-full px-2 py-1.5 text-sm border rounded-lg focus:outline-none transition-all ${
+                    isDarkMode
+                      ? 'border-red-900/30 bg-gray-800 text-white focus:border-red-500 placeholder-gray-500'
+                      : 'border-orange-200 bg-white text-orange-900 focus:border-orange-500 placeholder-gray-400'
+                  }`}
+                />
+              )}
+
+              {/* File upload (hidden) */}
+              <input
+                id="image-upload-edit"
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="hidden"
+              />
+
+              {/* Image preview */}
+              {(imagePreview || formData.imageUrl) && (
+                <div className={`relative rounded-lg border-2 overflow-hidden ${
+                  isDarkMode ? 'border-red-900/30' : 'border-orange-200'
+                }`}>
+                  <img
+                    src={getFullImageUrl(imagePreview || formData.imageUrl)}
+                    alt="Preview"
+                    className="w-full h-32 object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleRemoveImage}
+                    className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                  {isUploadingImage && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent"></div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Info */}
+              <p className={`text-[10px] ${
+                isDarkMode ? 'text-gray-500' : 'text-gray-400'
+              }`}>
+                💡 {t('Max 5MB, jpg/png/gif/webp', language)}
+              </p>
+            </div>
           </div>
 
           <div className={`flex items-center gap-2 pt-2 border-t ${

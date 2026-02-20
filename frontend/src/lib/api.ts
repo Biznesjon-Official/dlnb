@@ -94,7 +94,18 @@ export const getImageUrl = (imagePath: string | undefined): string => {
   // Agar imagePath / bilan boshlanmasa, qo'shish
   const path = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
   
-  return `${baseUrl}${path}`;
+  const fullUrl = `${baseUrl}${path}`;
+  
+  // Debug uchun - MAJBURIY LOG
+  console.log('🖼️ getImageUrl DEBUG:', {
+    imagePath,
+    API_BASE_URL,
+    baseUrl,
+    path,
+    fullUrl
+  });
+  
+  return fullUrl;
 };
 
 // AI Diagnostic API
