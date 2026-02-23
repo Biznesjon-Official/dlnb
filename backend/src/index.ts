@@ -115,7 +115,8 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Static files - rasmlar uchun
-app.use('/uploads', express.static('uploads'));
+import path from 'path';
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Security middleware (production only)
 if (process.env.NODE_ENV === 'production') {

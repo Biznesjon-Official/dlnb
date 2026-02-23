@@ -179,6 +179,10 @@ const CarPaymentModalHybrid: React.FC<CarPaymentModalProps> = ({ isOpen, onClose
     const numericValue = parseFormattedNumber(formatted);
     setCashAmount(numericValue.toString());
     setCashAmountDisplay(formatted);
+    // Auto-adjust card amount so total doesn't exceed remaining
+    const newCard = Math.max(0, remaining - numericValue);
+    setCardAmount(newCard.toString());
+    setCardAmountDisplay(formatNumber(newCard.toString()));
     if (errors.payment) {
       setErrors(prev => {
         const newErrors = { ...prev };
@@ -193,6 +197,10 @@ const CarPaymentModalHybrid: React.FC<CarPaymentModalProps> = ({ isOpen, onClose
     const numericValue = parseFormattedNumber(formatted);
     setCardAmount(numericValue.toString());
     setCardAmountDisplay(formatted);
+    // Auto-adjust cash amount so total doesn't exceed remaining
+    const newCash = Math.max(0, remaining - numericValue);
+    setCashAmount(newCash.toString());
+    setCashAmountDisplay(formatNumber(newCash.toString()));
     if (errors.payment) {
       setErrors(prev => {
         const newErrors = { ...prev };
@@ -306,37 +314,25 @@ const CarPaymentModalHybrid: React.FC<CarPaymentModalProps> = ({ isOpen, onClose
           console.log('✅ Yangi CarService yaratildi:', serviceToUse._id);
         }
 
-        // To'lovlarni parallel yuborish
+        // To'lovlarni ketma-ket yuborish (race condition oldini olish)
         if (serviceToUse) {
-          console.log('🔵 To\'lovlarni parallel yuborish boshlandi');
-          
-          const paymentPromises = [];
-          
           // Naqd to'lov
           if (cash > 0) {
-            paymentPromises.push(
-              api.post(`/car-services/${serviceToUse._id}/payment`, {
-                amount: cash,
-                paymentMethod: 'cash',
-                notes: t('Naqd', language)
-              }).then(() => console.log(`💵 Naqd to'lov qo'shildi: ${cash} so'm`))
-            );
+            await api.post(`/car-services/${serviceToUse._id}/payment`, {
+              amount: cash,
+              paymentMethod: 'cash',
+              notes: t('Naqd', language)
+            });
           }
-          
-          // Plastik to'lov
+
+          // Plastik to'lov (naqd to'lov saqlangandan keyin)
           if (card > 0) {
-            paymentPromises.push(
-              api.post(`/car-services/${serviceToUse._id}/payment`, {
-                amount: card,
-                paymentMethod: 'card',
-                notes: t('Plastik', language)
-              }).then(() => console.log(`💳 Plastik to'lov qo'shildi: ${card} so'm`))
-            );
+            await api.post(`/car-services/${serviceToUse._id}/payment`, {
+              amount: card,
+              paymentMethod: 'card',
+              notes: t('Plastik', language)
+            });
           }
-          
-          // Barcha to'lovlarni parallel yuborish
-          await Promise.all(paymentPromises);
-          console.log('✅ To\'lovlar muvaffaqiyatli saqlandi');
         }
       } else {
         // Offline rejim - IndexedDB ishlatish

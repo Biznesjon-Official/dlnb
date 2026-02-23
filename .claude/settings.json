@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ssh root@62.171.129.217 \"cd /var/www && tar -czf /tmp/dlnb.tar.gz dlnb\")"
+    ]
+  }
+}
