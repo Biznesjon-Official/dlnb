@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { X, DollarSign, Phone } from 'lucide-react';
-import { User as UserType } from '@/types';
+import { X, DollarSign, Phone, Car } from 'lucide-react';
+import { User as UserType, Car as CarType } from '@/types';
 import { formatCurrency } from '@/lib/utils';
 import { formatPhoneNumber } from '@/lib/phoneUtils';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { t } from '@/lib/transliteration';
 import { useTheme } from '@/contexts/ThemeContext';
 import api from '@/lib/api';
+import ViewCarModal from './ViewCarModal';
 
 interface ViewApprenticeModalProps {
   isOpen: boolean;
@@ -21,6 +22,12 @@ interface Task {
   status: string;
   payment: number;
   createdAt: string;
+  car?: {
+    _id: string;
+    make: string;
+    carModel: string;
+    licensePlate: string;
+  };
 }
 
 const ViewApprenticeModal: React.FC<ViewApprenticeModalProps> = ({ isOpen, onClose, apprentice }) => {
@@ -28,6 +35,7 @@ const ViewApprenticeModal: React.FC<ViewApprenticeModalProps> = ({ isOpen, onClo
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoadingTasks, setIsLoadingTasks] = useState(false);
   const [activeTab, setActiveTab] = useState<'stats' | 'tasks'>('stats');
+  const [selectedCar, setSelectedCar] = useState<CarType | null>(null);
 
   // localStorage'dan tilni o'qish
   const language = React.useMemo<'latin' | 'cyrillic'>(() => {
@@ -281,11 +289,17 @@ const ViewApprenticeModal: React.FC<ViewApprenticeModalProps> = ({ isOpen, onClo
                   </div>
                 ) : (
                   tasks.map((task) => (
-                    <div key={task._id} className={`rounded-lg p-3 transition-colors border ${
-                      isDarkMode
-                        ? 'bg-gray-800 hover:bg-gray-750 border-gray-700'
-                        : 'bg-gray-50 hover:bg-gray-100 border-gray-200'
-                    }`}>
+                    <div
+                      key={task._id}
+                      onClick={() => task.car && setSelectedCar(task.car as unknown as CarType)}
+                      className={`rounded-lg p-3 transition-colors border ${
+                        task.car ? 'cursor-pointer' : ''
+                      } ${
+                        isDarkMode
+                          ? 'bg-gray-800 hover:bg-gray-750 border-gray-700'
+                          : 'bg-gray-50 hover:bg-gray-100 border-gray-200'
+                      }`}
+                    >
                       <h4 className={`font-medium text-sm mb-1 ${
                         isDarkMode ? 'text-gray-200' : 'text-gray-900'
                       }`}>
@@ -296,6 +310,18 @@ const ViewApprenticeModal: React.FC<ViewApprenticeModalProps> = ({ isOpen, onClo
                       }`}>
                         {task.description}
                       </p>
+                      {task.car && (
+                        <div className={`flex items-center gap-2 mb-2 px-2 py-1.5 rounded-md ${
+                          isDarkMode
+                            ? 'bg-gray-700/60 text-gray-300'
+                            : 'bg-blue-50 text-blue-700'
+                        }`}>
+                          <Car className="h-3.5 w-3.5 flex-shrink-0" />
+                          <span className="text-xs font-medium truncate">
+                            {task.car.make} {task.car.carModel} — {task.car.licensePlate}
+                          </span>
+                        </div>
+                      )}
                       <div className="flex items-center justify-between">
                         <span className={`text-xs ${
                           isDarkMode ? 'text-gray-400' : 'text-gray-500'
@@ -334,6 +360,15 @@ const ViewApprenticeModal: React.FC<ViewApprenticeModalProps> = ({ isOpen, onClo
           </div>
         </div>
       </div>
+      {selectedCar && (
+        <ViewCarModal
+          isOpen={!!selectedCar}
+          onClose={() => setSelectedCar(null)}
+          car={selectedCar}
+          onEdit={() => {}}
+          onDelete={() => {}}
+        />
+      )}
     </div>
   );
 };
