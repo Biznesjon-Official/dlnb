@@ -6,6 +6,11 @@ import sharp from 'sharp';
 import path from 'path';
 import fs from 'fs';
 
+// Escape special regex characters to prevent ReDoS
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 export const searchSpareParts = async (req: AuthRequest, res: Response) => {
   try {
     const { q, limit = 10 } = req.query;
@@ -17,8 +22,8 @@ export const searchSpareParts = async (req: AuthRequest, res: Response) => {
     const searchQuery: any = {
       isActive: true,
       $or: [
-        { name: { $regex: q.trim(), $options: 'i' } },
-        { supplier: { $regex: q.trim(), $options: 'i' } }
+        { name: { $regex: escapeRegex(q.trim()), $options: 'i' } },
+        { supplier: { $regex: escapeRegex(q.trim()), $options: 'i' } }
       ]
     };
 
@@ -51,7 +56,7 @@ export const getSpareParts = async (req: AuthRequest, res: Response) => {
     
     // Validate and sanitize inputs
     const pageNum = Math.max(1, Number(page));
-    const limitNum = Math.min(100000, Math.max(1, Number(limit))); // Cheksiz mahsulotlar
+    const limitNum = Math.min(500, Math.max(1, Number(limit)));
     const skip = (pageNum - 1) * limitNum;
     
     const filter: any = { isActive: true };
@@ -60,8 +65,8 @@ export const getSpareParts = async (req: AuthRequest, res: Response) => {
     if (search && typeof search === 'string' && search.trim()) {
       const searchTerm = search.trim();
       filter.$or = [
-        { name: { $regex: searchTerm, $options: 'i' } },
-        { supplier: { $regex: searchTerm, $options: 'i' } }
+        { name: { $regex: escapeRegex(searchTerm), $options: 'i' } },
+        { supplier: { $regex: escapeRegex(searchTerm), $options: 'i' } }
       ];
     }
     
@@ -242,14 +247,14 @@ export const createSparePartWithExpense = async (req: AuthRequest, res: Response
 
     // Check if spare part with same name already exists
     const existingSparePart = await SparePart.findOne({ 
-      name: { $regex: `^${name.trim()}$`, $options: 'i' },
-      isActive: true 
+      name: { $regex: `^${escapeRegex(name.trim())}$`, $options: 'i' },
+      isActive: true
     });
 
     if (existingSparePart) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: 'Bu nom bilan zapchast allaqachon mavjud',
-        existingSparePart 
+        existingSparePart
       });
     }
 
@@ -308,7 +313,7 @@ export const updateSparePart = async (req: AuthRequest, res: Response) => {
     // Check if name is being changed and if new name already exists
     if (name && name.trim() !== sparePart.name) {
       const existingSparePart = await SparePart.findOne({ 
-        name: { $regex: `^${name.trim()}$`, $options: 'i' },
+        name: { $regex: `^${escapeRegex(name.trim())}$`, $options: 'i' },
         _id: { $ne: req.params.id },
         isActive: true 
       });
@@ -355,46 +360,23 @@ export const updateSparePart = async (req: AuthRequest, res: Response) => {
 
 export const deleteSparePart = async (req: AuthRequest, res: Response) => {
   try {
-    console.log('🗑️ DELETE REQUEST:', {
-      id: req.params.id,
-      user: req.user?._id,
-      timestamp: new Date().toISOString()
-    });
-
     const sparePart = await SparePart.findById(req.params.id);
-    
+
     if (!sparePart) {
-      console.log('❌ Spare part not found:', req.params.id);
       return res.status(404).json({ message: 'Spare part not found' });
     }
 
-    console.log('✅ Found spare part:', {
-      id: sparePart._id,
-      name: sparePart.name,
-      isActive: sparePart.isActive
-    });
-
-    console.log('🔄 Attempting to save...');
-    
     // Soft delete - just mark as inactive
     sparePart.isActive = false;
     await sparePart.save();
-
-    console.log('✅ Spare part deleted successfully:', sparePart._id);
 
     return res.json({
       message: 'Zapchast muvaffaqiyatli o\'chirildi',
       success: true
     });
   } catch (error: any) {
-    console.error('❌ DELETE ERROR:', {
-      id: req.params.id,
-      error: error.message,
-      stack: error.stack,
-      fullError: error
-    });
-    return res.status(500).json({ 
-      message: 'Server error', 
+    return res.status(500).json({
+      message: 'Server error',
       error: error.message,
       success: false
     });
@@ -735,13 +717,6 @@ export const uploadSparePartImage = async (req: AuthRequest, res: Response) => {
 
       // WebP rasm URL'ini qaytarish
       const imageUrl = `/uploads/spare-parts/${webpFilename}`;
-      
-      console.log('✅ Rasm WebP formatga o\'girildi:', {
-        original: filename,
-        webp: webpFilename,
-        imageUrl,
-        path: webpPath
-      });
       
       res.status(200).json({
         message: 'Rasm muvaffaqiyatli yuklandi va WebP formatga o\'girildi',

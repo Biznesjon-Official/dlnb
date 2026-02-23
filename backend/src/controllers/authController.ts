@@ -7,17 +7,6 @@ export const register = async (req: Request, res: Response) => {
   try {
     const { name, email, username, password, phone, percentage, role, profileImage, profession, experience, paymentType, dailyRate } = req.body;
 
-    console.log('📝 Register request body:', {
-      name,
-      username,
-      role,
-      paymentType,
-      percentage,
-      dailyRate,
-      email,
-      phone
-    });
-
     // Validation: name va username majburiy
     if (!name || !name.trim()) {
       return res.status(400).json({ message: 'Ism kiritilishi shart' });
@@ -77,43 +66,28 @@ export const register = async (req: Request, res: Response) => {
     // To'lov turi bo'yicha
     if (paymentType) {
       userData.paymentType = paymentType;
-      console.log('✅ PaymentType set to:', paymentType);
 
       if (paymentType === 'percentage') {
         if (percentage !== undefined) {
           userData.percentage = percentage;
-          console.log('✅ Percentage set to:', percentage);
         }
       } else if (paymentType === 'daily') {
-        // Kunlik ishchi uchun dailyRate ixtiyoriy (ishlardan pul oladi)
         userData.dailyRate = dailyRate || 0;
-        console.log('✅ DailyRate set to:', userData.dailyRate, '(0 = ishlardan pul oladi)');
       }
     } else {
-      // Default: foizli ishchi
       userData.paymentType = 'percentage';
       if (percentage !== undefined) {
         userData.percentage = percentage;
       }
-      console.log('⚠️ No paymentType provided, defaulting to percentage');
     }
-
-    console.log('💾 Final userData:', userData);
 
     const user = new User(userData);
     await user.save();
 
-    console.log('✅ User saved:', {
-      id: user._id,
-      paymentType: user.paymentType,
-      percentage: user.percentage,
-      dailyRate: user.dailyRate
-    });
-
     const token = jwt.sign(
       { userId: user._id },
       process.env.JWT_SECRET!,
-      { expiresIn: '7d' }
+      { expiresIn: process.env.JWT_EXPIRY || '7d' } as any
     );
 
     res.status(201).json({
@@ -162,8 +136,6 @@ export const login = async (req: Request, res: Response) => {
   try {
     const { username, email, password, phone } = req.body;
 
-    console.log('Login request:', { username, email, password: password ? '***' : undefined, phone }); // Debug
-
     // Agar telefon raqam berilgan bo'lsa (shogirtlar uchun - username va telefon raqam)
     if (phone) {
       if (!username) {
@@ -179,8 +151,6 @@ export const login = async (req: Request, res: Response) => {
         phone: phoneDigits
       });
       
-      console.log('Apprentice user found:', user ? 'Yes' : 'No'); // Debug
-      
       if (!user) {
         return res.status(400).json({ message: 'Username yoki telefon raqam noto\'g\'ri' });
       }
@@ -193,7 +163,7 @@ export const login = async (req: Request, res: Response) => {
       const token = jwt.sign(
         { userId: user._id },
         process.env.JWT_SECRET!,
-        { expiresIn: '7d' }
+        { expiresIn: process.env.JWT_EXPIRY || '7d' } as any
       );
 
       return res.json({
@@ -248,7 +218,7 @@ export const login = async (req: Request, res: Response) => {
     const token = jwt.sign(
       { userId: user._id },
       process.env.JWT_SECRET!,
-      { expiresIn: '7d' }
+      { expiresIn: process.env.JWT_EXPIRY || '7d' } as any
     );
 
     res.json({

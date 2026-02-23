@@ -124,7 +124,7 @@ temp/
 *.swp
 *.swo
 *~
-
+.mp3
 # OS generated files
 .DS_Store
 .DS_Store?

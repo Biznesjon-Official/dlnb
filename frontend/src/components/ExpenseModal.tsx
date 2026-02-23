@@ -50,14 +50,6 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({ isOpen, onClose }) => {
   const categories = expenseCategoriesQuery.data?.categories || [];
   const categoriesLoading = expenseCategoriesQuery.isLoading;
   
-  // Debug logging
-  console.log('ExpenseModal Debug:', {
-    data: expenseCategoriesQuery.data,
-    categories,
-    isArray: Array.isArray(categories),
-    loading: categoriesLoading
-  });
-  
   // Zapchastlar kategoriyasini filter qilish
   const filteredCategories = Array.isArray(categories) ? categories.filter((category: any) => {
     // Zapchastlar kategoriyasini chiqarib tashlash
@@ -122,7 +114,7 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({ isOpen, onClose }) => {
     try {
       await createTransactionMutation.mutateAsync({
         type: 'expense',
-        category: 'salary',
+        category: selectedCategory.nameUz,
         categoryId: selectedCategory._id,
         amount: salaryData.amount,
         description: salaryData.description,
@@ -514,13 +506,10 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({ isOpen, onClose }) => {
             setStep('categories');
           }}
           onSuccess={(_data) => {
-            // Chiqim yaratildi, modal yopiladi
             setIsSparePartModalOpen(false);
             setSelectedCategory(null);
             setStep('categories');
             handleClose();
-            // Sahifani yangilash
-            window.location.reload();
           }}
         />
       )}

@@ -38,7 +38,7 @@ const queryClient = new QueryClient({
         // ERR_NETWORK_CHANGED uchun 2 marta retry
         if (error?.code === 'ERR_NETWORK_CHANGED' || 
             error?.message?.includes('network change') ||
-            error?.message?.includes('ERR_NETWORK_CHANGED')) {2
+            error?.message?.includes('ERR_NETWORK_CHANGED')) {
           return failureCount < 2;
         }
         // Network xatolari uchun 1 marta retry

@@ -1,6 +1,7 @@
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import crypto from 'crypto';
 
 // Uploads papkalarini yaratish
 const profilesDir = path.join(__dirname, '../../uploads/profiles');
@@ -25,7 +26,7 @@ const profileStorage = multer.diskStorage({
     cb(null, profilesDir);
   },
   filename: (_req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const uniqueSuffix = Date.now() + '-' + crypto.randomBytes(6).toString('hex');
     const ext = path.extname(file.originalname);
     cb(null, 'profile-' + uniqueSuffix + ext);
   }
@@ -37,7 +38,7 @@ const serviceStorage = multer.diskStorage({
     cb(null, servicesDir);
   },
   filename: (_req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const uniqueSuffix = Date.now() + '-' + crypto.randomBytes(6).toString('hex');
     const ext = path.extname(file.originalname);
     cb(null, 'service-' + uniqueSuffix + ext);
   }
@@ -80,7 +81,7 @@ const sparePartStorage = multer.diskStorage({
     cb(null, sparePartsDir);
   },
   filename: (_req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const uniqueSuffix = Date.now() + '-' + crypto.randomBytes(6).toString('hex');
     const ext = path.extname(file.originalname);
     cb(null, 'spare-part-' + uniqueSuffix + ext);
   }

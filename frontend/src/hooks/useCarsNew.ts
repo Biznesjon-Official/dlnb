@@ -320,8 +320,9 @@ export function useCarsNew() {
         await loadCars(false); // false = show loading skeleton
       } else {
         // Offline yoki temp: IndexedDB'da restore
-        await carsRepository.update(id, { 
+        await carsRepository.update(id, {
           isDeleted: false,
+          status: 'in-progress',
           deletedAt: undefined
         });
         updatePendingCount();

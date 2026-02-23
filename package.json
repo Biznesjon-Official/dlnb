@@ -27,5 +27,8 @@
     "fullstack"
   ],
   "author": "Mator Life Team",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "sharp": "^0.34.5"
+  }
 }

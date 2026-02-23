@@ -23,6 +23,8 @@ import {
 } from 'lucide-react';
 import { t } from '@/lib/transliteration';
 import { useTheme } from '@/contexts/ThemeContext';
+import ViewCarModal from '@/components/ViewCarModal';
+import { Car as CarType } from '@/types';
 
 const ApprenticeTasks: React.FC = () => {
   const { isDarkMode } = useTheme();
@@ -42,6 +44,7 @@ const ApprenticeTasks: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'active' | 'all' | 'completed'>('active'); // Default: faqat faol vazifalar
   const [searchQuery, setSearchQuery] = useState('');
   const [filterPriority, setFilterPriority] = useState<string>('all');
+  const [selectedCar, setSelectedCar] = useState<CarType | null>(null);
 
   // ⚡ OPTIMIZED: useMemo bilan filtrlash - faqat tasks yoki user o'zgarganda qayta hisoblash
   const myTasks = React.useMemo(() => {
@@ -611,13 +614,16 @@ const ApprenticeTasks: React.FC = () => {
                       })()}
                     </div>
 
-                    {/* Car Info */}
+                    {/* Car Info - clickable */}
                     {task.car && (
-                      <div className={`flex items-center space-x-3 p-3 sm:p-4 rounded-xl border ${
-                        isDarkMode
-                          ? 'bg-gray-800/80 border-red-900/30'
-                          : 'bg-white/80 border-gray-200'
-                      }`}>
+                      <div
+                        onClick={() => setSelectedCar(task.car as CarType)}
+                        className={`flex items-center space-x-3 p-3 sm:p-4 rounded-xl border cursor-pointer transition-all duration-200 ${
+                          isDarkMode
+                            ? 'bg-gray-800/80 border-red-900/30 hover:bg-gray-700/80 hover:border-red-700'
+                            : 'bg-white/80 border-gray-200 hover:bg-blue-50/80 hover:border-blue-300'
+                        }`}
+                      >
                         <div className={`flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center text-white font-bold text-sm sm:text-lg shadow-lg ${
                           isDarkMode
                             ? 'bg-gradient-to-br from-red-600 to-red-700'
@@ -768,6 +774,16 @@ const ApprenticeTasks: React.FC = () => {
           })
         )}
       </div>
+      {/* Car Detail Modal */}
+      {selectedCar && (
+        <ViewCarModal
+          isOpen={!!selectedCar}
+          onClose={() => setSelectedCar(null)}
+          car={selectedCar}
+          onEdit={() => {}}
+          onDelete={() => {}}
+        />
+      )}
     </div>
   );
 };

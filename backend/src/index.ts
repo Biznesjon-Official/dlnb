@@ -69,6 +69,7 @@ const corsOptions = {
     // Allow requests with no origin (mobile apps, Postman, etc.)
     if (!origin) return callback(null, true);
     
+    const envOrigins = process.env.ALLOWED_ORIGINS?.split(',').map(s => s.trim()) || [];
     const allowedOrigins = [
       'http://localhost:8080',
       'http://localhost:3000',
@@ -79,10 +80,7 @@ const corsOptions = {
       'http://127.0.0.1:3000',
       'http://127.0.0.1:5173',
       'http://127.0.0.1:5177',
-      'https://biznes.uz',
-      'http://biznes.uz',
-      'https://dalnaboyshop.biznesjon.uz',
-      'http://dalnaboyshop.biznesjon.uz'
+      ...envOrigins
     ];
     
     if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
@@ -113,8 +111,8 @@ app.use(compression({
   level: 6 // Compression level (0-9, 6 optimal)
 }));
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Static files - rasmlar uchun
 app.use('/uploads', express.static('uploads'));

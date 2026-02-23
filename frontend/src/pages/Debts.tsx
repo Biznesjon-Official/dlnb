@@ -1,12 +1,15 @@
 import React, { useState, useMemo } from 'react';
 import { useDebtsNew } from '@/hooks/useDebtsNew';
+import { useAddPayment } from '@/hooks/useDebts';
+import { useCreateTransaction } from '@/hooks/useTransactions';
 import EditDebtModal from '@/components/EditDebtModal';
 import DeleteDebtModal from '@/components/DeleteDebtModal';
 import DebtsSkeleton from '@/components/DebtsSkeleton';
-import { DollarSign, TrendingUp, TrendingDown, Calendar, Phone, Eye, Edit, Trash2, X, FileText, CheckCircle, AlertTriangle } from 'lucide-react';
-import { formatCurrency } from '@/lib/utils';
+import { DollarSign, TrendingUp, TrendingDown, Calendar, Phone, Eye, Edit, Trash2, X, FileText, CheckCircle, AlertTriangle, CreditCard, Banknote } from 'lucide-react';
+import { formatCurrency, formatNumber, parseFormattedNumber } from '@/lib/utils';
 import { t } from '@/lib/transliteration';
 import { useTheme } from '@/contexts/ThemeContext';
+import toast from 'react-hot-toast';
 
 // Local Debt type from hook
 type Debt = {
@@ -40,6 +43,8 @@ const Debts: React.FC = () => {
   const [selectedDebt, setSelectedDebt] = useState<Debt | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [paymentDebt, setPaymentDebt] = useState<Debt | null>(null);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   // localStorage'dan tilni o'qish
   const language = React.useMemo<'latin' | 'cyrillic'>(() => {
@@ -275,6 +280,219 @@ const Debts: React.FC = () => {
                 className="px-6 py-3 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all shadow-sm"
               >
                 {t('Yopish', language)}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Payment modal component
+  const DebtPaymentModal: React.FC<{ debt: Debt; onClose: () => void }> = ({ debt, onClose }) => {
+    const [amount, setAmount] = useState(0);
+    const [amountDisplay, setAmountDisplay] = useState('');
+    const [description, setDescription] = useState('');
+    const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'click'>('cash');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const addPaymentMutation = useAddPayment();
+    const createTransactionMutation = useCreateTransaction();
+
+    const remaining = debt.amount - debt.paidAmount;
+
+    const handleAmountChange = (value: string) => {
+      const formatted = formatNumber(value);
+      setAmountDisplay(formatted);
+      setAmount(parseFormattedNumber(formatted));
+    };
+
+    const handleQuickAmount = (percent: number) => {
+      const val = Math.round(remaining * percent / 100);
+      setAmount(val);
+      setAmountDisplay(formatNumber(val.toString()));
+    };
+
+    const handleSubmit = async () => {
+      if (amount <= 0) {
+        toast.error(t("Summa 0 dan katta bo'lishi kerak", language));
+        return;
+      }
+      if (amount > remaining) {
+        toast.error(t("Summa qolgan qarzdan oshmasligi kerak", language));
+        return;
+      }
+
+      setIsSubmitting(true);
+
+      // Instant UI feedback
+      toast.success(t("Qarz to'lovi qabul qilindi", language));
+      onClose();
+
+      try {
+        // Debt payment
+        await addPaymentMutation.mutateAsync({
+          id: debt._id,
+          amount,
+          notes: `${t("To'lov usuli", language)}: ${paymentMethod === 'cash' ? t('Naqd', language) : paymentMethod === 'card' ? t('Karta', language) : 'Click'}${description ? ` - ${description}` : ''}`
+        });
+
+        // Transaction for kassa
+        await createTransactionMutation.mutateAsync({
+          type: 'income',
+          category: t("Qarz to'lovi", language),
+          amount,
+          description: description || `${debt.creditorName} - ${t("qarz to'lovi", language)}`,
+          paymentMethod,
+          relatedTo: {
+            type: 'debt',
+            id: debt._id
+          }
+        });
+      } catch (error) {
+        console.error('Payment error:', error);
+      }
+    };
+
+    return (
+      <div className="fixed inset-0 z-50 overflow-y-auto">
+        <div className="flex min-h-screen items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+
+          <div className={`relative w-full max-w-md rounded-2xl shadow-2xl overflow-hidden ${
+            isDarkMode ? 'bg-gray-900' : 'bg-white'
+          }`}>
+            {/* Header */}
+            <div className={`p-5 ${
+              isDarkMode
+                ? 'bg-gradient-to-br from-red-600 via-red-700 to-gray-900'
+                : 'bg-gradient-to-br from-orange-600 via-orange-700 to-red-700'
+            }`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="bg-white/20 backdrop-blur-xl p-2 rounded-xl">
+                    <DollarSign className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-white">{t("To'lov qilish", language)}</h3>
+                    <p className="text-sm text-orange-100">{debt.creditorName}</p>
+                  </div>
+                </div>
+                <button onClick={onClose} className="text-white/80 hover:text-white p-1 rounded-lg hover:bg-white/20 transition-all">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-5 space-y-4">
+              {/* Remaining amount */}
+              <div className={`rounded-xl p-3 border ${
+                isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-orange-50 border-orange-100'
+              }`}>
+                <div className="flex items-center justify-between">
+                  <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{t("Qolgan qarz", language)}:</span>
+                  <span className={`text-lg font-bold ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>{formatCurrency(remaining)}</span>
+                </div>
+              </div>
+
+              {/* Amount input */}
+              <div>
+                <label className={`block text-sm font-medium mb-1.5 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  {t("Summa", language)}
+                </label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={amountDisplay}
+                  onChange={(e) => handleAmountChange(e.target.value)}
+                  placeholder="0"
+                  className={`w-full px-4 py-3 rounded-xl border text-lg font-bold transition-all ${
+                    isDarkMode
+                      ? 'bg-gray-800 border-gray-700 text-white focus:ring-2 focus:ring-red-500 focus:border-red-500'
+                      : 'bg-white border-gray-200 text-gray-900 focus:ring-2 focus:ring-orange-500 focus:border-orange-500'
+                  }`}
+                />
+              </div>
+
+              {/* Quick amount buttons */}
+              <div className="grid grid-cols-4 gap-2">
+                {[25, 50, 75, 100].map((pct) => (
+                  <button
+                    key={pct}
+                    onClick={() => handleQuickAmount(pct)}
+                    className={`py-2 rounded-lg text-xs font-semibold transition-all ${
+                      isDarkMode
+                        ? 'bg-gray-800 text-gray-300 hover:bg-red-900/50 hover:text-red-300 border border-gray-700'
+                        : 'bg-gray-100 text-gray-700 hover:bg-orange-100 hover:text-orange-700 border border-gray-200'
+                    }`}
+                  >
+                    {pct}%
+                  </button>
+                ))}
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className={`block text-sm font-medium mb-1.5 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  {t("Izoh", language)} ({t("ixtiyoriy", language)})
+                </label>
+                <input
+                  type="text"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder={t("Izoh yozing...", language)}
+                  className={`w-full px-4 py-2.5 rounded-xl border transition-all ${
+                    isDarkMode
+                      ? 'bg-gray-800 border-gray-700 text-white focus:ring-2 focus:ring-red-500 focus:border-red-500'
+                      : 'bg-white border-gray-200 text-gray-900 focus:ring-2 focus:ring-orange-500 focus:border-orange-500'
+                  }`}
+                />
+              </div>
+
+              {/* Payment method */}
+              <div>
+                <label className={`block text-sm font-medium mb-1.5 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  {t("To'lov usuli", language)}
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {([
+                    { value: 'cash', label: t('Naqd', language), icon: <Banknote className="h-4 w-4" /> },
+                    { value: 'card', label: t('Karta', language), icon: <CreditCard className="h-4 w-4" /> },
+                    { value: 'click', label: 'Click', icon: <DollarSign className="h-4 w-4" /> },
+                  ] as const).map((method) => (
+                    <button
+                      key={method.value}
+                      onClick={() => setPaymentMethod(method.value)}
+                      className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl border text-sm font-medium transition-all ${
+                        paymentMethod === method.value
+                          ? isDarkMode
+                            ? 'bg-red-900/50 border-red-600 text-red-300'
+                            : 'bg-orange-100 border-orange-500 text-orange-700'
+                          : isDarkMode
+                            ? 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-600'
+                            : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
+                      }`}
+                    >
+                      {method.icon}
+                      {method.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Submit button */}
+              <button
+                onClick={handleSubmit}
+                disabled={isSubmitting || amount <= 0}
+                className={`w-full py-3 rounded-xl font-bold text-white transition-all ${
+                  isSubmitting || amount <= 0
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : isDarkMode
+                      ? 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 shadow-lg'
+                      : 'bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 shadow-lg'
+                }`}
+              >
+                {t("To'lov qilish", language)} {amount > 0 && `- ${formatCurrency(amount)}`}
               </button>
             </div>
           </div>
@@ -711,7 +929,22 @@ const Debts: React.FC = () => {
                     <div className={`flex items-stretch gap-2 pt-2 sm:pt-4 border-t ${
                       isDarkMode ? 'border-gray-700' : 'border-gray-100'
                     }`}>
-                      <button 
+                      <button
+                        onClick={() => {
+                          setPaymentDebt(debt);
+                          setIsPaymentModalOpen(true);
+                        }}
+                        className={`flex-1 flex items-center justify-center space-x-1 sm:space-x-2 px-3 py-2 sm:py-2.5 rounded-lg sm:rounded-xl transition-all duration-200 font-medium group ${
+                          isDarkMode
+                            ? 'bg-green-900/30 text-green-400 hover:bg-green-900/50'
+                            : 'bg-green-50 text-green-600 hover:bg-green-100'
+                        }`}
+                        title={t("To'lash", language)}
+                      >
+                        <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 group-hover:scale-110 transition-transform" />
+                        <span className="text-xs sm:text-sm">{t("To'lash", language)}</span>
+                      </button>
+                      <button
                         onClick={() => setSelectedDebt(debt)}
                         className={`flex-1 flex items-center justify-center space-x-1 sm:space-x-2 px-3 py-2 sm:py-2.5 rounded-lg sm:rounded-xl transition-all duration-200 font-medium group ${
                           isDarkMode
@@ -761,6 +994,15 @@ const Debts: React.FC = () => {
       </div>
 
       {/* Modals */}
+      {isPaymentModalOpen && paymentDebt && (
+        <DebtPaymentModal
+          debt={paymentDebt}
+          onClose={() => {
+            setIsPaymentModalOpen(false);
+            setPaymentDebt(null);
+          }}
+        />
+      )}
       {selectedDebt && !isEditModalOpen && !isDeleteModalOpen && <DebtDetailModal debt={selectedDebt} />}
       {selectedDebt && (
         <>

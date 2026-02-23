@@ -40,22 +40,13 @@ export const createTransaction = async (req: AuthRequest, res: Response) => {
     if (type === 'expense' && isSalaryCategory && apprenticeId) {
       const apprentice = await User.findById(apprenticeId);
       if (apprentice) {
-        console.log(`💰 Maosh to'lovi boshlandi: ${apprentice.name}`);
-        console.log(`   To'lov summasi: ${amount} so'm`);
-        console.log(`   Oldingi joriy daromad: ${apprentice.earnings} so'm`);
-        console.log(`   Oldingi jami daromad: ${apprentice.totalEarnings} so'm`);
-        
         // 1. To'langan summani jami daromadga qo'shish
         apprentice.totalEarnings += amount;
-        
+
         // 2. To'langan summani joriy daromaddan ayirish
         apprentice.earnings = Math.max(0, apprentice.earnings - amount);
-        
+
         await apprentice.save();
-        
-        console.log(`✅ Maosh to'landi: ${apprentice.name}`);
-        console.log(`   Yangi jami daromad: ${apprentice.totalEarnings} so'm`);
-        console.log(`   Yangi joriy daromad: ${apprentice.earnings} so'm`);
       }
     }
     
@@ -73,8 +64,6 @@ export const createTransaction = async (req: AuthRequest, res: Response) => {
       
       await debt.save();
       createdDebt = debt;
-      
-      console.log(`✅ Zapchast uchun qarz yaratildi: ${sparePartName} - ${amount} so'm`);
     }
     
     await user.save();

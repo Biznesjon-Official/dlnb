@@ -4,6 +4,7 @@ import { register, login, getProfile, getApprentices, getUsers, getApprenticesWi
 import { authenticate, authorize } from '../middleware/auth';
 import { handleValidationErrors } from '../middleware/validation';
 import { upload } from '../middleware/upload';
+import { apiLimiter } from '../middleware/rateLimiter';
 
 const router = express.Router();
 
@@ -77,7 +78,7 @@ router.post('/users', authenticate, authorize('master'), [
 ], register);
 
 // Public endpoint - Get apprentices for landing page (no auth required)
-router.get('/public/apprentices', async (req, res) => {
+router.get('/public/apprentices', apiLimiter, async (req, res) => {
   try {
     const User = require('../models/User').default;
     const apprentices = await User.find({ role: 'apprentice' })

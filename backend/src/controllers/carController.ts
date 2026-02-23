@@ -742,14 +742,13 @@ export const restoreCar = async (req: AuthRequest, res: Response) => {
     // Faqat isDeleted mashinalarni qaytarish mumkin
     const updatedCar = await Car.findByIdAndUpdate(
       req.params.id,
-      { 
+      {
         isDeleted: false,
+        status: 'in-progress',
         $unset: { deletedAt: 1 }
       },
       { new: true }
     );
-    
-    console.log(`♻️ Mashina qaytarildi: ${updatedCar?.licensePlate} - ${updatedCar?.ownerName}`);
     
     res.json({
       message: 'Mashina muvaffaqiyatli qaytarildi',
