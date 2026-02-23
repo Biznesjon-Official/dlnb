@@ -41,12 +41,14 @@ export function formatCurrency(amount: number, language?: 'latin' | 'cyrillic') 
   // Get language from parameter or localStorage
   const lang = language || localStorage.getItem('language') || 'latin';
   const currencyText = lang === 'cyrillic' ? 'сўм' : 'so\'m';
-  
+
+  const safeAmount = (amount == null || isNaN(amount)) ? 0 : amount;
+
   return new Intl.NumberFormat('uz-UZ', {
     style: 'decimal',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(amount).replace(/,/g, '.') + ' ' + currencyText;
+  }).format(safeAmount).replace(/,/g, '.') + ' ' + currencyText;
 }
 
 /**
