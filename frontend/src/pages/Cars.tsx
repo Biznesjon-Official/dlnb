@@ -912,41 +912,17 @@ const Cars: React.FC = () => {
                               <Eye className="h-4 w-4" />
                             </button>
                             
-                            {car.isDeleted ? (
-                              <button
-                                onClick={() => handleRestoreCar(car)}
-                                className={`inline-flex items-center justify-center p-2.5 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-110 ${
-                                  isDarkMode
-                                    ? 'bg-gradient-to-r from-emerald-600 to-teal-700 text-white hover:from-emerald-700 hover:to-teal-800'
-                                    : 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700'
-                                }`}
-                                title={t("Qaytarish", language)}
-                              >
-                                <RotateCcw className="h-4 w-4" />
-                              </button>
-                            ) : (
-                              <button
-                                onClick={() => handleDeleteCar(car)}
-                                className={`inline-flex items-center justify-center p-2.5 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-110 ${
-                                  isDarkMode
-                                    ? 'bg-gradient-to-r from-red-600 to-pink-700 text-white hover:from-red-700 hover:to-pink-800'
-                                    : 'bg-gradient-to-r from-red-500 to-pink-600 text-white hover:from-red-600 hover:to-pink-700'
-                                }`}
-                                title={t("O'chirish", language)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            )}
-                            
-                            {!hasDebt && !car.isDeleted && (
-                              <div className={`inline-flex items-center justify-center p-2.5 rounded-lg ${
+                            <button
+                              onClick={() => handleRestoreCar(car)}
+                              className={`inline-flex items-center justify-center p-2.5 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-110 ${
                                 isDarkMode
-                                  ? 'bg-emerald-900/40 text-emerald-300 border border-emerald-700'
-                                  : 'bg-emerald-100 text-emerald-700 border border-emerald-200'
-                              }`} title={t("Tugallangan", language)}>
-                                <CheckCircle className="h-4 w-4" />
-                              </div>
-                            )}
+                                  ? 'bg-gradient-to-r from-emerald-600 to-teal-700 text-white hover:from-emerald-700 hover:to-teal-800'
+                                  : 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700'
+                              }`}
+                              title={t("Qaytarish", language)}
+                            >
+                              <RotateCcw className="h-4 w-4" />
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -1179,33 +1155,17 @@ const Cars: React.FC = () => {
                         </a>
                       )}
                       
-                      {car.isDeleted && (
-                        <button
-                          onClick={() => handleRestoreCar(car)}
-                          className={`flex-1 min-w-[100px] inline-flex items-center justify-center px-3 py-2 rounded-lg transition-all duration-200 font-medium text-sm ${
-                            isDarkMode
-                              ? 'bg-green-900/40 text-green-300 hover:bg-green-900/60 border border-green-700'
-                              : 'bg-green-50 text-green-600 hover:bg-green-100'
-                          }`}
-                        >
-                          <RotateCcw className="h-4 w-4 mr-1.5" />
-                          {t("Qaytarish", language)}
-                        </button>
-                      )}
-                      
-                      {!car.isDeleted && (
-                        <button
-                          onClick={() => handleDeleteCar(car)}
-                          className={`flex-1 min-w-[100px] inline-flex items-center justify-center px-3 py-2 rounded-lg transition-all duration-200 font-medium text-sm ${
-                            isDarkMode
-                              ? 'bg-red-900/40 text-red-300 hover:bg-red-900/60 border border-red-700'
-                              : 'bg-red-50 text-red-600 hover:bg-red-100'
-                          }`}
-                        >
-                          <Trash2 className="h-4 w-4 mr-1.5" />
-                          {t("O'chirish", language)}
-                        </button>
-                      )}
+                      <button
+                        onClick={() => handleRestoreCar(car)}
+                        className={`flex-1 min-w-[100px] inline-flex items-center justify-center px-3 py-2 rounded-lg transition-all duration-200 font-medium text-sm ${
+                          isDarkMode
+                            ? 'bg-green-900/40 text-green-300 hover:bg-green-900/60 border border-green-700'
+                            : 'bg-green-50 text-green-600 hover:bg-green-100'
+                        }`}
+                      >
+                        <RotateCcw className="h-4 w-4 mr-1.5" />
+                        {t("Qaytarish", language)}
+                      </button>
                     </div>
                   </div>
                 );

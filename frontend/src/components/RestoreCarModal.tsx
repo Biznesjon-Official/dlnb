@@ -94,10 +94,10 @@ const RestoreCarModal: React.FC<RestoreCarModalProps> = ({ isOpen, onClose, car,
               <RotateCcw className="h-5 w-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" />
               <div>
                 <p className="text-sm font-semibold text-green-900 mb-1">
-                  {t("Mashina faol mashinalarga qaytariladi", language)}
+                  {t("Yangi mashina yaratiladi", language)}
                 </p>
                 <p className="text-sm text-green-800">
-                  {t("Mashina arxivdan chiqariladi va faol mashinalar ro'yxatida ko'rinadi. Barcha ma'lumotlar saqlanib qoladi.", language)}
+                  {t("Faqat mashina ma'lumotlari qaytariladi (zapchast, vazifa va to'lovlarsiz). Arxivdagi mashina qarzlari bilan qoladi.", language)}
                 </p>
               </div>
             </div>

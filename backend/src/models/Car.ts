@@ -157,7 +157,6 @@ const carSchema = new Schema<ICar>({
   licensePlate: {
     type: String,
     required: true,
-    unique: true,
     uppercase: true,
     trim: true
   },
@@ -241,13 +240,24 @@ carSchema.index({
 });
 
 // 4. isDeleted uchun (arxiv)
-carSchema.index({ 
-  isDeleted: 1, 
-  updatedAt: -1 
-}, { 
+carSchema.index({
+  isDeleted: 1,
+  updatedAt: -1
+}, {
   name: 'deleted_index',
-  background: true 
+  background: true
 });
+
+// 5. licensePlate partial unique — faqat faol mashinalar orasida unique
+carSchema.index(
+  { licensePlate: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { isDeleted: false },
+    name: 'licensePlate_active_unique',
+    background: true
+  }
+);
 
 carSchema.pre('save', function(next) {
   const partsTotal = this.parts.reduce((total, part) => total + (part.price * part.quantity), 0);
@@ -266,4 +276,11 @@ carSchema.pre('findOneAndUpdate', function(next) {
   next();
 });
 
-export default mongoose.model<ICar>('Car', carSchema);
+const Car = mongoose.model<ICar>('Car', carSchema);
+
+// Drop old licensePlate unique index if exists
+Car.collection.dropIndex('licensePlate_1').catch(() => {
+  // Index doesn't exist, ignore
+});
+
+export default Car;
