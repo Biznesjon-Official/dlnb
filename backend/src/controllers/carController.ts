@@ -28,12 +28,34 @@ export const createCar = async (req: AuthRequest, res: Response) => {
       });
     }
     
-    const existingCar = await Car.findOne({ licensePlate, isDeleted: { $ne: true } });
+    const existingCar = await Car.findOne({ licensePlate, isDeleted: { $ne: true }, status: { $nin: ['completed', 'delivered'] } });
     if (existingCar) {
       return res.status(400).json({
         message: 'Bu davlat raqami bilan mashina allaqachon mavjud',
         duplicateField: 'licensePlate',
         existingCarId: existingCar._id
+      });
+    }
+
+    // Check archived cars (deleted or completed/delivered)
+    const archivedCar = await Car.findOne({
+      licensePlate,
+      $or: [
+        { isDeleted: true },
+        { status: { $in: ['completed', 'delivered'] } }
+      ]
+    });
+    if (archivedCar) {
+      return res.status(409).json({
+        message: `Bu raqamli mashina arxivda mavjud (${archivedCar.make} ${archivedCar.carModel}). Arxivdan qaytarishingiz mumkin.`,
+        archivedCar: {
+          _id: archivedCar._id,
+          make: archivedCar.make,
+          carModel: archivedCar.carModel,
+          licensePlate: archivedCar.licensePlate,
+          ownerName: archivedCar.ownerName
+        },
+        code: 'ARCHIVED_DUPLICATE'
       });
     }
 
@@ -744,31 +766,17 @@ export const restoreCar = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    // Create new car with basic info only (no parts, no payments)
-    const newCar = new Car({
-      make: oldCar.make,
-      carModel: oldCar.carModel,
-      year: oldCar.year,
-      licensePlate: oldCar.licensePlate,
-      ownerName: oldCar.ownerName,
-      ownerPhone: oldCar.ownerPhone,
-      parts: [],
-      serviceItems: [],
-      totalEstimate: 0,
-      paidAmount: 0,
-      paymentStatus: 'pending',
-      payments: [],
-      status: 'pending',
-      isDeleted: false
-    });
+    // Reactivate the archived car (keep all data: parts, payments, debts)
+    oldCar.status = 'pending';
+    oldCar.isDeleted = false;
 
-    await newCar.save();
+    await oldCar.save();
 
-    console.log(`🔄 Mashina qaytarildi (yangi): ${newCar.licensePlate} - ${newCar._id}, eski: ${oldCar._id}`);
+    console.log(`🔄 Mashina qaytarildi: ${oldCar.licensePlate} - ${oldCar._id}`);
 
     res.json({
       message: 'Mashina muvaffaqiyatli qaytarildi',
-      car: newCar
+      car: oldCar
     });
   } catch (error: any) {
     res.status(500).json({ message: 'Server xatoligi', error: error.message });

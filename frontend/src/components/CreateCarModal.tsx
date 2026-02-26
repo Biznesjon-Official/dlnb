@@ -11,9 +11,18 @@ import { useTheme } from '@/contexts/ThemeContext';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 
+interface ArchivedCarInfo {
+  _id: string;
+  make: string;
+  carModel: string;
+  licensePlate: string;
+  ownerName: string;
+}
+
 interface CreateCarModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onArchivedDuplicate?: (car: ArchivedCarInfo) => void;
 }
 
 interface Part {
@@ -59,7 +68,7 @@ interface TaskItem {
 
 
 
-const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
+const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose, onArchivedDuplicate }) => {
   const { isDarkMode } = useTheme();
   const [currentStep, setCurrentStep] = useState(1);
   
@@ -600,8 +609,27 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose }) => {
     } catch (error: any) {
       console.error('Error creating car:', error);
       console.error('Error response:', error.response?.data);
-      
-      if (error.response?.data?.errors) {
+
+      if (error.response?.data?.code === 'ARCHIVED_DUPLICATE') {
+        const archivedCar = error.response.data.archivedCar;
+        toast((toastInstance) => (
+          <div className="flex flex-col gap-2">
+            <span>{error.response.data.message}</span>
+            {onArchivedDuplicate && (
+              <button
+                className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                onClick={() => {
+                  toast.dismiss(toastInstance.id);
+                  onClose();
+                  onArchivedDuplicate(archivedCar);
+                }}
+              >
+                Arxivdan qaytarish
+              </button>
+            )}
+          </div>
+        ), { duration: 8000, icon: '📦' });
+      } else if (error.response?.data?.errors) {
         const errorMessages = error.response.data.errors.map((err: any) => err.msg).join(', ');
         toast.error(`Xatolik: ${errorMessages}`);
       } else if (error.response?.data?.message) {

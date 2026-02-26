@@ -17,6 +17,7 @@ import { formatCurrency } from '@/lib/utils';
 import { Car } from '@/types';
 import { t } from '@/lib/transliteration';
 import toast from 'react-hot-toast';
+import api from '@/lib/api';
 import { useTheme } from '@/contexts/ThemeContext';
 
 const Cars: React.FC = () => {
@@ -1282,9 +1283,20 @@ const Cars: React.FC = () => {
       </div>
 
       {/* Modals */}
-      <CreateCarModal 
+      <CreateCarModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
+        onArchivedDuplicate={async (archivedCar) => {
+          try {
+            const response = await api.get(`/cars/${archivedCar._id}`);
+            setSelectedCar(response.data.car || response.data);
+            setIsRestoreModalOpen(true);
+          } catch {
+            // Fallback: switch to archive tab
+            setActiveTab('archive');
+            toast.error('Arxivdan mashina topilmadi. Arxiv tabida qidiring.');
+          }
+        }}
       />
       
       {selectedCar && (
