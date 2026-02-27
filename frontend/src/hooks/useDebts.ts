@@ -84,6 +84,7 @@ export const useAddPayment = () => {
       queryClient.invalidateQueries({ queryKey: ['debts'] });
       queryClient.invalidateQueries({ queryKey: ['debt'] });
       queryClient.invalidateQueries({ queryKey: ['debtSummary'] });
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
       toast.success('To\'lov muvaffaqiyatli qo\'shildi');
     },
     onError: (error: any) => {

@@ -1397,9 +1397,7 @@ const TasksSection: React.FC<{
   
   const tasks = isOnline && shouldFetchTasks ? (tasksData?.tasks || []) : [];
   // Barcha shogirtlarni ko'rsatish (kunlik va foizlik)
-  const apprentices = isOnline 
-    ? (apprenticesData?.users || []).filter((u: any) => u.role === 'apprentice')
-    : [];
+  const apprentices = (apprenticesData?.users || []).filter((u: any) => u.role === 'apprentice');
   
   // Mashina xizmatlarini yuklash
   const [carServices, setCarServices] = React.useState<any[]>([]);
@@ -1563,13 +1561,20 @@ const TasksSection: React.FC<{
 
   const handleSaveTask = async () => {
     if (!editingTaskId || !editingTask) return;
-    
+
     try {
       // Assignments ni to'g'ri formatga o'tkazish
-      const formattedAssignments = editingTask.assignments.map((assignment: any) => ({
-        apprenticeId: assignment.apprenticeId || assignment.apprentice?._id || assignment.apprentice,
-        dailyAmount: assignment.dailyAmount || 0 // Kunlik ishchi uchun kiritilgan pul
-      }));
+      const formattedAssignments = editingTask.assignments
+        .filter((a: any) => a.apprenticeId || a.apprentice?._id)
+        .map((assignment: any) => ({
+          apprenticeId: assignment.apprenticeId || assignment.apprentice?._id || assignment.apprentice,
+          dailyAmount: assignment.dailyAmount || 0
+        }));
+
+      if (formattedAssignments.length === 0) {
+        alert(t('Kamida bitta shogird tanlang', language));
+        return;
+      }
 
       // Task data tayyorlash - description'ni olib tashlash
       const taskData: any = {
@@ -1622,11 +1627,16 @@ const TasksSection: React.FC<{
     try {
       // Assignments ni to'g'ri formatga o'tkazish
       const formattedAssignments = newTask.assignments
-        .filter((a: any) => a.apprenticeId) // Faqat shogird tanlangan bo'lsa
+        .filter((a: any) => a.apprenticeId)
         .map((assignment: any) => ({
           apprenticeId: assignment.apprenticeId,
-          dailyAmount: assignment.dailyAmount || 0 // Kunlik ishchi uchun kiritilgan pul
+          dailyAmount: assignment.dailyAmount || 0
         }));
+
+      if (formattedAssignments.length === 0) {
+        alert(t('Kamida bitta shogird tanlang', language));
+        return;
+      }
 
       // Task data tayyorlash - description'ni olib tashlash
       const taskData: any = {
@@ -1904,6 +1914,43 @@ const TasksSection: React.FC<{
                 {newTask.payment ? newTask.payment.toLocaleString() : 0} {t("so'm", language)}
               </div>
             </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className={`block text-xs mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  {t('Soat (taxminiy)', language)}
+                </label>
+                <input
+                  type="number"
+                  min="0.5"
+                  step="0.5"
+                  value={newTask.estimatedHours}
+                  onChange={(e) => setNewTask({ ...newTask, estimatedHours: parseFloat(e.target.value) || 1 })}
+                  className={`w-full px-3 py-2 text-sm rounded-lg focus:ring-2 ${
+                    isDarkMode
+                      ? 'bg-gray-800 border border-gray-700 text-white focus:ring-red-500'
+                      : 'bg-white border border-gray-300 text-gray-900 focus:ring-red-500'
+                  }`}
+                />
+              </div>
+              <div>
+                <label className={`block text-xs mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  {t('Muhimlik', language)}
+                </label>
+                <select
+                  value={newTask.priority}
+                  onChange={(e) => setNewTask({ ...newTask, priority: e.target.value })}
+                  className={`w-full px-3 py-2 text-sm rounded-lg focus:ring-2 ${
+                    isDarkMode
+                      ? 'bg-gray-800 border border-gray-700 text-white focus:ring-red-500'
+                      : 'bg-white border border-gray-300 text-gray-900 focus:ring-red-500'
+                  }`}
+                >
+                  <option value="low">{t('Past', language)}</option>
+                  <option value="medium">{t('O\'rta', language)}</option>
+                  <option value="high">{t('Yuqori', language)}</option>
+                </select>
+              </div>
+            </div>
             
             {/* Shogirdlar */}
             <div className={`space-y-2 rounded-lg p-3 border ${
@@ -2013,6 +2060,99 @@ const TasksSection: React.FC<{
                           </span>
                         </div>
                       )}
+
+                      {/* Earnings calculation */}
+                      {newTask.payment > 0 && assignment.apprenticeId && (
+                        <div className={`p-2 rounded text-xs space-y-1 ${
+                          isDarkMode ? 'bg-gray-900/50' : 'bg-purple-50'
+                        }`}>
+                          {(() => {
+                            const percentageApprentices = newTask.assignments.filter((a: any) => {
+                              if (!a.apprenticeId) return false;
+                              const app = apprentices.find((ap: any) => ap._id === a.apprenticeId);
+                              return app && app.paymentType !== 'daily';
+                            });
+                            const dailyWorkers = newTask.assignments.filter((a: any) => {
+                              if (!a.apprenticeId) return false;
+                              const app = apprentices.find((ap: any) => ap._id === a.apprenticeId);
+                              return app && app.paymentType === 'daily';
+                            });
+
+                            if (percentageApprentices.length > 0 && dailyWorkers.length > 0) {
+                              if (isDaily) {
+                                const dailyAmount = assignment.dailyAmount || 0;
+                                return (
+                                  <>
+                                    <div className="flex justify-between">
+                                      <span className={isDarkMode ? 'text-orange-400' : 'text-orange-600'}>👤 {t('Kunlik ishchi:', language)}</span>
+                                      <span className={`font-bold ${isDarkMode ? 'text-orange-400' : 'text-orange-700'}`}>{dailyAmount.toLocaleString()} {t("so'm", language)}</span>
+                                    </div>
+                                    <div className={`text-[10px] ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                                      {t('(Foizlik shogird pulidan olinadi)', language)}
+                                    </div>
+                                  </>
+                                );
+                              } else {
+                                const apprenticeShare = (newTask.payment * assignment.percentage) / 100;
+                                const totalDailyAmount = dailyWorkers.reduce((sum: number, dw: any) => sum + (dw.dailyAmount || 0), 0);
+                                const dailyAmountPerPercentage = totalDailyAmount / percentageApprentices.length;
+                                const apprenticeFinal = apprenticeShare - dailyAmountPerPercentage;
+                                const masterPercentage = 100 - assignment.percentage;
+                                const masterShare = (newTask.payment * masterPercentage) / 100;
+                                return (
+                                  <>
+                                    <div className="flex justify-between">
+                                      <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>💰 {t('Foiz ulushi:', language)} ({assignment.percentage}%)</span>
+                                      <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{apprenticeShare.toLocaleString()}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className={isDarkMode ? 'text-red-400' : 'text-red-600'}>🚚 {t('Kunlik ishchi:', language)}</span>
+                                      <span className={`font-bold ${isDarkMode ? 'text-red-400' : 'text-red-700'}`}>-{dailyAmountPerPercentage.toLocaleString()}</span>
+                                    </div>
+                                    <div className="flex justify-between border-t pt-1 mt-1">
+                                      <span className={`font-bold ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>✅ {t('Shogird oladi:', language)}</span>
+                                      <span className={`font-bold ${isDarkMode ? 'text-green-400' : 'text-green-700'}`}>{apprenticeFinal.toLocaleString()}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className={isDarkMode ? 'text-blue-400' : 'text-blue-600'}>👨‍🏫 {t('Ustoz:', language)} ({masterPercentage}%)</span>
+                                      <span className={`font-bold ${isDarkMode ? 'text-blue-400' : 'text-blue-700'}`}>{masterShare.toLocaleString()}</span>
+                                    </div>
+                                  </>
+                                );
+                              }
+                            }
+
+                            const allocatedAmount = newTask.payment / newTask.assignments.filter((a: any) => a.apprenticeId).length;
+                            const earning = isDaily ? 0 : (allocatedAmount * assignment.percentage) / 100;
+                            const masterShare = allocatedAmount - earning;
+                            return (
+                              <>
+                                <div className="flex justify-between">
+                                  <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>💰 {t('Ajratilgan:', language)}</span>
+                                  <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{allocatedAmount.toLocaleString()}</span>
+                                </div>
+                                {isDaily ? (
+                                  <div className="flex justify-between">
+                                    <span className={isDarkMode ? 'text-blue-400' : 'text-blue-600'}>👨‍🏫 {t('Ustoz:', language)}</span>
+                                    <span className={`font-bold ${isDarkMode ? 'text-blue-400' : 'text-blue-700'}`}>{allocatedAmount.toLocaleString()}</span>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <div className="flex justify-between">
+                                      <span className={isDarkMode ? 'text-green-400' : 'text-green-600'}>👤 {t('Shogird', language)} ({assignment.percentage}%):</span>
+                                      <span className={`font-bold ${isDarkMode ? 'text-green-400' : 'text-green-700'}`}>{earning.toLocaleString()}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className={isDarkMode ? 'text-blue-400' : 'text-blue-600'}>👨‍🏫 {t('Ustoz:', language)}</span>
+                                      <span className={`font-bold ${isDarkMode ? 'text-blue-400' : 'text-blue-700'}`}>{masterShare.toLocaleString()}</span>
+                                    </div>
+                                  </>
+                                )}
+                              </>
+                            );
+                          })()}
+                        </div>
+                      )}
                     </div>
                   );
                 })
@@ -2120,13 +2260,17 @@ const TasksSection: React.FC<{
                     
                     return (
                       <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                        <label className={`block text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-700'}`}>
                           {t('Xizmat (ixtiyoriy)', language)}
                         </label>
                         <select
                           value={editingTask.service || ''}
                           onChange={(e) => handleEditServiceSelect(e.target.value)}
-                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white"
+                          className={`w-full px-3 py-2 text-sm rounded-lg focus:ring-2 focus:ring-red-500 ${
+                            isDarkMode
+                              ? 'bg-gray-800 border border-gray-700 text-white'
+                              : 'bg-white border border-gray-300 text-gray-900'
+                          }`}
                         >
                           <option value="">{t('Xizmat tanlang yoki qo\'lda kiriting', language)}</option>
                           {availableServices.map((service: any) => {
@@ -2157,91 +2301,269 @@ const TasksSection: React.FC<{
                     value={editingTask.title}
                     onChange={(e) => setEditingTask({ ...editingTask, title: e.target.value })}
                     placeholder={t('Vazifa nomi', language)}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg"
+                    className={`w-full px-3 py-2 text-sm rounded-lg focus:ring-2 focus:ring-red-500 ${
+                      isDarkMode
+                        ? 'bg-gray-800 border border-gray-700 text-white placeholder:text-gray-500'
+                        : 'bg-white border border-gray-300 text-gray-900'
+                    }`}
                   />
                   <div className="grid grid-cols-2 gap-2">
                     <input
                       type="date"
                       value={editingTask.dueDate}
                       onChange={(e) => setEditingTask({ ...editingTask, dueDate: e.target.value })}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg"
+                      className={`w-full px-3 py-2 text-sm rounded-lg focus:ring-2 focus:ring-red-500 ${
+                        isDarkMode
+                          ? 'bg-gray-800 border border-gray-700 text-white'
+                          : 'bg-white border border-gray-300 text-gray-900'
+                      }`}
                     />
-                    <div className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 font-medium text-gray-700">
+                    <div className={`w-full px-3 py-2 text-sm rounded-lg font-medium ${
+                      isDarkMode
+                        ? 'bg-gray-900 border border-gray-700 text-gray-300'
+                        : 'bg-gray-50 border border-gray-200 text-gray-700'
+                    }`}>
                       {editingTask.payment ? editingTask.payment.toLocaleString() : 0} {t("so'm", language)}
                     </div>
                   </div>
-                  
-                  {/* Shogirdlar tahrirlash */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-gray-700">{t('Shogirdlar', language)}</span>
-                      <button
-                        onClick={() => handleAddApprentice(editingTask, setEditingTask)}
-                        className="text-xs text-blue-600 hover:text-blue-700"
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className={`block text-xs mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                        {t('Soat (taxminiy)', language)}
+                      </label>
+                      <input
+                        type="number"
+                        min="0.5"
+                        step="0.5"
+                        value={editingTask.estimatedHours}
+                        onChange={(e) => setEditingTask({ ...editingTask, estimatedHours: parseFloat(e.target.value) || 1 })}
+                        className={`w-full px-3 py-2 text-sm rounded-lg focus:ring-2 focus:ring-red-500 ${
+                          isDarkMode
+                            ? 'bg-gray-800 border border-gray-700 text-white'
+                            : 'bg-white border border-gray-300 text-gray-900'
+                        }`}
+                      />
+                    </div>
+                    <div>
+                      <label className={`block text-xs mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                        {t('Muhimlik', language)}
+                      </label>
+                      <select
+                        value={editingTask.priority}
+                        onChange={(e) => setEditingTask({ ...editingTask, priority: e.target.value })}
+                        className={`w-full px-3 py-2 text-sm rounded-lg focus:ring-2 focus:ring-red-500 ${
+                          isDarkMode
+                            ? 'bg-gray-800 border border-gray-700 text-white'
+                            : 'bg-white border border-gray-300 text-gray-900'
+                        }`}
                       >
-                        + {t('Qo\'shish', language)}
+                        <option value="low">{t('Past', language)}</option>
+                        <option value="medium">{t('O\'rta', language)}</option>
+                        <option value="high">{t('Yuqori', language)}</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Shogirdlar tahrirlash */}
+                  <div className={`space-y-2 rounded-lg p-3 border ${
+                    isDarkMode ? 'bg-gray-800/50 border-red-900/50' : 'bg-red-50 border-red-200'
+                  }`}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Users className={`h-4 w-4 ${isDarkMode ? 'text-red-400' : 'text-red-600'}`} />
+                        <span className={`text-sm font-semibold ${isDarkMode ? 'text-red-400' : 'text-red-700'}`}>{t('Shogirdlar', language)}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleAddApprentice(editingTask, setEditingTask)}
+                        className="flex items-center space-x-1 px-2 py-1 rounded text-xs font-medium bg-red-600 text-white hover:bg-red-700 transition-colors"
+                      >
+                        <Plus className="h-3 w-3" />
+                        <span>{t('Qo\'shish', language)}</span>
                       </button>
                     </div>
-                    {editingTask.assignments.map((assignment: any, index: number) => {
-                      // Shogirdni topish
-                      const selectedApprentice = apprentices.find((app: any) => 
-                        app._id === (assignment.apprenticeId || assignment.apprentice?._id)
-                      );
-                      const isDaily = selectedApprentice?.paymentType === 'daily';
-                      
-                      return (
-                        <div key={index} className="space-y-2">
-                          <div className="flex items-center space-x-2">
-                            <select
-                              value={assignment.apprenticeId || assignment.apprentice?._id}
-                              onChange={(e) => handleUpdateApprentice(editingTask, setEditingTask, index, 'apprenticeId', e.target.value)}
-                              className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded"
-                            >
-                              <option value="">{t('Tanlang', language)}</option>
-                              {apprentices.map((app: any) => (
-                                <option key={app._id} value={app._id}>
-                                  {app.name} {app.paymentType === 'daily' ? '(Kunlik)' : `(${app.percentage || 50}%)`}
-                                </option>
-                              ))}
-                            </select>
-                            {!isDaily && (
-                              <div className="w-16 px-2 py-1 text-xs border border-gray-200 rounded bg-gray-50 text-center font-medium text-gray-700">
-                                {assignment.percentage || 0}%
+                    {editingTask.assignments.length === 0 ? (
+                      <div className={`text-center py-3 text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                        {t('Shogird qo\'shing', language)}
+                      </div>
+                    ) : (
+                      editingTask.assignments.map((assignment: any, index: number) => {
+                        const selectedApprentice = apprentices.find((app: any) =>
+                          app._id === (assignment.apprenticeId || assignment.apprentice?._id)
+                        );
+                        const isDaily = selectedApprentice?.paymentType === 'daily';
+
+                        return (
+                          <div key={index} className={`space-y-2 rounded-lg p-2 border ${
+                            isDarkMode ? 'bg-gray-900 border-red-900/50' : 'bg-white border-red-200'
+                          }`}>
+                            <div className="flex items-center space-x-2">
+                              <div className="flex-1">
+                                <select
+                                  value={assignment.apprenticeId || assignment.apprentice?._id || ''}
+                                  onChange={(e) => handleUpdateApprentice(editingTask, setEditingTask, index, 'apprenticeId', e.target.value)}
+                                  className={`w-full px-2 py-1.5 text-sm rounded focus:ring-2 ${
+                                    isDarkMode
+                                      ? 'bg-gray-800 border border-gray-700 text-white focus:ring-red-500'
+                                      : 'bg-white border border-gray-300 text-gray-900 focus:ring-red-500'
+                                  }`}
+                                >
+                                  <option value="">{t('Tanlang', language)}</option>
+                                  {apprentices.map((app: any) => (
+                                    <option key={app._id} value={app._id}>
+                                      {app.name} {app.paymentType === 'daily' ? '(Kunlik)' : `(${app.percentage || 50}%)`}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                              {!isDaily && (
+                                <div className={`w-16 px-2 py-1.5 text-xs rounded text-center font-medium ${
+                                  isDarkMode
+                                    ? 'bg-gray-900 border border-gray-700 text-gray-300'
+                                    : 'bg-gray-50 border border-gray-200 text-gray-700'
+                                }`}>
+                                  {assignment.percentage || 0}%
+                                </div>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveApprentice(editingTask, setEditingTask, index)}
+                                className={`p-1.5 rounded transition-colors ${
+                                  isDarkMode ? 'text-red-400 hover:bg-red-900/30' : 'text-red-600 hover:bg-red-50'
+                                }`}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+
+                            {/* Kunlik ishchi uchun pul kiritish */}
+                            {isDaily && (assignment.apprenticeId || assignment.apprentice?._id) && (
+                              <div className="flex items-center space-x-2">
+                                <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{t('Pul:', language)}</span>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  step="1000"
+                                  value={assignment.dailyAmount || ''}
+                                  onChange={(e) => handleUpdateApprentice(editingTask, setEditingTask, index, 'dailyAmount', e.target.value)}
+                                  placeholder={t("Pul kiriting", language)}
+                                  className={`flex-1 px-2 py-1.5 text-sm rounded focus:ring-2 ${
+                                    isDarkMode
+                                      ? 'bg-gray-800 border border-gray-700 text-white placeholder:text-gray-500 focus:ring-red-500'
+                                      : 'bg-white border border-gray-300 text-gray-900 placeholder:text-gray-400 focus:ring-red-500'
+                                  }`}
+                                />
+                                <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{t("so'm", language)}</span>
                               </div>
                             )}
-                            <button
-                              onClick={() => handleRemoveApprentice(editingTask, setEditingTask, index)}
-                              className="text-red-600 hover:text-red-700"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </button>
+
+                            {/* Earnings calculation */}
+                            {editingTask.payment > 0 && (assignment.apprenticeId || assignment.apprentice?._id) && (
+                              <div className={`p-2 rounded text-xs space-y-1 ${
+                                isDarkMode ? 'bg-gray-900/50' : 'bg-purple-50'
+                              }`}>
+                                {(() => {
+                                  const percentageApprentices = editingTask.assignments.filter((a: any) => {
+                                    const id = a.apprenticeId || a.apprentice?._id;
+                                    if (!id) return false;
+                                    const app = apprentices.find((ap: any) => ap._id === id);
+                                    return app && app.paymentType !== 'daily';
+                                  });
+                                  const dailyWorkers = editingTask.assignments.filter((a: any) => {
+                                    const id = a.apprenticeId || a.apprentice?._id;
+                                    if (!id) return false;
+                                    const app = apprentices.find((ap: any) => ap._id === id);
+                                    return app && app.paymentType === 'daily';
+                                  });
+
+                                  if (percentageApprentices.length > 0 && dailyWorkers.length > 0) {
+                                    if (isDaily) {
+                                      const dailyAmount = assignment.dailyAmount || 0;
+                                      return (
+                                        <>
+                                          <div className="flex justify-between">
+                                            <span className={isDarkMode ? 'text-orange-400' : 'text-orange-600'}>👤 {t('Kunlik ishchi:', language)}</span>
+                                            <span className={`font-bold ${isDarkMode ? 'text-orange-400' : 'text-orange-700'}`}>{dailyAmount.toLocaleString()} {t("so'm", language)}</span>
+                                          </div>
+                                          <div className={`text-[10px] ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                                            {t('(Foizlik shogird pulidan olinadi)', language)}
+                                          </div>
+                                        </>
+                                      );
+                                    } else {
+                                      const apprenticeShare = (editingTask.payment * assignment.percentage) / 100;
+                                      const totalDailyAmount = dailyWorkers.reduce((sum: number, dw: any) => sum + (dw.dailyAmount || 0), 0);
+                                      const dailyAmountPerPercentage = totalDailyAmount / percentageApprentices.length;
+                                      const apprenticeFinal = apprenticeShare - dailyAmountPerPercentage;
+                                      const masterPercentage = 100 - assignment.percentage;
+                                      const masterShare = (editingTask.payment * masterPercentage) / 100;
+                                      return (
+                                        <>
+                                          <div className="flex justify-between">
+                                            <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>💰 {t('Foiz ulushi:', language)} ({assignment.percentage}%)</span>
+                                            <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{apprenticeShare.toLocaleString()}</span>
+                                          </div>
+                                          <div className="flex justify-between">
+                                            <span className={isDarkMode ? 'text-red-400' : 'text-red-600'}>🚚 {t('Kunlik ishchi:', language)}</span>
+                                            <span className={`font-bold ${isDarkMode ? 'text-red-400' : 'text-red-700'}`}>-{dailyAmountPerPercentage.toLocaleString()}</span>
+                                          </div>
+                                          <div className="flex justify-between border-t pt-1 mt-1">
+                                            <span className={`font-bold ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>✅ {t('Shogird oladi:', language)}</span>
+                                            <span className={`font-bold ${isDarkMode ? 'text-green-400' : 'text-green-700'}`}>{apprenticeFinal.toLocaleString()}</span>
+                                          </div>
+                                          <div className="flex justify-between">
+                                            <span className={isDarkMode ? 'text-blue-400' : 'text-blue-600'}>👨‍🏫 {t('Ustoz:', language)} ({masterPercentage}%)</span>
+                                            <span className={`font-bold ${isDarkMode ? 'text-blue-400' : 'text-blue-700'}`}>{masterShare.toLocaleString()}</span>
+                                          </div>
+                                        </>
+                                      );
+                                    }
+                                  }
+
+                                  const validAssignments = editingTask.assignments.filter((a: any) => a.apprenticeId || a.apprentice?._id);
+                                  const allocatedAmount = validAssignments.length > 0 ? editingTask.payment / validAssignments.length : 0;
+                                  const earning = isDaily ? 0 : (allocatedAmount * assignment.percentage) / 100;
+                                  const masterShare = allocatedAmount - earning;
+                                  return (
+                                    <>
+                                      <div className="flex justify-between">
+                                        <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>💰 {t('Ajratilgan:', language)}</span>
+                                        <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{allocatedAmount.toLocaleString()}</span>
+                                      </div>
+                                      {isDaily ? (
+                                        <div className="flex justify-between">
+                                          <span className={isDarkMode ? 'text-blue-400' : 'text-blue-600'}>👨‍🏫 {t('Ustoz:', language)}</span>
+                                          <span className={`font-bold ${isDarkMode ? 'text-blue-400' : 'text-blue-700'}`}>{allocatedAmount.toLocaleString()}</span>
+                                        </div>
+                                      ) : (
+                                        <>
+                                          <div className="flex justify-between">
+                                            <span className={isDarkMode ? 'text-green-400' : 'text-green-600'}>👤 {t('Shogird', language)} ({assignment.percentage}%):</span>
+                                            <span className={`font-bold ${isDarkMode ? 'text-green-400' : 'text-green-700'}`}>{earning.toLocaleString()}</span>
+                                          </div>
+                                          <div className="flex justify-between">
+                                            <span className={isDarkMode ? 'text-blue-400' : 'text-blue-600'}>👨‍🏫 {t('Ustoz:', language)}</span>
+                                            <span className={`font-bold ${isDarkMode ? 'text-blue-400' : 'text-blue-700'}`}>{masterShare.toLocaleString()}</span>
+                                          </div>
+                                        </>
+                                      )}
+                                    </>
+                                  );
+                                })()}
+                              </div>
+                            )}
                           </div>
-                          
-                          {/* Kunlik ishchi uchun pul kiritish */}
-                          {isDaily && (assignment.apprenticeId || assignment.apprentice?._id) && (
-                            <div className="flex items-center space-x-2 pl-2">
-                              <span className="text-xs text-gray-600">{t('Pul:', language)}</span>
-                              <input
-                                type="number"
-                                min="0"
-                                step="1000"
-                                value={assignment.dailyAmount || ''}
-                                onChange={(e) => handleUpdateApprentice(editingTask, setEditingTask, index, 'dailyAmount', e.target.value)}
-                                placeholder={t("Pul kiriting", language)}
-                                className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded"
-                              />
-                              <span className="text-xs text-gray-600">{t("so'm", language)}</span>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                        );
+                      })
+                    )}
                   </div>
 
                   <div className="flex items-center space-x-2 pt-2">
                     <button
                       onClick={handleSaveTask}
-                      className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+                      className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        isDarkMode ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-red-600 text-white hover:bg-red-700'
+                      }`}
                     >
                       {t('Saqlash', language)}
                     </button>
@@ -2250,7 +2572,9 @@ const TasksSection: React.FC<{
                         setEditingTaskId(null);
                         setEditingTask(null);
                       }}
-                      className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm"
+                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        isDarkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
                     >
                       {t('Bekor qilish', language)}
                     </button>

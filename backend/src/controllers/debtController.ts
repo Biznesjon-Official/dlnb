@@ -3,7 +3,7 @@ import Debt from '../models/Debt';
 import User from '../models/User';
 import { AuthRequest } from '../middleware/auth';
 import telegramService from '../services/telegramService';
-import { updateOrCreateCustomer } from '../services/customerService';
+import { updateOrCreateCustomer, updateCustomerDebt } from '../services/customerService';
 export const createDebt = async (req: AuthRequest, res: Response) => {
   try {
     const { type, amount, description, creditorName, creditorPhone, car, dueDate } = req.body;
@@ -119,11 +119,21 @@ export const addPayment = async (req: AuthRequest, res: Response) => {
     
     await debt.save();
     await debt.populate('car', 'make carModel licensePlate');
-    
-    // ❌ OLIB TASHLANDI: Daromad yangilash
-    // Daromad faqat Transaction orqali yangilanadi (transactionController.ts)
-    // Bu yerda faqat qarz ma'lumotlarini yangilaymiz
-    
+
+    // Customer.totalDebt ni yangilash (faqat receivable uchun)
+    if (debt.type === 'receivable' && debt.creditorPhone) {
+      try {
+        await updateCustomerDebt(
+          debt.creditorPhone,
+          req.user?.clientId || '',
+          -amount,  // totalDebt kamayadi
+          amount    // totalPaid oshadi
+        );
+      } catch (err) {
+        console.error('Customer debt update error:', err);
+      }
+    }
+
     // To'lov qo'shilganda Telegram xabar yuborish
     try {
       const paymentData = {
