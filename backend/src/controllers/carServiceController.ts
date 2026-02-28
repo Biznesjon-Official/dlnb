@@ -613,11 +613,13 @@ export const addCarServicePayment = async (req: AuthRequest, res: Response) => {
           car.paymentStatus = 'partial';
         }
         
-        // ✨ YANGI: Har qanday to'lovda mashinani arxivga o'tkazish (soft delete)
-        car.isDeleted = true;
-        car.deletedAt = new Date();
-        car.status = 'completed';
-        console.log(`🗄️ Mashina arxivga o'tkazildi: ${car.licensePlate}`);
+        // Archive only when fully paid
+        if (service.paymentStatus === 'paid') {
+          car.isDeleted = true;
+          car.deletedAt = new Date();
+          car.status = 'completed';
+          console.log(`🗄️ Mashina arxivga o'tkazildi: ${car.licensePlate}`);
+        }
         
         // To'lov tarixiga qo'shish
         if (!car.payments) {

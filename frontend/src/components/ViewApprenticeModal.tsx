@@ -264,7 +264,7 @@ const ViewApprenticeModal: React.FC<ViewApprenticeModalProps> = ({ isOpen, onClo
                       <div className={`text-sm font-bold ${
                         isDarkMode ? 'text-green-300' : 'text-green-900'
                       }`}>
-                        {formatCurrency(apprentice.totalEarnings || 0)}
+                        {formatCurrency((apprentice.totalEarnings || 0) + (apprentice.earnings || 0))}
                       </div>
                     </div>
                   </div>

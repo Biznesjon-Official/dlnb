@@ -220,7 +220,7 @@ const CarPaymentModalHybrid: React.FC<CarPaymentModalProps> = ({ isOpen, onClose
     const totalPayment = cash + card;
     
     const totalPrice = carService?.totalPrice || car.totalEstimate || 0;
-    const currentPaidAmount = car.paidAmount || 0;
+    const currentPaidAmount = carService?.paidAmount || car.paidAmount || 0;
     const newPaidAmount = currentPaidAmount + totalPayment;
     const isFullyPaid = newPaidAmount >= totalPrice;
     
@@ -234,11 +234,11 @@ const CarPaymentModalHybrid: React.FC<CarPaymentModalProps> = ({ isOpen, onClose
     // ⚡ INSTANT: Modal yopish
     onClose();
     
-    // ⚡ OPTIMISTIC UPDATE: Har qanday to'lovda DARHOL faol ro'yxatdan olib tashlash
-    console.log('⚡ OPTIMISTIC: To\'lov qilindi - DARHOL faol ro\'yxatdan olib tashlanmoqda...');
-    
-    // INSTANT: Custom event dispatch (mashina DARHOL yo'qoladi)
-    window.dispatchEvent(new CustomEvent('car-fully-paid', { detail: { carId: car._id } }));
+    // INSTANT: Dispatch car-fully-paid only when fully paid
+    if (isFullyPaid) {
+      console.log('⚡ OPTIMISTIC: To\'lov to\'liq - DARHOL faol ro\'yxatdan olib tashlanmoqda...');
+      window.dispatchEvent(new CustomEvent('car-fully-paid', { detail: { carId: car._id } }));
+    }
     
     // ⚡ SILENT: Hech qanday toast xabar yo'q - faqat background sync
 
