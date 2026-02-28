@@ -179,10 +179,6 @@ const CarPaymentModalHybrid: React.FC<CarPaymentModalProps> = ({ isOpen, onClose
     const numericValue = parseFormattedNumber(formatted);
     setCashAmount(numericValue.toString());
     setCashAmountDisplay(formatted);
-    // Auto-adjust card amount so total doesn't exceed remaining
-    const newCard = Math.max(0, remaining - numericValue);
-    setCardAmount(newCard.toString());
-    setCardAmountDisplay(formatNumber(newCard.toString()));
     if (errors.payment) {
       setErrors(prev => {
         const newErrors = { ...prev };
@@ -197,10 +193,6 @@ const CarPaymentModalHybrid: React.FC<CarPaymentModalProps> = ({ isOpen, onClose
     const numericValue = parseFormattedNumber(formatted);
     setCardAmount(numericValue.toString());
     setCardAmountDisplay(formatted);
-    // Auto-adjust cash amount so total doesn't exceed remaining
-    const newCash = Math.max(0, remaining - numericValue);
-    setCashAmount(newCash.toString());
-    setCashAmountDisplay(formatNumber(newCash.toString()));
     if (errors.payment) {
       setErrors(prev => {
         const newErrors = { ...prev };
@@ -214,12 +206,8 @@ const CarPaymentModalHybrid: React.FC<CarPaymentModalProps> = ({ isOpen, onClose
     const quickAmount = Math.round((remaining * percentage) / 100);
     if (type === 'cash') {
       handleCashAmountChange(quickAmount.toString());
-      setCardAmount('0');
-      setCardAmountDisplay('0');
     } else {
       handleCardAmountChange(quickAmount.toString());
-      setCashAmount('0');
-      setCashAmountDisplay('0');
     }
   };
 
