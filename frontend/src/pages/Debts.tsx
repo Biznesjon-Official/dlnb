@@ -1,11 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { useDebtsNew } from '@/hooks/useDebtsNew';
-import { useAddPayment } from '@/hooks/useDebts';
 import { useCreateTransaction } from '@/hooks/useTransactions';
 import EditDebtModal from '@/components/EditDebtModal';
 import DeleteDebtModal from '@/components/DeleteDebtModal';
+import CreateDebtModal from '@/components/CreateDebtModal';
 import DebtsSkeleton from '@/components/DebtsSkeleton';
-import { DollarSign, TrendingUp, TrendingDown, Calendar, Phone, Eye, Edit, Trash2, X, FileText, CheckCircle, AlertTriangle, CreditCard, Banknote } from 'lucide-react';
+import { DollarSign, TrendingUp, TrendingDown, Calendar, Phone, Eye, Edit, Trash2, X, FileText, CheckCircle, AlertTriangle, CreditCard, Banknote, Plus } from 'lucide-react';
 import { formatCurrency, formatNumber, parseFormattedNumber } from '@/lib/utils';
 import { t } from '@/lib/transliteration';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -43,6 +43,7 @@ const Debts: React.FC = () => {
   const [selectedDebt, setSelectedDebt] = useState<Debt | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [paymentDebt, setPaymentDebt] = useState<Debt | null>(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
@@ -59,7 +60,9 @@ const Debts: React.FC = () => {
     loading: isLoading, 
     summaryLoading,
     updateDebt,
-    deleteDebt 
+    deleteDebt,
+    addPayment,
+    refresh
   } = useDebtsNew({ type: typeFilter, status: statusFilter });
 
   // Faqat to'lanmagan va qisman to'langan qarzlarni ko'rsatish
@@ -296,7 +299,6 @@ const Debts: React.FC = () => {
     const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'click'>('cash');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const addPaymentMutation = useAddPayment();
     const createTransactionMutation = useCreateTransaction();
 
     const remaining = debt.amount - debt.paidAmount;
@@ -325,17 +327,11 @@ const Debts: React.FC = () => {
 
       setIsSubmitting(true);
 
-      // Instant UI feedback
-      toast.success(t("Qarz to'lovi qabul qilindi", language));
-      onClose();
-
       try {
-        // Debt payment
-        await addPaymentMutation.mutateAsync({
-          id: debt._id,
-          amount,
-          notes: `${t("To'lov usuli", language)}: ${paymentMethod === 'cash' ? t('Naqd', language) : paymentMethod === 'card' ? t('Karta', language) : 'Click'}${description ? ` - ${description}` : ''}`
-        });
+        const paymentNotes = `${t("To'lov usuli", language)}: ${paymentMethod === 'cash' ? t('Naqd', language) : paymentMethod === 'card' ? t('Karta', language) : 'Click'}${description ? ` - ${description}` : ''}`;
+
+        // Debt payment (useDebtsNew - optimistic update + API)
+        await addPayment(debt._id, amount, paymentNotes);
 
         // Transaction for kassa
         await createTransactionMutation.mutateAsync({
@@ -349,8 +345,14 @@ const Debts: React.FC = () => {
             id: debt._id
           }
         });
+
+        toast.success(t("Qarz to'lovi qabul qilindi", language));
+        onClose();
       } catch (error) {
         console.error('Payment error:', error);
+        toast.error(t("To'lov qilishda xatolik", language));
+      } finally {
+        setIsSubmitting(false);
       }
     };
 
@@ -526,6 +528,13 @@ const Debts: React.FC = () => {
                 </p>
               </div>
             </div>
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2.5 sm:px-6 sm:py-3 bg-white/20 backdrop-blur-xl hover:bg-white/30 text-white rounded-xl font-semibold transition-all shadow-lg"
+            >
+              <Plus className="h-5 w-5" />
+              <span className="text-sm sm:text-base">{t("Qarz qo'shish", language)}</span>
+            </button>
           </div>
         </div>
 
@@ -1003,6 +1012,13 @@ const Debts: React.FC = () => {
           }}
         />
       )}
+      <CreateDebtModal
+        isOpen={isCreateModalOpen}
+        onClose={() => {
+          setIsCreateModalOpen(false);
+          refresh();
+        }}
+      />
       {selectedDebt && !isEditModalOpen && !isDeleteModalOpen && <DebtDetailModal debt={selectedDebt} />}
       {selectedDebt && (
         <>
