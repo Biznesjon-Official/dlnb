@@ -27,13 +27,16 @@ const Cars: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [activeTab, setActiveTab] = useState<'active' | 'archive' | 'bookings'>('active');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [prefillCarData, setPrefillCarData] = useState<{
+    make: string; carModel: string; year: number;
+    licensePlate: string; ownerName: string; ownerPhone: string;
+  } | undefined>(undefined);
   const [selectedCar, setSelectedCar] = useState<Car | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isRestoreModalOpen, setIsRestoreModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false); // Restore qilinganda refresh holati
 
   // localStorage'dan tilni o'qish
   const language = React.useMemo<'latin' | 'cyrillic'>(() => {
@@ -143,8 +146,7 @@ const Cars: React.FC = () => {
     cars, 
     loading,
     updateCar,
-    getArchivedCars,
-    refresh // refresh funksiyasini olish
+    getArchivedCars
   } = useCarsNew();
 
   // Brondan mashina yaratilganda callback
@@ -320,25 +322,6 @@ const Cars: React.FC = () => {
     setIsRestoreModalOpen(true);
   };
   
-  // Restore muvaffaqiyatli bo'lganda chaqiriladigan callback
-  const handleRestoreSuccess = async () => {
-    // ⚡ LOADING STATE: Refresh boshlanishi
-    setIsRefreshing(true);
-    
-    // Arxiv ma'lumotlarini tozalash
-    setArchivedCarsData([]);
-    
-    // Darhol "Faol" tabga o'tish
-    setActiveTab('active');
-    
-    // ⚡ MUHIM: Qo'shimcha refresh (double-check)
-    // Bu faol tab'da yangi ma'lumotlarni ko'rsatadi
-    setTimeout(async () => {
-      await refresh();
-      // Refresh tugagandan keyin loading'ni o'chirish
-      setIsRefreshing(false);
-    }, 500); // 500ms - skeleton ko'rsatish uchun yetarli vaqt
-  };
 
   const closeAllModals = () => {
     setIsViewModalOpen(false);
@@ -594,8 +577,8 @@ const Cars: React.FC = () => {
         {activeTab === 'bookings' ? (
           // Bronlar tabi - BookingsContent komponenti
           <BookingsContent onCarCreatedFromBooking={handleCarCreatedFromBooking} />
-        ) : loading || isRefreshing ? (
-          // ⚡ SKELETON LOADER - Ma'lumotlar yuklanayotganda yoki restore qilinayotganda
+        ) : loading ? (
+          // ⚡ SKELETON LOADER - Ma'lumotlar yuklanayotganda
           <CarsSkeleton />
         ) : displayedCars.length === 0 ? (
           <div className={`rounded-lg sm:rounded-2xl shadow-lg border p-6 sm:p-16 text-center ${
@@ -1285,7 +1268,8 @@ const Cars: React.FC = () => {
       {/* Modals */}
       <CreateCarModal
         isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
+        onClose={() => { setIsCreateModalOpen(false); setPrefillCarData(undefined); }}
+        prefillData={prefillCarData}
         onArchivedDuplicate={async (archivedCar) => {
           try {
             const response = await api.get(`/cars/${archivedCar._id}`);
@@ -1328,7 +1312,20 @@ const Cars: React.FC = () => {
             isOpen={isRestoreModalOpen}
             onClose={closeAllModals}
             car={selectedCar}
-            onRestoreSuccess={handleRestoreSuccess}
+            onConfirm={() => {
+              // RestoreCarModal yopildi, CreateCarModal ni pre-filled holda ochamiz
+              // selectedCar dan ma'lumotlarni avval olib olamiz (keyin null qilamiz)
+              setPrefillCarData({
+                make: selectedCar.make,
+                carModel: selectedCar.carModel,
+                year: selectedCar.year,
+                licensePlate: selectedCar.licensePlate,
+                ownerName: selectedCar.ownerName,
+                ownerPhone: selectedCar.ownerPhone || ''
+              });
+              setSelectedCar(null);
+              setIsCreateModalOpen(true);
+            }}
           />
           
           <CarPaymentModalHybrid
