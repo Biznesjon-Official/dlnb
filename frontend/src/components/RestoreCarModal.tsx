@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { X, RotateCcw, Car as CarIcon } from 'lucide-react';
 import { Car } from '@/types';
+import { useCarsNew } from '@/hooks/useCarsNew';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { t } from '@/lib/transliteration';
 
@@ -8,22 +9,42 @@ interface RestoreCarModalProps {
   isOpen: boolean;
   onClose: () => void;
   car: Car;
-  onConfirm: () => void; // Foydalanuvchi tasdiqlagan — ota-komponent oqimni boshqaradi
+  onRestoreSuccess?: () => void; // Callback restore muvaffaqiyatli bo'lganda
 }
 
-const RestoreCarModal: React.FC<RestoreCarModalProps> = ({ isOpen, onClose, car, onConfirm }) => {
+const RestoreCarModal: React.FC<RestoreCarModalProps> = ({ isOpen, onClose, car, onRestoreSuccess }) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const { restoreCar } = useCarsNew();
+  
   // localStorage'dan tilni o'qish
   const language = React.useMemo<'latin' | 'cyrillic'>(() => {
     const savedLanguage = localStorage.getItem('language');
     return (savedLanguage as 'latin' | 'cyrillic') || 'latin';
   }, []);
-
+  
   // Modal ochilganda body scroll ni bloklash
   useBodyScrollLock(isOpen);
 
-  const handleConfirm = () => {
-    onClose();
-    onConfirm();
+  const handleRestore = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Restore qilish (bu ichida loadCars chaqiriladi)
+      await restoreCar(car._id);
+      
+      // Modal yopish
+      onClose();
+      
+      // ⚡ MUHIM: Restore tugagandan KEYIN callback chaqirish
+      // Bu vaqtda ma'lumotlar allaqachon yangilangan
+      if (onRestoreSuccess) {
+        onRestoreSuccess();
+      }
+    } catch (error) {
+      console.error('Error restoring car:', error);
+      // Error bo'lsa loading'ni o'chirish
+      setIsLoading(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -76,7 +97,7 @@ const RestoreCarModal: React.FC<RestoreCarModalProps> = ({ isOpen, onClose, car,
                   {t("Yangi mashina yaratiladi", language)}
                 </p>
                 <p className="text-sm text-green-800">
-                  {t("Asosiy ma'lumotlar (marka, model, raqam, egasi) to'ldirilgan holda yangi mashina qo'shish oynasi ochiladi. Zapchast, vazifa va to'lovlarni yangi qo'shishingiz mumkin.", language)}
+                  {t("Faqat mashina ma'lumotlari qaytariladi (zapchast, vazifa va to'lovlarsiz). Arxivdagi mashina qarzlari bilan qoladi.", language)}
                 </p>
               </div>
             </div>
@@ -93,15 +114,17 @@ const RestoreCarModal: React.FC<RestoreCarModalProps> = ({ isOpen, onClose, car,
         <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-end space-x-3 rounded-b-xl">
           <button
             onClick={onClose}
-            className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+            disabled={isLoading}
+            className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50"
           >
             {t('Bekor qilish', language)}
           </button>
           <button
-            onClick={handleConfirm}
-            className="px-5 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all"
+            onClick={handleRestore}
+            disabled={isLoading}
+            className="px-5 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
-            {t("Ha, qaytarish", language)}
+            {isLoading ? t("Qaytarilmoqda...", language) : t("Ha, qaytarish", language)}
           </button>
         </div>
       </div>
