@@ -700,13 +700,25 @@ export const getClientParts = async (req: AuthRequest, res: Response) => {
 export const getArchivedCars = async (req: AuthRequest, res: Response) => {
   try {
     const { search } = req.query;
-    // ⚡ YANGI QOIDA: Arxivlangan mashinalar - biror to'lov qilingan yoki o'chirilgan
-    const filter: any = { 
-      $or: [
-        { isDeleted: true },
-        { status: 'completed' },
-        { status: 'delivered' },
-        { paidAmount: { $gt: 0 } } // ⚡ Biror to'lov qilingan
+    // Arxivlangan mashinalar: o'chirilgan, yakunlangan, yoki to'liq to'langan
+    // Lekin faol mashinalar (pending/in-progress) arxivda ko'rinmasligi kerak
+    const filter: any = {
+      $and: [
+        {
+          $or: [
+            { isDeleted: true },
+            { status: 'completed' },
+            { status: 'delivered' },
+            { paidAmount: { $gt: 0 } }
+          ]
+        },
+        // Faol mashinalarni arxivdan chiqarish (restore qilinganlar)
+        {
+          $nor: [
+            { isDeleted: false, status: 'pending' },
+            { isDeleted: false, status: 'in-progress' }
+          ]
+        }
       ]
     };
     
@@ -766,9 +778,18 @@ export const restoreCar = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    // Reactivate the archived car (keep all data: parts, payments, debts)
+    // Mashinani faolga qaytarish — yangi xizmat uchun tozalash
     oldCar.status = 'pending';
     oldCar.isDeleted = false;
+    (oldCar as any).deletedAt = undefined;
+
+    // To'lov ma'lumotlarini tozalash (yangi xizmat boshlanadi)
+    oldCar.paidAmount = 0;
+    oldCar.paymentStatus = 'pending';
+    oldCar.totalEstimate = 0;
+    oldCar.parts = [];
+    oldCar.serviceItems = [];
+    (oldCar as any).payments = [];
 
     await oldCar.save();
 
