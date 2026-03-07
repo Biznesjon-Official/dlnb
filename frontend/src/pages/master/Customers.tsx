@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { Users, Search, TrendingUp, TrendingDown, Car as CarIcon } from 'lucide-react';
 import { useCustomers, useCustomersStats } from '../../hooks/useCustomers';
 import CustomersSkeleton from '../../components/CustomersSkeleton';
+import CustomerModal from '../../components/CustomerModal';
 import { Customer } from '../../types';
 import { useTheme } from '../../contexts/ThemeContext';
 
@@ -9,6 +10,7 @@ const Customers = () => {
   const { isDarkMode } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'debt' | 'cars'>('all');
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
 
   const { data: customers = [], isLoading } = useCustomers();
   const { data: stats } = useCustomersStats();
@@ -275,9 +277,18 @@ const Customers = () => {
               key={customer._id}
               customer={customer}
               isDarkMode={isDarkMode}
+              onClick={() => setSelectedCustomerId(customer._id)}
             />
           ))}
         </div>
+      )}
+
+      {selectedCustomerId && (
+        <CustomerModal
+          customerId={selectedCustomerId}
+          isDarkMode={isDarkMode}
+          onClose={() => setSelectedCustomerId(null)}
+        />
       )}
     </div>
   );
@@ -287,13 +298,16 @@ const Customers = () => {
 const CustomerCard = ({
   customer,
   isDarkMode,
+  onClick,
 }: {
   customer: Customer;
   isDarkMode: boolean;
+  onClick: () => void;
 }) => {
   return (
     <div
-      className={`p-4 rounded-xl border transition-all ${
+      onClick={onClick}
+      className={`p-4 rounded-xl border transition-all cursor-pointer ${
         isDarkMode
           ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 border-red-900/30 hover:border-red-700/50'
           : 'bg-white border-rose-200 hover:border-rose-300 hover:shadow-lg'

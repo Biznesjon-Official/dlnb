@@ -72,33 +72,36 @@ export class NetworkManager {
     return this.getStatus();
   }
 
+  private debounceTimer: NodeJS.Timeout | null = null;
+
+  private debouncedCheck(delay = 300): void {
+    if (this.debounceTimer) clearTimeout(this.debounceTimer);
+    this.debounceTimer = setTimeout(() => this.checkNetworkStatus(), delay);
+  }
+
   private setupEventListeners(): void {
-    // Browser online/offline events
     window.addEventListener('online', () => {
-      this.checkNetworkStatus();
+      // Birozdan keyin tekshir — tarmoq to'liq ulanguncha
+      this.debouncedCheck(500);
     });
 
     window.addEventListener('offline', () => {
+      if (this.debounceTimer) clearTimeout(this.debounceTimer);
       this.updateStatus({
         isOnline: false,
         internetConnected: false,
         backendHealthy: false
       });
     });
-
-    // REMOVED: visibilitychange and focus events to prevent frequent refreshes
-    // Network status will be checked only on:
-    // - Browser online/offline events
-    // - Manual forceCheck() calls
   }
 
   private startPeriodicCheck(): void {
-    // DISABLED: Periodic check removed to prevent unnecessary refreshes
-    // Network status will be checked only on:
-    // - Browser online/offline events
-    // - Tab visibility change
-    // - Window focus
-    // - Manual forceCheck() calls
+    // Har 30 sekundda tekshir — agar status o'zgarmagan bo'lsa listener chaqirilmaydi
+    this.checkInterval = setInterval(() => {
+      if (!this.isChecking) {
+        this.checkNetworkStatus();
+      }
+    }, 30_000);
   }
 
   private async checkNetworkStatus(): Promise<void> {
@@ -110,11 +113,8 @@ export class NetworkManager {
     this.updateStatus({ isChecking: true });
 
     try {
-      // Step 1: Check browser online status FIRST
-      const browserOnline = navigator.onLine;
-
-      if (!browserOnline) {
-        // FAST: Immediately set offline status without checking internet/backend
+      // Browser offline bo'lsa - tezda offline qo'y
+      if (!navigator.onLine) {
         this.updateStatus({
           isOnline: false,
           internetConnected: false,
@@ -126,18 +126,13 @@ export class NetworkManager {
         return;
       }
 
-      // Step 2: Parallel check - internet va backend bir vaqtda
-      const [internetConnected, backendHealthy] = await Promise.all([
-        this.checkInternetConnection(),
-        this.checkBackendHealth()
-      ]);
+      // Faqat backend health tekshir — bu yetarli
+      // Agar backend ishlayotgan bo'lsa = online
+      const backendHealthy = await this.checkBackendHealth();
 
-      // Final status
-      const isOnline = browserOnline && internetConnected && backendHealthy;
-      
       this.updateStatus({
-        isOnline,
-        internetConnected,
+        isOnline: backendHealthy,
+        internetConnected: backendHealthy,
         backendHealthy,
         isChecking: false,
         lastChecked: new Date()
@@ -145,7 +140,6 @@ export class NetworkManager {
 
     } catch (error) {
       console.error('Network check failed:', error);
-      
       this.updateStatus({
         isOnline: false,
         internetConnected: false,
@@ -158,61 +152,30 @@ export class NetworkManager {
     }
   }
 
-  private async checkInternetConnection(): Promise<boolean> {
-    try {
-      // Try to fetch a small resource from a reliable external source
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 500); // 500ms (tezroq)
+  private async checkBackendHealth(): Promise<boolean> {
+    const TIMEOUT_MS = 5000; // 5 sekund — yetarli vaqt
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
-      await fetch('https://www.google.com/favicon.ico', {
+    try {
+      const response = await fetch('/api/health', {
         method: 'HEAD',
-        mode: 'no-cors',
         signal: controller.signal,
         cache: 'no-cache'
       });
-
       clearTimeout(timeoutId);
-      return true;
+      return response.ok || response.status === 401;
     } catch (error: any) {
-      // ERR_NETWORK_CHANGED is normal when switching from offline to online
-      if (error?.message?.includes('network change') || error?.message?.includes('NetworkError')) {
-        return true; // Assume online if network changed
+      clearTimeout(timeoutId);
+      // Network o'zgarganda (WiFi→4G) 1 marta retry qil
+      if (error?.name === 'AbortError') {
+        return false; // Timeout — offline
       }
-      return false;
-    }
-  }
-
-  private async checkBackendHealth(): Promise<boolean> {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 800); // 800ms (tezroq)
-
-      const response = await fetch('/api/health', {
-        method: 'GET',
-        signal: controller.signal,
-        cache: 'no-cache',
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        }
-      });
-
-      clearTimeout(timeoutId);
-      
-      // Accept 200 (healthy) or 401 (unauthorized but server is running)
-      return response.status === 200 || response.status === 401;
-    } catch (error: any) {
-      // ERR_NETWORK_CHANGED is normal when switching from offline to online
       if (error?.message?.includes('network change') || error?.message?.includes('NetworkError')) {
-        // Retry once after network change
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 800));
         try {
-          const response = await fetch('/api/health', {
-            method: 'GET',
-            cache: 'no-cache'
-          });
-          return response.status === 200 || response.status === 401;
+          const response = await fetch('/api/health', { method: 'HEAD', cache: 'no-cache' });
+          return response.ok || response.status === 401;
         } catch {
           return false;
         }

@@ -72,18 +72,16 @@ export const getCustomerById = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ message: 'Mijoz topilmadi' });
     }
 
-    // Mijozning barcha mashinalarini olish
+    // Mijozning barcha mashinalarini olish (arxivlanganlar ham — tarix uchun)
     const cars = await Car.find({
       ownerPhone: customer.phone,
-      clientId,
     })
       .sort({ createdAt: -1 })
       .lean();
 
-    // Mijozning barcha qarzlarini olish
+    // Mijozning barcha qarzlarini olish (creditorPhone ishlatiladi)
     const debts = await Debt.find({
-      customerPhone: customer.phone,
-      clientId,
+      creditorPhone: customer.phone,
     })
       .sort({ createdAt: -1 })
       .lean();
