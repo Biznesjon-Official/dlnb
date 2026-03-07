@@ -19,10 +19,20 @@ interface ArchivedCarInfo {
   ownerName: string;
 }
 
+interface PrefillData {
+  make: string;
+  carModel: string;
+  year: number;
+  licensePlate: string;
+  ownerName: string;
+  ownerPhone: string;
+}
+
 interface CreateCarModalProps {
   isOpen: boolean;
   onClose: () => void;
   onArchivedDuplicate?: (car: ArchivedCarInfo) => void;
+  prefillData?: PrefillData;
 }
 
 interface Part {
@@ -68,7 +78,7 @@ interface TaskItem {
 
 
 
-const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose, onArchivedDuplicate }) => {
+const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose, onArchivedDuplicate, prefillData }) => {
   const { isDarkMode } = useTheme();
   const [currentStep, setCurrentStep] = useState(1);
   
@@ -175,12 +185,19 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose, onArch
   
   useBodyScrollLock(isOpen);
 
-  // Modal ochilganda state'larni tozalash
+  // Modal ochilganda state'larni tozalash (yoki prefillData bilan to'ldirish)
   React.useEffect(() => {
     if (isOpen) {
-      // Barcha state'larni tozalash
       setCurrentStep(1);
-      setFormData({
+      // Arxivdan qaytarilayotgan bo'lsa, asosiy ma'lumotlarni avtomatik to'ldirish
+      setFormData(prefillData ? {
+        make: prefillData.make,
+        carModel: prefillData.carModel,
+        year: prefillData.year,
+        licensePlate: prefillData.licensePlate,
+        ownerName: prefillData.ownerName,
+        ownerPhone: prefillData.ownerPhone
+      } : {
         make: '',
         carModel: '',
         year: new Date().getFullYear(),
@@ -534,7 +551,9 @@ const CreateCarModal: React.FC<CreateCarModalProps> = ({ isOpen, onClose, onArch
           category: 'labor' as const
         })),
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
+        // Arxivdan qaytarilayotgan bo'lsa, arxiv tekshiruvini o'tkazib yuborish
+        ...(prefillData ? { skipArchivedCheck: true } : {})
       };
 
       // 1. Mashinani yaratish

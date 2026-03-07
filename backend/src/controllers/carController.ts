@@ -8,7 +8,7 @@ import debtService from '../services/debtService';
 import { updateOrCreateCustomer } from '../services/customerService';
 export const createCar = async (req: AuthRequest, res: Response) => {
   try {
-    const { make, carModel, year, licensePlate, ownerName, ownerPhone, parts, serviceItems, usedSpareParts } = req.body;
+    const { make, carModel, year, licensePlate, ownerName, ownerPhone, parts, serviceItems, usedSpareParts, skipArchivedCheck } = req.body;
     
     console.log('🚗 Mashina yaratish so\'rovi:');
     console.log('📦 Parts:', parts);
@@ -38,25 +38,28 @@ export const createCar = async (req: AuthRequest, res: Response) => {
     }
 
     // Check archived cars (deleted or completed/delivered)
-    const archivedCar = await Car.findOne({
-      licensePlate,
-      $or: [
-        { isDeleted: true },
-        { status: { $in: ['completed', 'delivered'] } }
-      ]
-    });
-    if (archivedCar) {
-      return res.status(409).json({
-        message: `Bu raqamli mashina arxivda mavjud (${archivedCar.make} ${archivedCar.carModel}). Arxivdan qaytarishingiz mumkin.`,
-        archivedCar: {
-          _id: archivedCar._id,
-          make: archivedCar.make,
-          carModel: archivedCar.carModel,
-          licensePlate: archivedCar.licensePlate,
-          ownerName: archivedCar.ownerName
-        },
-        code: 'ARCHIVED_DUPLICATE'
+    // skipArchivedCheck: arxivdan yangi mashina sifatida yaratilganda bu tekshiruvni o'tkazib yuborish
+    if (!skipArchivedCheck) {
+      const archivedCar = await Car.findOne({
+        licensePlate,
+        $or: [
+          { isDeleted: true },
+          { status: { $in: ['completed', 'delivered'] } }
+        ]
       });
+      if (archivedCar) {
+        return res.status(409).json({
+          message: `Bu raqamli mashina arxivda mavjud (${archivedCar.make} ${archivedCar.carModel}). Arxivdan qaytarishingiz mumkin.`,
+          archivedCar: {
+            _id: archivedCar._id,
+            make: archivedCar.make,
+            carModel: archivedCar.carModel,
+            licensePlate: archivedCar.licensePlate,
+            ownerName: archivedCar.ownerName
+          },
+          code: 'ARCHIVED_DUPLICATE'
+        });
+      }
     }
 
     // Zapchastlar sonini kamaytirish
