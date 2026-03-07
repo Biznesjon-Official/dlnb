@@ -1,5 +1,6 @@
 import { Response } from 'express';
 import Debt from '../models/Debt';
+import Car from '../models/Car';
 import User from '../models/User';
 import { AuthRequest } from '../middleware/auth';
 import telegramService from '../services/telegramService';
@@ -119,6 +120,19 @@ export const addPayment = async (req: AuthRequest, res: Response) => {
     
     await debt.save();
     await debt.populate('car', 'make carModel licensePlate');
+
+    // Agar qarz to'liq to'langan bo'lsa va bog'liq mashina bo'lsa, car.paidAmount ni yangilash
+    // Bu arxivdagi mashinada "Qarzi bor" ko'rinishini to'g'rilaydi
+    if (debt.status === 'paid' && debt.car) {
+      try {
+        await Car.findByIdAndUpdate(debt.car, {
+          paidAmount: debt.amount,
+          paymentStatus: 'paid'
+        });
+      } catch (carUpdateErr) {
+        console.error('Car paidAmount update error:', carUpdateErr);
+      }
+    }
 
     // Customer.totalDebt ni yangilash (faqat receivable uchun)
     if (debt.type === 'receivable' && debt.creditorPhone) {
