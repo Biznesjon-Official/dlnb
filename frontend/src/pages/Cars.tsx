@@ -1632,7 +1632,18 @@ const CarCard: React.FC<{
           >
             <Eye className="h-3.5 w-3.5 group-hover:scale-110 transition-transform" />
           </button>
-          <button 
+          <button
+            onClick={() => onComplete(car)}
+            className={`p-2 rounded-lg transition-all duration-200 ${
+              isDarkMode
+                ? 'bg-green-700 text-white hover:bg-green-600'
+                : 'bg-green-50 text-green-600 hover:bg-green-100 hover:text-green-700'
+            }`}
+            title={t("Tugatish", language)}
+          >
+            <CheckCircle className="h-3.5 w-3.5" />
+          </button>
+          <button
             onClick={() => onEdit(car)}
             className={`p-2 rounded-lg transition-all duration-200 ${
               isDarkMode
@@ -1643,7 +1654,7 @@ const CarCard: React.FC<{
           >
             <Edit className="h-3.5 w-3.5" />
           </button>
-          <button 
+          <button
             onClick={() => onDelete(car)}
             className={`p-2 rounded-lg transition-all duration-200 ${
               isDarkMode
