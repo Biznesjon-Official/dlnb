@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { CheckCircle, X, AlertTriangle, FileText } from 'lucide-react';
 import { Car } from '@/types';
-import { useCarsNew } from '@/hooks/useCarsNew';
+import api from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
 import { t } from '@/lib/transliteration';
 
@@ -21,7 +21,6 @@ const CompleteCarModal: React.FC<CompleteCarModalProps> = ({
   const [notes, setNotes] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const { updateCar } = useCarsNew();
 
   // localStorage'dan tilni o'qish
   const language = React.useMemo<'latin' | 'cyrillic'>(() => {
@@ -41,15 +40,15 @@ const CompleteCarModal: React.FC<CompleteCarModalProps> = ({
     setIsLoading(true);
 
     try {
-      await updateCar(car._id, { 
-        status: 'completed'
-      });
-      
+      // POST /cars/:id/complete — qarz avtomatik yaratiladi
+      await api.post(`/cars/${car._id}/complete`, { notes });
+
       if (onComplete) {
         onComplete();
       }
-      
+
       onClose();
+      window.location.reload();
     } catch (err: any) {
       console.error('Mashinani tugatishda xatolik:', err);
       setError(err.response?.data?.message || 'Xatolik yuz berdi');

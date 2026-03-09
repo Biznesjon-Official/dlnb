@@ -9,6 +9,7 @@ import ViewCarModal from '@/components/ViewCarModal';
 import EditCarStepModal from '@/components/EditCarStepModal';
 import DeleteCarModal from '@/components/DeleteCarModal';
 import RestoreCarModal from '@/components/RestoreCarModal';
+import CompleteCarModal from '@/components/CompleteCarModal';
 import CarPaymentModalHybrid from '@/components/CarPaymentModalHybrid';
 import CarsSkeleton from '@/components/CarsSkeleton';
 import BookingsContent from '@/components/BookingsContent';
@@ -36,6 +37,7 @@ const Cars: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isRestoreModalOpen, setIsRestoreModalOpen] = useState(false);
+  const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   // localStorage'dan tilni o'qish
@@ -323,11 +325,17 @@ const Cars: React.FC = () => {
   };
   
 
+  const handleCompleteCar = (car: Car) => {
+    setSelectedCar(car);
+    setIsCompleteModalOpen(true);
+  };
+
   const closeAllModals = () => {
     setIsViewModalOpen(false);
     setIsEditModalOpen(false);
     setIsDeleteModalOpen(false);
     setIsRestoreModalOpen(false);
+    setIsCompleteModalOpen(false);
     setSelectedCar(null);
   };
 
@@ -1259,7 +1267,7 @@ const Cars: React.FC = () => {
               // Backend dan kelgan totalEstimate ni ishlatish, agar mavjud bo'lsa
               const displayTotal = car.totalEstimate || calculatedTotal;
               
-              return <CarCard key={car._id} car={car} displayTotal={displayTotal} language={language} isDarkMode={isDarkMode} onView={handleViewCar} onEdit={handleEditCar} onDelete={handleDeleteCar} onPayment={handlePaymentCar} getSmsMessage={getSmsMessage} />;
+              return <CarCard key={car._id} car={car} displayTotal={displayTotal} language={language} isDarkMode={isDarkMode} onView={handleViewCar} onEdit={handleEditCar} onDelete={handleDeleteCar} onPayment={handlePaymentCar} onComplete={handleCompleteCar} getSmsMessage={getSmsMessage} />;
             })}
           </div>
         )}
@@ -1308,6 +1316,12 @@ const Cars: React.FC = () => {
             car={selectedCar}
           />
           
+          <CompleteCarModal
+            isOpen={isCompleteModalOpen}
+            onClose={closeAllModals}
+            car={selectedCar}
+          />
+
           <RestoreCarModal
             isOpen={isRestoreModalOpen}
             onClose={closeAllModals}
@@ -1372,8 +1386,9 @@ const CarCard: React.FC<{
   onEdit: (car: Car) => void;
   onDelete: (car: Car) => void;
   onPayment: (car: Car) => void;
+  onComplete: (car: Car) => void;
   getSmsMessage: (car: Car) => string;
-}> = ({ car, displayTotal, language, isDarkMode, onView, onEdit, onDelete, onPayment, getSmsMessage }) => {
+}> = ({ car, displayTotal, language, isDarkMode, onView, onEdit, onDelete, onPayment, onComplete, getSmsMessage }) => {
   // Fetch tasks for this car ONLY
   const { data: tasksData } = useTasks({ car: car._id });
   const tasks = tasksData?.tasks || [];
@@ -1699,9 +1714,9 @@ const CarCard: React.FC<{
             </button>
           </div>
           
-          {/* Ikkinchi qator: Tahrirlash va O'chirish */}
+          {/* Ikkinchi qator: Tahrirlash, Tugatish, O'chirish */}
           <div className="flex items-center gap-2">
-            <button 
+            <button
               onClick={() => onEdit(car)}
               className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg transition-all duration-200 font-medium ${
                 isDarkMode
@@ -1713,8 +1728,21 @@ const CarCard: React.FC<{
               <Edit className="h-3.5 w-3.5" />
               <span className="text-xs">{t("Tahrirlash", language)}</span>
             </button>
-            
-            <button 
+
+            <button
+              onClick={() => onComplete(car)}
+              className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg transition-all duration-200 font-medium ${
+                isDarkMode
+                  ? 'bg-green-700 text-white hover:bg-green-600'
+                  : 'bg-green-50 text-green-600 hover:bg-green-100'
+              }`}
+              title={t("Tugatish", language)}
+            >
+              <CheckCircle className="h-3.5 w-3.5" />
+              <span className="text-xs">{t("Tugatish", language)}</span>
+            </button>
+
+            <button
               onClick={() => onDelete(car)}
               className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg transition-all duration-200 font-medium ${
                 isDarkMode
