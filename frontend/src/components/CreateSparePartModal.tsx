@@ -35,7 +35,6 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [currency, setCurrency] = useState<'UZS' | 'USD'>('UZS'); // Valyuta tanlash
-  const [exchangeRate] = useState(12800); // 1 USD = 12,800 UZS (o'zgarmas)
   const [formData, setFormData] = useState({
     name: '',
     costPrice: '', // O'zini narxi

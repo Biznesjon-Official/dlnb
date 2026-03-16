@@ -37,9 +37,10 @@ interface SparePart {
   price?: number; // Optional - backward compatibility
   costPrice?: number; // O'zini narxi
   sellingPrice?: number; // Sotish narxi
+  currency?: 'UZS' | 'USD';
   quantity: number;
   supplier: string;
-  imageUrl?: string; // YANGI: Rasm URL
+  imageUrl?: string;
   usageCount: number;
   isActive: boolean;
   createdAt: string;
