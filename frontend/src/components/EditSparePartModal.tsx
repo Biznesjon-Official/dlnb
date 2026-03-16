@@ -223,11 +223,16 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
       // @ts-ignore
       const sellingPrice = sparePart.sellingPrice || sparePart.price || 0;
       const price = sparePart.price || sellingPrice || 0;
-      
-      const priceFormatted = formatNumber(price.toString());
-      const costPriceFormatted = formatNumber(costPrice.toString());
-      const sellingPriceFormatted = formatNumber(sellingPrice.toString());
-      
+      const partCurrency = (sparePart.currency as 'UZS' | 'USD') || 'UZS';
+
+      // USD uchun decimal format, UZS uchun minglik separator
+      const formatPrice = (val: number) =>
+        partCurrency === 'USD' ? val.toString() : formatNumber(val.toString());
+
+      const priceFormatted = formatPrice(price);
+      const costPriceFormatted = formatPrice(costPrice);
+      const sellingPriceFormatted = formatPrice(sellingPrice);
+
       setFormData({
         name: sparePart.name,
         costPrice: costPrice.toString(),
@@ -258,9 +263,10 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
       }
       setImageFile(null);
       
-      // Modal ochilganda valyutani va previousCurrency ni reset qilish
-      setCurrency('UZS');
-      setPreviousCurrency('UZS');
+      // Saqlangan valyutani yuklash
+      const partCurrency2 = (sparePart.currency as 'UZS' | 'USD') || 'UZS';
+      setCurrency(partCurrency2);
+      setPreviousCurrency(partCurrency2);
     }
   }, [sparePart]);
 
@@ -447,14 +453,8 @@ const EditSparePartModal: React.FC<EditSparePartModalProps> = ({
     }
 
     // Agar faqat bitta narx kiritilgan bo'lsa, ikkinchisini avtomatik to'ldirish
-    let costPrice = Number(formData.costPrice) || Number(formData.sellingPrice);
-    let sellingPrice = Number(formData.sellingPrice) || Number(formData.costPrice);
-
-    // Agar dollar tanlangan bo'lsa, so'mga o'tkazish
-    if (currency === 'USD') {
-      costPrice = costPrice * exchangeRate;
-      sellingPrice = sellingPrice * exchangeRate;
-    }
+    const costPrice = Number(formData.costPrice) || Number(formData.sellingPrice);
+    const sellingPrice = Number(formData.sellingPrice) || Number(formData.costPrice);
 
     // Kategoriya nomini qo'shish (agar yo'q bo'lsa)
     let finalName = formData.name;

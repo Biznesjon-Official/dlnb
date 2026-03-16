@@ -160,8 +160,9 @@ class DebtService {
     paidAmount: number;
     description: string;
     notes?: string;
+    createdBy: mongoose.Types.ObjectId | string;
   }) {
-    const { carId, clientName, clientPhone, totalAmount, paidAmount, description, notes } = params;
+    const { carId, clientName, clientPhone, totalAmount, paidAmount, description, notes, createdBy } = params;
     
     const remainingAmount = totalAmount - paidAmount;
     
@@ -194,7 +195,8 @@ class DebtService {
       status: 'pending',
       paidAmount: 0,
       paymentHistory: [],
-      notes
+      notes,
+      createdBy
     });
 
     await newDebt.save();

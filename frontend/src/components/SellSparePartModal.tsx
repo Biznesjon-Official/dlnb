@@ -34,6 +34,10 @@ const SellSparePartModal: React.FC<SellSparePartModalProps> = ({
   const totalRevenue = sellingPrice * quantity;
   const totalCost = sparePart.costPrice * quantity;
   const profit = totalRevenue - totalCost;
+  const isUSD = sparePart.currency === 'USD';
+  const formatPrice = (val: number) => isUSD
+    ? `$${val.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
+    : formatCurrency(val);
 
   // Telefon raqamini formatlash
   const formatPhoneNumber = (value: string) => {
@@ -149,7 +153,7 @@ const SellSparePartModal: React.FC<SellSparePartModalProps> = ({
               </div>
               <div>
                 <p className={`text-[10px] mb-0.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{t('Tannarx', language)}</p>
-                <p className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{formatCurrency(sparePart.costPrice)}</p>
+                <p className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{formatPrice(sparePart.costPrice)}</p>
               </div>
             </div>
           </div>
@@ -253,17 +257,17 @@ const SellSparePartModal: React.FC<SellSparePartModalProps> = ({
             <div className="space-y-1.5">
               <div className="flex justify-between items-center">
                 <span className={`text-[10px] ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{t('Jami tannarx', language)}:</span>
-                <span className={`text-xs font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{formatCurrency(totalCost)}</span>
+                <span className={`text-xs font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{formatPrice(totalCost)}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className={`text-[10px] ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{t('Jami tushum', language)}:</span>
-                <span className="text-xs font-bold text-green-400">{formatCurrency(totalRevenue)}</span>
+                <span className="text-xs font-bold text-green-400">{formatPrice(totalRevenue)}</span>
               </div>
               <div className={`h-px ${isDarkMode ? 'bg-red-900/30' : 'bg-rose-200'}`}></div>
               <div className="flex justify-between items-center">
                 <span className={`text-xs font-bold ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>{t('Foyda', language)}:</span>
                 <span className={`text-sm font-bold ${profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {formatCurrency(profit)}
+                  {formatPrice(profit)}
                 </span>
               </div>
             </div>

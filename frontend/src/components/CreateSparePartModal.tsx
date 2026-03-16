@@ -364,14 +364,8 @@ const CreateSparePartModal: React.FC<CreateSparePartModalProps> = ({
     console.log('✅ Final imageUrl:', uploadedImageUrl);
 
     // Agar faqat bitta narx kiritilgan bo'lsa, ikkinchisini avtomatik to'ldirish
-    let costPrice = Number(formData.costPrice) || Number(formData.sellingPrice);
-    let sellingPrice = Number(formData.sellingPrice) || Number(formData.costPrice);
-
-    // Agar dollar tanlangan bo'lsa, so'mga o'tkazish
-    if (currency === 'USD') {
-      costPrice = costPrice * exchangeRate;
-      sellingPrice = sellingPrice * exchangeRate;
-    }
+    const costPrice = Number(formData.costPrice) || Number(formData.sellingPrice);
+    const sellingPrice = Number(formData.sellingPrice) || Number(formData.costPrice);
 
     // Kategoriya nomini qo'shish (faqat zapchast va boshqa uchun)
     let finalName = formData.name;

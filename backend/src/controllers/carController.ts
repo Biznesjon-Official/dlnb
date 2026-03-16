@@ -841,7 +841,8 @@ export const completeCar = async (req: AuthRequest, res: Response) => {
           totalAmount,
           paidAmount,
           description: `${car.make} ${car.carModel} (${car.licensePlate}) - Mashina ta'miri qarzi`,
-          notes: notes || 'Mashina tugatilganda avtomatik yaratilgan qarz'
+          notes: notes || 'Mashina tugatilganda avtomatik yaratilgan qarz',
+          createdBy: req.user!._id
         });
         
         console.log(`💰 Qarz yaratildi: ${car.ownerName} - ${remainingAmount} so'm`);

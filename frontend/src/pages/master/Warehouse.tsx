@@ -1000,7 +1000,9 @@ const MasterWarehouse: React.FC = memo(() => {
                           <span className={`text-sm font-bold ${
                             isDarkMode ? 'text-red-400' : 'text-purple-600'
                           }`}>
-                            {part.currency === 'USD' ? '$' : ''}{formatCurrency(part.sellingPrice || part.price || 0)}{part.currency === 'UZS' ? '' : ''}
+                            {part.currency === 'USD'
+                              ? `$${(part.sellingPrice || part.price || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
+                              : formatCurrency(part.sellingPrice || part.price || 0)}
                           </span>
                         </div>
                       </div>
