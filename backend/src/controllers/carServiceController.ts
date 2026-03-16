@@ -62,7 +62,8 @@ async function checkAndCompleteCarIfReady(carId: any) {
               totalAmount,
               paidAmount,
               description: `${car.make} ${car.carModel} (${car.licensePlate}) - Avtomatik yaratilgan qarz (barcha ishlar tugadi)`,
-              notes: 'Barcha ishlar tugaganda avtomatik yaratilgan qarz'
+              notes: 'Barcha ishlar tugaganda avtomatik yaratilgan qarz',
+              createdBy: (car as any).createdBy
             });
           } catch (debtError) {
             console.error('❌ Qarz yaratishda xatolik:', debtError);
