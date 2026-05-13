@@ -5,6 +5,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 
 interface Debt {
@@ -46,6 +47,14 @@ interface DebtSummary {
 }
 
 export function useDebtsNew(filters?: { type?: string; status?: string }) {
+  const queryClient = useQueryClient();
+  // Bog'liq cross-collection cache'larni yangilash uchun yagona helper.
+  const invalidateRelated = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['customers'] });
+    queryClient.invalidateQueries({ queryKey: ['debts'] });
+    queryClient.invalidateQueries({ queryKey: ['debtSummary'] });
+  }, [queryClient]);
+
   // ⚡ INSTANT LOADING: Initial state bo'sh array
   const [debts, setDebts] = useState<Debt[]>([]);
 
@@ -205,8 +214,9 @@ export function useDebtsNew(filters?: { type?: string; status?: string }) {
           console.error('Failed to update cache:', err);
         }
         
-        // Summary'ni yangilash
+        // Summary'ni yangilash + bog'liq query'larni invalidate qilish
         loadSummary(true);
+        invalidateRelated();
       }).catch(err => {
         console.error('Failed to update debt:', err);
         // Xatolik bo'lsa, eski ma'lumotga qaytarish
@@ -222,7 +232,7 @@ export function useDebtsNew(filters?: { type?: string; status?: string }) {
       console.error('Failed to update debt:', err);
       throw err;
     }
-  }, [debts, loadSummary]);
+  }, [debts, loadSummary, invalidateRelated]);
 
   // Delete debt - OPTIMISTIC UPDATE
   const deleteDebt = useCallback(async (debtId: string) => {
@@ -249,8 +259,9 @@ export function useDebtsNew(filters?: { type?: string; status?: string }) {
           console.error('Failed to update cache:', err);
         }
         
-        // Summary'ni yangilash
+        // Summary'ni yangilash + bog'liq query'larni invalidate qilish
         loadSummary(true);
+        invalidateRelated();
       }).catch(err => {
         console.error('Failed to delete debt:', err);
         // Xatolik bo'lsa, qaytarib qo'yish
@@ -264,7 +275,7 @@ export function useDebtsNew(filters?: { type?: string; status?: string }) {
       console.error('Failed to delete debt:', err);
       throw err;
     }
-  }, [debts, loadSummary]);
+  }, [debts, loadSummary, invalidateRelated]);
 
   // Add payment - OPTIMISTIC UPDATE
   const addPayment = useCallback(async (debtId: string, amount: number, notes?: string) => {
@@ -319,8 +330,9 @@ export function useDebtsNew(filters?: { type?: string; status?: string }) {
           console.error('Failed to update cache:', err);
         }
         
-        // Summary'ni yangilash
+        // Summary'ni yangilash + bog'liq query'larni invalidate qilish
         loadSummary(true);
+        invalidateRelated();
       }).catch(err => {
         console.error('Failed to add payment:', err);
         // Xatolik bo'lsa, eski ma'lumotga qaytarish
@@ -336,7 +348,7 @@ export function useDebtsNew(filters?: { type?: string; status?: string }) {
       console.error('Failed to add payment:', err);
       throw err;
     }
-  }, [debts, loadSummary]);
+  }, [debts, loadSummary, invalidateRelated]);
 
   return {
     debts,

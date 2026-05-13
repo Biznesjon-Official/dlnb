@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { carsRepository } from '@/lib/repositories/CarsRepository';
 import { NetworkManager } from '@/lib/sync/NetworkManager';
 import { QueueManager } from '@/lib/sync/QueueManager';
@@ -15,6 +16,14 @@ import toast from 'react-hot-toast';
 import api from '@/lib/api';
 
 export function useCarsNew() {
+  const queryClient = useQueryClient();
+  const invalidateRelated = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['customers'] });
+    queryClient.invalidateQueries({ queryKey: ['debts'] });
+    queryClient.invalidateQueries({ queryKey: ['debtSummary'] });
+    queryClient.invalidateQueries({ queryKey: ['car-services'] });
+  }, [queryClient]);
+
   // ⚡ INSTANT LOADING: Initial state bo'sh array (cache ishlatmaymiz)
   const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true); // Initial load uchun true
@@ -250,22 +259,24 @@ export function useCarsNew() {
         // Real data bilan yangilash
         setCars(prev => prev.map(car => car._id === id ? updatedCar : car));
         updatePendingCount();
+        // Backend Customer/Debt'ni qayta hisoblaganidan keyin bog'liq query'larni invalidate qilish
+        invalidateRelated();
       }).catch(err => {
         console.error('Failed to update car:', err);
         // Rollback on error
         loadCars(true); // silent reload
       });
-      
+
       return carData as Car; // Return immediately for UI
     } catch (err: any) {
       console.error('Failed to update car:', err);
       toast.error(`Xatolik: ${err.message}`);
-      
+
       // Rollback on error
       await loadCars();
       throw err;
     }
-  }, [isOnline, updatePendingCount, loadCars]);
+  }, [isOnline, updatePendingCount, loadCars, invalidateRelated]);
 
   // Delete car - OPTIMIZED (instant UI update, silent)
   const deleteCar = useCallback(async (id: string) => {
@@ -278,6 +289,7 @@ export function useCarsNew() {
         // Online: Server'ga soft delete so'rovi yuborish
         api.delete(`/cars/${id}`).then(() => {
           updatePendingCount();
+          invalidateRelated();
         }).catch((err: any) => {
           console.error('Failed to delete car:', err);
           // Rollback on error
@@ -285,9 +297,9 @@ export function useCarsNew() {
         });
       } else {
         // Offline yoki temp: IndexedDB'da soft delete
-        carsRepository.update(id, { 
-          isDeleted: true, 
-          deletedAt: new Date().toISOString() 
+        carsRepository.update(id, {
+          isDeleted: true,
+          deletedAt: new Date().toISOString()
         }).then(() => {
           updatePendingCount();
         }).catch((err: any) => {
@@ -298,12 +310,12 @@ export function useCarsNew() {
     } catch (err: any) {
       console.error('Failed to delete car:', err);
       toast.error(`Xatolik: ${err.message}`);
-      
+
       // Rollback on error
       await loadCars();
       throw err;
     }
-  }, [isOnline, updatePendingCount, loadCars]);
+  }, [isOnline, updatePendingCount, loadCars, invalidateRelated]);
 
   // Restore car - OPTIMIZED (instant UI update, silent)
   const restoreCar = useCallback(async (id: string) => {

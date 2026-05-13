@@ -10,7 +10,8 @@ export const useCustomers = () => {
       const { data } = await api.get('/customers');
       return data;
     },
-    staleTime: 30000, // 30 soniya
+    staleTime: 10_000,
+    refetchOnWindowFocus: true,
   });
 };
 
@@ -22,7 +23,8 @@ export const useCustomersStats = () => {
       const { data } = await api.get('/customers/stats');
       return data;
     },
-    staleTime: 60000, // 1 daqiqa
+    staleTime: 10_000,
+    refetchOnWindowFocus: true,
   });
 };
 

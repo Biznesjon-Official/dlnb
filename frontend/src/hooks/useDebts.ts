@@ -42,14 +42,15 @@ export const useDebtSummary = () => {
       const response = await api.get('/debts/summary');
       return response.data;
     },
-    staleTime: Infinity, // Infinite cache - maksimal tezlik
-    gcTime: Infinity, // Infinite cache
-    retry: 0, // No retry - instant loading
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
+    // 30s cache: arxivda/qarzda tahrirlash so'ng yangilanishi uchun yetarli muddat.
+    staleTime: 30_000,
+    gcTime: 5 * 60_000,
+    retry: 0,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    refetchOnReconnect: true,
     notifyOnChangeProps: ['data'],
-    placeholderData: (previousData) => previousData, // Cache'dan instant yuklash
+    placeholderData: (previousData) => previousData,
   });
 };
 

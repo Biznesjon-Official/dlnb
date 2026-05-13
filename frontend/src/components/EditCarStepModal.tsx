@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Car, ArrowLeft, ArrowRight, Check, Plus, Trash2, Edit, Save, ClipboardList, Users, Calendar, AlertCircle, Search } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Car as CarType } from '@/types';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { useCarTasks, useUpdateTask, useCreateTask } from '@/hooks/useTasks';
@@ -36,6 +37,7 @@ interface EditCarStepModalProps {
 
 const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, car, updateCar }) => {
   const { isDarkMode } = useTheme();
+  const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState(1);
   const { isOnline } = useBackendStatus();
   
@@ -352,7 +354,15 @@ const EditCarStepModal: React.FC<EditCarStepModalProps> = ({ isOpen, onClose, ca
       };
       
       await updateCar(car._id, updateData);
-      
+
+      // Bog'liq kollektsiyalarni yangilash (Mijozlar, Qarzlar, Statistika)
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      queryClient.invalidateQueries({ queryKey: ['debts'] });
+      queryClient.invalidateQueries({ queryKey: ['debtSummary'] });
+      queryClient.invalidateQueries({ queryKey: ['car-services'] });
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['transactionSummary'] });
+
       onClose();
     } catch (error: any) {
       console.error('❌ Error updating car:', error);

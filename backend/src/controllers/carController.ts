@@ -2,10 +2,11 @@ import { Response } from 'express';
 import Car from '../models/Car';
 import Task from '../models/Task';
 import SparePart from '../models/SparePart';
+import Debt from '../models/Debt';
 import { AuthRequest } from '../middleware/auth';
 import telegramService from '../services/telegramService';
 import debtService from '../services/debtService';
-import { updateOrCreateCustomer } from '../services/customerService';
+import { updateOrCreateCustomer, decreaseCustomerCarsCount } from '../services/customerService';
 export const createCar = async (req: AuthRequest, res: Response) => {
   try {
     const { make, carModel, year, licensePlate, ownerName, ownerPhone, parts, serviceItems, usedSpareParts, skipArchivedCheck } = req.body;
@@ -405,6 +406,33 @@ export const updateCar = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ message: 'Mashina yangilanmadi' });
     }
 
+    // ✨ Bog'liq qarz va Mijoz sinxronizatsiyasi
+    // Mashina narxi yoki egasi o'zgargan bo'lsa, aktiv qarz va Customer yangilanishi shart.
+    try {
+      const activeDebt = await Debt.findOne({
+        car: carId,
+        type: 'receivable',
+        status: { $in: ['pending', 'partial'] }
+      });
+      if (activeDebt) {
+        const totalChanged = activeDebt.amount !== updateData.totalEstimate;
+        const ownerChanged =
+          activeDebt.creditorPhone !== car.ownerPhone ||
+          activeDebt.creditorName !== car.ownerName;
+        if (totalChanged || ownerChanged) {
+          activeDebt.amount = updateData.totalEstimate;
+          activeDebt.creditorName = car.ownerName;
+          activeDebt.creditorPhone = car.ownerPhone;
+          await activeDebt.save();
+        }
+      }
+      if (car.ownerPhone) {
+        await debtService.updateCustomerDebt(car.ownerPhone, car.ownerName);
+      }
+    } catch (syncErr: any) {
+      console.error('⚠️ Mashina updateCar sync xatosi:', syncErr.message);
+    }
+
     // ✨ YANGI: CarService yaratish yoki yangilash
     try {
       const CarService = require('../models/CarService').default;
@@ -586,9 +614,19 @@ export const deleteCar = async (req: AuthRequest, res: Response) => {
     if (!car) {
       return res.status(404).json({ message: 'Mashina topilmadi' });
     }
-    
+
     console.log(`🗑️ Mashina soft delete qilindi: ${car.licensePlate} - ${car.ownerName}`);
-    
+
+    // ✨ Mijoz sinxronizatsiyasi: mashina arxivlangach carsCount kamaytirish va totalDebt qayta hisoblash
+    try {
+      if (car.ownerPhone) {
+        await decreaseCustomerCarsCount(car.ownerPhone);
+        await debtService.updateCustomerDebt(car.ownerPhone, car.ownerName);
+      }
+    } catch (syncErr: any) {
+      console.error('⚠️ deleteCar customer sync xatosi:', syncErr.message);
+    }
+
     res.json({
       message: 'Mashina arxivga o\'tkazildi',
       car: car // To'liq mashina ma'lumotlarini qaytarish

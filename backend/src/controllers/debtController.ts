@@ -190,6 +190,17 @@ export const updateDebt = async (req: AuthRequest, res: Response) => {
     if (!debt) {
       return res.status(404).json({ message: 'Debt record not found' });
     }
+
+    // ✨ Mijoz sinxronizatsiyasi: qarz tahrirlanganda Customer.totalDebt qayta hisoblanadi
+    if (debt.type === 'receivable' && debt.creditorPhone) {
+      try {
+        const debtSvc = require('../services/debtService').default;
+        await debtSvc.updateCustomerDebt(debt.creditorPhone, debt.creditorName);
+      } catch (syncErr: any) {
+        console.error('⚠️ updateDebt customer sync xatosi:', syncErr.message);
+      }
+    }
+
     res.json({
       message: 'Debt record updated successfully',
       debt
@@ -204,6 +215,17 @@ export const deleteDebt = async (req: AuthRequest, res: Response) => {
     if (!debt) {
       return res.status(404).json({ message: 'Debt record not found' });
     }
+
+    // ✨ Mijoz sinxronizatsiyasi: qarz o'chirilgach Customer.totalDebt qayta hisoblanadi
+    if (debt.type === 'receivable' && debt.creditorPhone) {
+      try {
+        const debtSvc = require('../services/debtService').default;
+        await debtSvc.updateCustomerDebt(debt.creditorPhone, debt.creditorName);
+      } catch (syncErr: any) {
+        console.error('⚠️ deleteDebt customer sync xatosi:', syncErr.message);
+      }
+    }
+
     res.json({
       message: 'Debt record deleted successfully',
       debt
