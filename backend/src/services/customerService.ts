@@ -3,7 +3,7 @@ import Customer from '../models/Customer';
 interface UpdateCustomerData {
   name: string;
   phone: string;
-  clientId: string;
+  clientId?: string;
   debtAmount?: number;
   paidAmount?: number;
   carAdded?: boolean;
@@ -16,20 +16,22 @@ export const updateOrCreateCustomer = async (data: UpdateCustomerData) => {
     // Telefon raqamni tozalash
     const cleanPhone = phone.trim();
 
-    // Mijozni topish
-    let customer = await Customer.findOne({ phone: cleanPhone, clientId });
+    // Single-tenant: mijoz faqat phone bo'yicha topiladi (clientId ixtiyoriy filterga aylanadi)
+    const findFilter: Record<string, unknown> = { phone: cleanPhone };
+    if (clientId) findFilter.clientId = clientId;
+    let customer = await Customer.findOne(findFilter);
 
     if (!customer) {
-      // Yangi mijoz yaratish
-      customer = await Customer.create({
+      const createData: Record<string, unknown> = {
         name: name.trim(),
         phone: cleanPhone,
-        clientId,
         totalDebt: debtAmount || 0,
         totalPaid: paidAmount || 0,
         carsCount: carAdded ? 1 : 0,
         lastVisit: new Date(),
-      });
+      };
+      if (clientId) createData.clientId = clientId;
+      customer = await Customer.create(createData);
     } else {
       // Mavjud mijozni yangilash
       if (debtAmount !== undefined) {
@@ -52,9 +54,11 @@ export const updateOrCreateCustomer = async (data: UpdateCustomerData) => {
   }
 };
 
-export const decreaseCustomerCarsCount = async (phone: string, clientId: string) => {
+export const decreaseCustomerCarsCount = async (phone: string, clientId?: string) => {
   try {
-    const customer = await Customer.findOne({ phone: phone.trim(), clientId });
+    const filter: Record<string, unknown> = { phone: phone.trim() };
+    if (clientId) filter.clientId = clientId;
+    const customer = await Customer.findOne(filter);
     if (customer && customer.carsCount > 0) {
       customer.carsCount -= 1;
       await customer.save();
@@ -66,12 +70,14 @@ export const decreaseCustomerCarsCount = async (phone: string, clientId: string)
 
 export const updateCustomerDebt = async (
   phone: string,
-  clientId: string,
+  clientId: string | undefined,
   debtChange: number,
   paidChange: number
 ) => {
   try {
-    const customer = await Customer.findOne({ phone: phone.trim(), clientId });
+    const filter: Record<string, unknown> = { phone: phone.trim() };
+    if (clientId) filter.clientId = clientId;
+    const customer = await Customer.findOne(filter);
     if (customer) {
       customer.totalDebt += debtChange;
       customer.totalPaid += paidChange;

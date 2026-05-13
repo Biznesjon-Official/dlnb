@@ -8,19 +8,10 @@ import { AuthRequest } from '../middleware/auth';
 export const getCustomers = async (req: AuthRequest, res: Response) => {
   try {
     const clientId = req.user?.clientId;
+    // Single-tenant ERP: agar clientId mavjud bo'lsa filterlanadi, aks holda barchasi.
+    const filter: Record<string, unknown> = clientId ? { clientId } : {};
 
-    console.log('🔍 Get customers request:', { 
-      userId: req.user?._id, 
-      clientId,
-      hasUser: !!req.user 
-    });
-
-    if (!clientId) {
-      console.log('❌ Client ID topilmadi:', req.user);
-      return res.status(400).json({ message: 'Client ID topilmadi' });
-    }
-
-    const customers = await Customer.find({ clientId })
+    const customers = await Customer.find(filter)
       .sort({ lastVisit: -1 })
       .lean();
 
@@ -61,12 +52,10 @@ export const getCustomerById = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const clientId = req.user?.clientId;
+    const filter: Record<string, unknown> = { _id: id };
+    if (clientId) filter.clientId = clientId;
 
-    if (!clientId) {
-      return res.status(400).json({ message: 'Client ID topilmadi' });
-    }
-
-    const customer = await Customer.findOne({ _id: id, clientId });
+    const customer = await Customer.findOne(filter);
 
     if (!customer) {
       return res.status(404).json({ message: 'Mijoz topilmadi' });
@@ -101,28 +90,25 @@ export const getCustomerById = async (req: AuthRequest, res: Response) => {
 export const getCustomersStats = async (req: AuthRequest, res: Response) => {
   try {
     const clientId = req.user?.clientId;
+    const baseFilter: Record<string, unknown> = clientId ? { clientId } : {};
 
-    if (!clientId) {
-      return res.status(400).json({ message: 'Client ID topilmadi' });
-    }
-
-    const totalCustomers = await Customer.countDocuments({ clientId });
+    const totalCustomers = await Customer.countDocuments(baseFilter);
     const customersWithDebt = await Customer.countDocuments({
-      clientId,
+      ...baseFilter,
       totalDebt: { $gt: 0 },
     });
     const customersWithCars = await Customer.countDocuments({
-      clientId,
+      ...baseFilter,
       carsCount: { $gt: 0 },
     });
 
     const totalDebtResult = await Customer.aggregate([
-      { $match: { clientId } },
+      { $match: baseFilter },
       { $group: { _id: null, total: { $sum: '$totalDebt' } } },
     ]);
 
     const totalPaidResult = await Customer.aggregate([
-      { $match: { clientId } },
+      { $match: baseFilter },
       { $group: { _id: null, total: { $sum: '$totalPaid' } } },
     ]);
 

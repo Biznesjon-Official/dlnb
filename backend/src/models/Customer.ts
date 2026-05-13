@@ -7,7 +7,7 @@ export interface ICustomer extends Document {
   totalPaid: number;
   carsCount: number;
   lastVisit: Date;
-  clientId: string;
+  clientId?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -43,7 +43,6 @@ const customerSchema = new Schema<ICustomer>(
     },
     clientId: {
       type: String,
-      required: true,
     },
   },
   {
