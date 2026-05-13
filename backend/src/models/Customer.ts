@@ -22,7 +22,6 @@ const customerSchema = new Schema<ICustomer>(
     phone: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
     },
     totalDebt: {
@@ -51,8 +50,8 @@ const customerSchema = new Schema<ICustomer>(
   }
 );
 
-// Index'lar
-customerSchema.index({ phone: 1, clientId: 1 });
+// Index'lar — phone har bir client (master) ichida unique bo'ladi
+customerSchema.index({ phone: 1, clientId: 1 }, { unique: true });
 customerSchema.index({ name: 1, clientId: 1 });
 customerSchema.index({ clientId: 1, lastVisit: -1 });
 
