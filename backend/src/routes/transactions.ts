@@ -9,7 +9,8 @@ import {
   resetMonthlyEarnings,
   getMonthlyHistory,
   getMonthHistory,
-  deleteMonthlyHistory
+  deleteMonthlyHistory,
+  getUserMonthlyEarnings
 } from '../controllers/transactionController';
 import { authenticate, authorize } from '../middleware/auth';
 import { handleValidationErrors } from '../middleware/validation';
@@ -43,6 +44,9 @@ router.get('/monthly-history/:year/:month', authenticate, authorize('master'), g
 
 // Delete monthly history (master only)
 router.delete('/monthly-history/:id', authenticate, authorize('master'), deleteMonthlyHistory);
+
+// Foydalanuvchining oylik daromad tarixi (apprentice profilida ishlatiladi)
+router.get('/user-monthly/:userId', authenticate, authorize('master'), getUserMonthlyEarnings);
 
 // Export transactions (placeholder - would need actual implementation)
 router.get('/export', authenticate, (req, res) => {

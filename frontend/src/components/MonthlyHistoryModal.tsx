@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, TrendingUp, TrendingDown, BarChart3, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
+import { X, Calendar, TrendingUp, TrendingDown, BarChart3, ChevronDown, ChevronUp, Trash2, Eye } from 'lucide-react';
 import { t } from '@/lib/transliteration';
 import { formatCurrency } from '@/lib/utils';
 import { transactionApi } from '@/lib/api';
+import MonthDetailModal from './MonthDetailModal';
 
 interface MonthlyHistoryModalProps {
   isOpen: boolean;
@@ -13,11 +14,17 @@ const MonthlyHistoryModal: React.FC<MonthlyHistoryModalProps> = ({ isOpen, onClo
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [expandedMonths, setExpandedMonths] = useState<Set<string>>(new Set());
-  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; item: any | null }>({ 
-    isOpen: false, 
-    item: null 
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; item: any | null }>({
+    isOpen: false,
+    item: null
   });
   const [deleting, setDeleting] = useState(false);
+  const [detailModal, setDetailModal] = useState<{ year: number; month: number } | null>(null);
+
+  const openDetail = (e: React.MouseEvent, item: any) => {
+    e.stopPropagation();
+    setDetailModal({ year: item.year, month: item.month });
+  };
 
   const language = React.useMemo<'latin' | 'cyrillic'>(() => {
     const savedLanguage = localStorage.getItem('language');
@@ -114,9 +121,20 @@ const MonthlyHistoryModal: React.FC<MonthlyHistoryModalProps> = ({ isOpen, onClo
             <X className="h-4 w-4" />
           </button>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <Calendar className="h-5 w-5 text-white" />
             <h2 className="text-base font-bold text-white">{t("Oylik tarix", language)}</h2>
+            <button
+              onClick={() => {
+                const now = new Date();
+                setDetailModal({ year: now.getFullYear(), month: now.getMonth() + 1 });
+              }}
+              className="ml-auto mr-7 text-[10px] font-bold bg-yellow-400 text-yellow-900 px-2 py-1 rounded hover:bg-yellow-300 transition-colors flex items-center gap-1"
+              title={t('Joriy oy batafsil', language)}
+            >
+              <Eye className="h-3 w-3" />
+              {t('Joriy oy', language)}
+            </button>
           </div>
         </div>
 
@@ -166,26 +184,50 @@ const MonthlyHistoryModal: React.FC<MonthlyHistoryModalProps> = ({ isOpen, onClo
                       }`}
                       onClick={() => toggleMonth(item._id)}
                     >
-                      <div className="flex items-center gap-2">
-                        <Calendar className={`h-4 w-4 ${isDarkMode ? 'text-red-500' : 'text-red-600'}`} />
-                        <div>
-                          <h3 className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                            {getMonthName(item.month)} {item.year}
-                          </h3>
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <Calendar className={`h-4 w-4 flex-shrink-0 ${isDarkMode ? 'text-red-500' : 'text-red-600'}`} />
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <h3 className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                              {getMonthName(item.month)} {item.year}
+                            </h3>
+                            {item.hasDetailedSnapshot ? (
+                              <span className="text-[9px] font-bold bg-green-400 text-green-900 px-1.5 py-0.5 rounded">
+                                {t('Batafsil', language)}
+                              </span>
+                            ) : (
+                              <span className="text-[9px] font-bold bg-orange-400 text-orange-900 px-1.5 py-0.5 rounded">
+                                {t('Eski arxiv', language)}
+                              </span>
+                            )}
+                          </div>
                           <p className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
                             {new Date(item.resetDate).toLocaleDateString('uz-UZ')}
+                            {' · '}
+                            {item.transactionCount || 0} {t('tranzaksiya', language)}
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <div className={`text-lg font-bold ${item.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <div className={`text-base sm:text-lg font-bold ${item.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                           {formatCurrency(item.balance)}
                         </div>
                         <button
+                          onClick={(e) => openDetail(e, item)}
+                          className={`p-1.5 rounded-lg transition-colors ${
+                            isDarkMode
+                              ? 'text-blue-400 hover:bg-blue-900/20'
+                              : 'text-blue-600 hover:bg-blue-50'
+                          }`}
+                          title={t('Batafsil ko\'rish', language)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </button>
+                        <button
                           onClick={(e) => handleDeleteClick(e, item)}
                           className={`p-1.5 rounded-lg transition-colors ${
-                            isDarkMode 
-                              ? 'text-red-500 hover:bg-red-900/20' 
+                            isDarkMode
+                              ? 'text-red-500 hover:bg-red-900/20'
                               : 'text-red-600 hover:bg-red-50'
                           }`}
                           title={t("O'chirish", language)}
@@ -385,6 +427,16 @@ const MonthlyHistoryModal: React.FC<MonthlyHistoryModalProps> = ({ isOpen, onClo
           )}
         </div>
       </div>
+
+      {/* Detail modal */}
+      {detailModal && (
+        <MonthDetailModal
+          isOpen={true}
+          year={detailModal.year}
+          month={detailModal.month}
+          onClose={() => setDetailModal(null)}
+        />
+      )}
 
       {/* Delete Confirmation Modal */}
       {deleteConfirm.isOpen && deleteConfirm.item && (

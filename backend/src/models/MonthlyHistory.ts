@@ -1,5 +1,44 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
+export interface ITransactionSnapshot {
+  type: 'income' | 'expense';
+  amount: number;
+  paymentMethod?: 'cash' | 'card' | 'click';
+  description?: string;
+  categoryName?: string;
+  relatedType?: string;
+  relatedLicensePlate?: string;
+  relatedOwnerName?: string;
+  apprenticeName?: string;
+  createdByName?: string;
+  createdAt: Date;
+}
+
+export interface ITaskSnapshot {
+  title: string;
+  carLicensePlate?: string;
+  carOwnerName?: string;
+  payment: number;
+  apprenticeEarning?: number;
+  completedAt?: Date;
+}
+
+export interface ICategoryBreakdown {
+  categoryName: string;
+  type: 'income' | 'expense';
+  amount: number;
+  count: number;
+}
+
+export interface IUserEarning {
+  userId: mongoose.Types.ObjectId;
+  name: string;
+  role: string;
+  earnings: number;
+  taskCount?: number;
+  tasks?: ITaskSnapshot[];
+}
+
 export interface IMonthlyHistory extends Document {
   month: number; // 1-12
   year: number;
@@ -15,12 +54,11 @@ export interface IMonthlyHistory extends Document {
   incomeCount: number;
   expenseCount: number;
   transactionCount: number;
-  userEarnings: {
-    userId: mongoose.Types.ObjectId;
-    name: string;
-    role: string;
-    earnings: number;
-  }[];
+  userEarnings: IUserEarning[];
+  // Yangi snapshot fieldlari — eski yozuvlarda yo'q, yangilarida to'la
+  hasDetailedSnapshot: boolean;
+  transactions?: ITransactionSnapshot[];
+  categoriesBreakdown?: ICategoryBreakdown[];
   resetDate: Date;
   resetBy: mongoose.Types.ObjectId;
   createdAt: Date;
@@ -103,7 +141,43 @@ const monthlyHistorySchema = new Schema<IMonthlyHistory>({
     earnings: {
       type: Number,
       default: 0
-    }
+    },
+    taskCount: {
+      type: Number,
+      default: 0
+    },
+    tasks: [{
+      title: String,
+      carLicensePlate: String,
+      carOwnerName: String,
+      payment: { type: Number, default: 0 },
+      apprenticeEarning: { type: Number, default: 0 },
+      completedAt: Date
+    }]
+  }],
+  // Eski yozuvlar uchun false (faqat aggregate), yangilar uchun true (to'liq snapshot)
+  hasDetailedSnapshot: {
+    type: Boolean,
+    default: false
+  },
+  transactions: [{
+    type: { type: String, enum: ['income', 'expense'], required: true },
+    amount: { type: Number, required: true },
+    paymentMethod: { type: String, enum: ['cash', 'card', 'click'] },
+    description: String,
+    categoryName: String,
+    relatedType: String,
+    relatedLicensePlate: String,
+    relatedOwnerName: String,
+    apprenticeName: String,
+    createdByName: String,
+    createdAt: { type: Date, required: true }
+  }],
+  categoriesBreakdown: [{
+    categoryName: { type: String, required: true },
+    type: { type: String, enum: ['income', 'expense'], required: true },
+    amount: { type: Number, default: 0 },
+    count: { type: Number, default: 0 }
   }],
   resetDate: {
     type: Date,

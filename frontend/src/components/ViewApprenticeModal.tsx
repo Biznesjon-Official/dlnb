@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { X, DollarSign, Phone, Car } from 'lucide-react';
+import { X, DollarSign, Phone, Car, Calendar, TrendingUp } from 'lucide-react';
 import { User as UserType, Car as CarType } from '@/types';
 import { formatCurrency } from '@/lib/utils';
 import { formatPhoneNumber } from '@/lib/phoneUtils';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { t } from '@/lib/transliteration';
 import { useTheme } from '@/contexts/ThemeContext';
-import api from '@/lib/api';
+import api, { transactionApi } from '@/lib/api';
 import ViewCarModal from './ViewCarModal';
 
 interface ViewApprenticeModalProps {
@@ -34,8 +34,11 @@ const ViewApprenticeModal: React.FC<ViewApprenticeModalProps> = ({ isOpen, onClo
   const { isDarkMode } = useTheme();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoadingTasks, setIsLoadingTasks] = useState(false);
-  const [activeTab, setActiveTab] = useState<'stats' | 'tasks'>('stats');
+  const [activeTab, setActiveTab] = useState<'stats' | 'tasks' | 'history'>('stats');
   const [selectedCar, setSelectedCar] = useState<CarType | null>(null);
+  const [monthlyHistory, setMonthlyHistory] = useState<any[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [expandedMonth, setExpandedMonth] = useState<string | null>(null);
 
   // localStorage'dan tilni o'qish
   const language = React.useMemo<'latin' | 'cyrillic'>(() => {
@@ -54,7 +57,7 @@ const ViewApprenticeModal: React.FC<ViewApprenticeModalProps> = ({ isOpen, onClo
 
   const fetchApprenticeTasks = async () => {
     if (!apprentice) return;
-    
+
     setIsLoadingTasks(true);
     try {
       const response = await api.get(`/tasks?assignedTo=${apprentice._id}`);
@@ -65,6 +68,30 @@ const ViewApprenticeModal: React.FC<ViewApprenticeModalProps> = ({ isOpen, onClo
       setIsLoadingTasks(false);
     }
   };
+
+  const fetchMonthlyHistory = async () => {
+    if (!apprentice) return;
+    setIsLoadingHistory(true);
+    try {
+      const res = await transactionApi.getUserMonthlyEarnings(apprentice._id, 12);
+      setMonthlyHistory(res.history || []);
+    } catch (error) {
+      console.error('Error fetching apprentice monthly history:', error);
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen && apprentice && activeTab === 'history' && monthlyHistory.length === 0) {
+      fetchMonthlyHistory();
+    }
+  }, [isOpen, apprentice, activeTab]);
+
+  const getMonthName = (m: number) =>
+    ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr'][m - 1];
+
+  const maxEarning = monthlyHistory.reduce((m, h) => Math.max(m, h.earnings || 0), 0);
 
   if (!isOpen || !apprentice) return null;
 
@@ -133,6 +160,21 @@ const ViewApprenticeModal: React.FC<ViewApprenticeModalProps> = ({ isOpen, onClo
               }`}
             >
               {t('Vazifalar', language)} ({tasks.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('history')}
+              className={`px-3 py-2 text-xs font-medium border-b-2 transition-colors flex items-center gap-1 ${
+                activeTab === 'history'
+                  ? isDarkMode
+                    ? 'border-red-500 text-red-400'
+                    : 'border-orange-500 text-orange-600'
+                  : isDarkMode
+                    ? 'border-transparent text-gray-400 hover:text-gray-300'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <Calendar className="h-3 w-3" />
+              {t('Oylik tarix', language)}
             </button>
           </div>
 
@@ -336,6 +378,130 @@ const ViewApprenticeModal: React.FC<ViewApprenticeModalProps> = ({ isOpen, onClo
                       </div>
                     </div>
                   ))
+                )}
+              </div>
+            )}
+
+            {/* Oylik tarix tab */}
+            {activeTab === 'history' && (
+              <div className="space-y-2">
+                {isLoadingHistory ? (
+                  <div className="text-center py-8">
+                    <div className={`animate-spin rounded-full h-8 w-8 border-4 mx-auto ${
+                      isDarkMode ? 'border-red-900/30 border-t-red-600' : 'border-orange-200 border-t-orange-600'
+                    }`} />
+                  </div>
+                ) : monthlyHistory.length === 0 ? (
+                  <p className={`text-center py-6 text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    {t("Oylik tarix mavjud emas", language)}
+                  </p>
+                ) : (
+                  <>
+                    {/* Bar-chart o'rniga proportional progress bars */}
+                    <div className={`p-3 rounded-lg ${isDarkMode ? 'bg-gray-800/50' : 'bg-gray-50'}`}>
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <TrendingUp className={`h-3.5 w-3.5 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`} />
+                        <span className={`text-xs font-semibold ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                          {t('Oxirgi 12 oy daromad', language)}
+                        </span>
+                      </div>
+                      <div className="space-y-1.5">
+                        {monthlyHistory.map((h: any) => {
+                          const percent = maxEarning > 0 ? (h.earnings / maxEarning) * 100 : 0;
+                          return (
+                            <div key={`${h.year}-${h.month}`} className="space-y-0.5">
+                              <div className="flex items-center justify-between text-[10px]">
+                                <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
+                                  {getMonthName(h.month)} {h.year}
+                                  {h.isLive && (
+                                    <span className="ml-1 text-[8px] bg-yellow-400 text-yellow-900 px-1 rounded">
+                                      {t('Joriy', language)}
+                                    </span>
+                                  )}
+                                </span>
+                                <span className={`font-bold ${isDarkMode ? 'text-green-400' : 'text-green-700'}`}>
+                                  {formatCurrency(h.earnings)}
+                                </span>
+                              </div>
+                              <div className={`h-1.5 rounded-full overflow-hidden ${isDarkMode ? 'bg-gray-900' : 'bg-gray-200'}`}>
+                                <div
+                                  className={`h-full transition-all ${isDarkMode ? 'bg-green-500' : 'bg-green-500'}`}
+                                  style={{ width: `${percent}%` }}
+                                />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Har oy uchun detal (accordion) */}
+                    <div className="space-y-1.5">
+                      {monthlyHistory.map((h: any) => {
+                        const key = `${h.year}-${h.month}`;
+                        const isExpanded = expandedMonth === key;
+                        return (
+                          <div
+                            key={key}
+                            className={`rounded-lg overflow-hidden border ${
+                              isDarkMode ? 'bg-gray-800/50 border-red-900/20' : 'bg-white border-gray-200'
+                            }`}
+                          >
+                            <button
+                              onClick={() => setExpandedMonth(isExpanded ? null : key)}
+                              className="w-full flex items-center justify-between p-2.5 text-left"
+                            >
+                              <div className="flex items-center gap-1.5">
+                                <Calendar className={`h-3.5 w-3.5 ${isDarkMode ? 'text-red-500' : 'text-orange-600'}`} />
+                                <span className={`text-xs font-semibold ${isDarkMode ? 'text-gray-200' : 'text-gray-900'}`}>
+                                  {getMonthName(h.month)} {h.year}
+                                </span>
+                                <span className={`text-[10px] ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                                  · {h.taskCount || 0} {t('vazifa', language)}
+                                </span>
+                              </div>
+                              <span className="text-xs font-bold text-green-600">
+                                {formatCurrency(h.earnings)}
+                              </span>
+                            </button>
+                            {isExpanded && (
+                              <div className={`px-2.5 pb-2.5 space-y-1 ${isDarkMode ? 'border-t border-red-900/20' : 'border-t border-gray-200'}`}>
+                                {h.tasks && h.tasks.length > 0 ? (
+                                  h.tasks.map((task: any, idx: number) => (
+                                    <div
+                                      key={idx}
+                                      className={`flex items-center justify-between p-2 rounded text-[11px] ${
+                                        isDarkMode ? 'bg-gray-900/50' : 'bg-gray-50'
+                                      }`}
+                                    >
+                                      <div className="flex-1 min-w-0">
+                                        <p className={`font-medium truncate ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                                          {task.title}
+                                        </p>
+                                        <p className={`text-[9px] ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                                          {task.carLicensePlate || '—'}
+                                          {task.carOwnerName && ` · ${task.carOwnerName}`}
+                                        </p>
+                                      </div>
+                                      <div className="font-bold text-green-600 ml-2 whitespace-nowrap">
+                                        {formatCurrency(task.apprenticeEarning || task.payment || 0)}
+                                      </div>
+                                    </div>
+                                  ))
+                                ) : (
+                                  <p className={`text-[10px] py-1 ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                                    {h.hasDetailedSnapshot
+                                      ? t('Vazifalar yo\'q', language)
+                                      : t('Eski arxiv — vazifalar saqlanmagan', language)}
+                                  </p>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
                 )}
               </div>
             )}

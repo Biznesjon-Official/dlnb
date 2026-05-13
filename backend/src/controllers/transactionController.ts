@@ -498,10 +498,24 @@ export const deleteMonthlyHistory = async (req: AuthRequest, res: Response) => {
     });
   } catch (error: any) {
     console.error('❌ Tarixni o\'chirishda xatolik:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      message: 'Server xatoligi', 
-      error: error.message 
+      message: 'Server xatoligi',
+      error: error.message
     });
+  }
+};
+
+// Foydalanuvchining oylik tarixi (apprentice profili uchun)
+export const getUserMonthlyEarnings = async (req: AuthRequest, res: Response) => {
+  try {
+    const { userId } = req.params;
+    const limit = req.query.limit ? Number(req.query.limit) : 12;
+    const { getUserMonthlyEarnings } = await import('../services/monthlyResetService');
+    const data = await getUserMonthlyEarnings(userId, limit);
+    res.json({ success: true, history: data });
+  } catch (error: any) {
+    console.error('❌ User oylik tarixini olishda xatolik:', error);
+    res.status(500).json({ success: false, message: 'Server xatoligi', error: error.message });
   }
 };

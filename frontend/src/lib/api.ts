@@ -159,5 +159,11 @@ export const transactionApi = {
   deleteMonthlyHistory: async (id: string) => {
     const response = await api.delete(`/transactions/monthly-history/${id}`);
     return response.data;
+  },
+  getUserMonthlyEarnings: async (userId: string, limit: number = 12) => {
+    const response = await api.get(`/transactions/user-monthly/${userId}`, {
+      params: { limit }
+    });
+    return response.data;
   }
 };
