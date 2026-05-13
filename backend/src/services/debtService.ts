@@ -9,7 +9,6 @@ interface CreateOrUpdateDebtParams {
   paymentMethod?: 'cash' | 'card' | 'click';
   notes?: string;
   createdBy: mongoose.Types.ObjectId | string;
-  clientId: string;
 }
 
 /**
@@ -22,7 +21,7 @@ class DebtService {
    * Agar to'liq to'langan bo'lsa, qarzni "paid" ga o'zgartiradi
    */
   async createOrUpdateDebt(params: CreateOrUpdateDebtParams) {
-    const { carId, totalAmount, paidAmount, paymentMethod, notes, createdBy, clientId } = params;
+    const { carId, totalAmount, paidAmount, paymentMethod, notes, createdBy } = params;
 
     // Mashina ma'lumotlarini olish
     const car = await Car.findById(carId);
@@ -48,7 +47,7 @@ class DebtService {
         console.log(`✅ Qarz to'liq to'landi - ${car.licensePlate}`);
         
         // 👤 Customer'ni yangilash - qarzni kamaytirish
-        await this.updateCustomerDebt(car.ownerPhone, car.ownerName, clientId);
+        await this.updateCustomerDebt(car.ownerPhone, car.ownerName);
       }
       return { debt: existingDebt, action: 'paid' };
     }
@@ -112,37 +111,37 @@ class DebtService {
   }
 
   /**
-   * Customer'ning umumiy qarzini qayta hisoblash (recompute strategiyasi).
-   * clientId majburiy — Customer model uni `required` qiladi va multi-tenant ajratish uchun zarur.
+   * Customer'ning umumiy qarzini yangilash
    */
-  async updateCustomerDebt(phone: string, name: string, clientId: string) {
-    if (!clientId) {
-      console.error('⚠️ updateCustomerDebt: clientId yo\'q, customer yangilanmaydi:', phone);
-      return;
-    }
+  async updateCustomerDebt(phone: string, name: string) {
     try {
       const Customer = require('../models/Customer').default;
-
+      
+      // Mijozning barcha faol qarzlarini hisoblash
       const debts = await Debt.find({
         creditorPhone: phone,
         type: 'receivable',
         status: { $in: ['pending', 'partial'] }
       });
-
+      
       const totalDebt = debts.reduce((sum, debt) => {
         const remaining = debt.amount - (debt.paidAmount || 0);
         return sum + remaining;
       }, 0);
-
+      
+      // Customer'ni yangilash yoki yaratish
       await Customer.findOneAndUpdate(
-        { phone, clientId },
+        { phone },
         {
-          $set: { name, totalDebt, lastVisit: new Date() },
-          $setOnInsert: { clientId }
+          $set: {
+            name,
+            totalDebt,
+            lastVisit: new Date()
+          }
         },
         { upsert: true, new: true }
       );
-
+      
       console.log(`👤 Customer yangilandi: ${name} - Qarz: ${totalDebt} so'm`);
     } catch (error: any) {
       console.error('⚠️ Customer yangilashda xatolik:', error.message);

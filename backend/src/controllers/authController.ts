@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import { randomUUID } from 'crypto';
 import User from '../models/User';
 import { AuthRequest } from '../middleware/auth';
 
@@ -47,8 +46,7 @@ export const register = async (req: Request, res: Response) => {
       name: name.trim(),
       username: username.trim().toLowerCase(),
       password,
-      role: role || 'apprentice',
-      clientId: randomUUID()
+      role: role || 'apprentice'
     };
 
     // Email faqat mavjud bo'lsa qo'shish

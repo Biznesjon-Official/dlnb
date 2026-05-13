@@ -541,8 +541,7 @@ export const addCarServicePayment = async (req: AuthRequest, res: Response) => {
         paidAmount: service.paidAmount,
         paymentMethod: paymentMethod || 'cash',
         notes: notes || `Xizmat to'lovi - ${paymentMethod || 'naqd'}`,
-        createdBy: req.user?.id,
-        clientId: req.user?.clientId || ''
+        createdBy: req.user?.id
       });
     } catch (debtError: any) {
       console.error('⚠️ Qarz yaratishda xatolik:', debtError.message);
